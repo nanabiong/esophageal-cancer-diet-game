@@ -1,0 +1,20 @@
+[
+  {
+    "id": "breakfast",
+    "name": "早餐",
+    "description": "一天的第一餐，选择温和、易吞咽的食物更友好。",
+    "foodIds": ["food_001", "food_002", "food_003"]
+  },
+  {
+    "id": "lunch",
+    "name": "午餐",
+    "description": "午餐需要兼顾营养和舒适，避免过烫、过辣或过硬。",
+    "foodIds": ["food_004", "food_005", "food_006"]
+  },
+  {
+    "id": "dinner",
+    "name": "晚餐",
+    "description": "晚餐适合清淡、柔软、不过度刺激的饮食选择。",
+    "foodIds": ["food_007", "food_008", "food_009"]
+  }
+]

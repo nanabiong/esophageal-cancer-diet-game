@@ -1,0 +1,74 @@
+[
+  {
+    "id": "food_001",
+    "name": "温热燕麦粥",
+    "sceneId": "breakfast",
+    "riskFactors": ["soft_texture", "warm_temperature"],
+    "hoverText": "质地柔软，温度适中，适合作为早餐选项。",
+    "image": "assets/images/food_001.png"
+  },
+  {
+    "id": "food_002",
+    "name": "烫口热汤面",
+    "sceneId": "breakfast",
+    "riskFactors": ["high_temperature"],
+    "hoverText": "温度过高，进食前需要放凉。",
+    "image": "assets/images/food_002.png"
+  },
+  {
+    "id": "food_003",
+    "name": "油炸酥饼",
+    "sceneId": "breakfast",
+    "riskFactors": ["fried_food", "hard_texture"],
+    "hoverText": "油脂较多，质地偏硬，可能增加吞咽不适。",
+    "image": "assets/images/food_003.png"
+  },
+  {
+    "id": "food_004",
+    "name": "清蒸鱼肉",
+    "sceneId": "lunch",
+    "riskFactors": ["soft_texture", "high_protein"],
+    "hoverText": "鱼肉细嫩，蛋白质较丰富，适合作为午餐选择。",
+    "image": "assets/images/food_004.png"
+  },
+  {
+    "id": "food_005",
+    "name": "麻辣火锅",
+    "sceneId": "lunch",
+    "riskFactors": ["spicy_food", "high_temperature"],
+    "hoverText": "辛辣且温度较高，可能刺激食管。",
+    "image": "assets/images/food_005.png"
+  },
+  {
+    "id": "food_006",
+    "name": "粗糙烤肉",
+    "sceneId": "lunch",
+    "riskFactors": ["hard_texture", "smoked_grilled_food"],
+    "hoverText": "质地较粗糙，烧烤类食物不适合频繁选择。",
+    "image": "assets/images/food_006.png"
+  },
+  {
+    "id": "food_007",
+    "name": "南瓜小米粥",
+    "sceneId": "dinner",
+    "riskFactors": ["soft_texture", "warm_temperature"],
+    "hoverText": "口感软糯，晚餐选择较温和。",
+    "image": "assets/images/food_007.png"
+  },
+  {
+    "id": "food_008",
+    "name": "腌制咸菜",
+    "sceneId": "dinner",
+    "riskFactors": ["pickled_food", "high_salt"],
+    "hoverText": "盐分较高，腌制食物不建议经常食用。",
+    "image": "assets/images/food_008.png"
+  },
+  {
+    "id": "food_009",
+    "name": "冰镇饮料",
+    "sceneId": "dinner",
+    "riskFactors": ["cold_stimulation", "low_nutrition"],
+    "hoverText": "温度过低且营养价值有限，不适合作为晚餐搭配。",
+    "image": "assets/images/food_009.png"
+  }
+]

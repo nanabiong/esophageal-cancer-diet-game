@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>食管癌饮食数感游戏</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main class="game-container">
+    <section id="introScreen">
+      <h1>食管癌饮食数感游戏</h1>
+      <p>通过轻松的互动练习，认识食管癌饮食相关的数量和选择。</p>
+      <button id="startButton" type="button">开始游戏</button>
+    </section>
+
+    <section id="sceneScreen" class="hidden">
+      <h2 id="sceneName"></h2>
+      <p id="sceneDescription"></p>
+      <div id="foodList" class="food-list"></div>
+      <div id="mealPlate" class="meal-plate">
+        <span id="plateText">把食物拖到餐盘中</span>
+      </div>
+      <button id="confirmButton" class="hidden" type="button">确认进食</button>
+    </section>
+
+    <section id="resultScreen" class="hidden">
+      <h2>结果页</h2>
+      <p>三餐选择已完成，请打开浏览器控制台查看本轮选择记录。</p>
+      <p id="riskIndexText" class="risk-index-text"></p>
+      <div id="personaResult" class="persona-result"></div>
+    </section>
+  </main>
+
+  <script src="game.js"></script>
+</body>
+</html>

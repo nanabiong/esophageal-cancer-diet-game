@@ -1,0 +1,29 @@
+[
+  {
+    "id": "low_risk",
+    "name": "低风险人格",
+    "riskLevel": "低风险",
+    "minRiskIndex": 0,
+    "maxRiskIndex": 33,
+    "description": "你的选择整体温和、清淡，比较关注食物温度和吞咽舒适度。",
+    "advice": "继续优先选择温热、柔软、易吞咽的食物，保持规律进餐。"
+  },
+  {
+    "id": "medium_risk",
+    "name": "中风险人格",
+    "riskLevel": "中风险",
+    "minRiskIndex": 33,
+    "maxRiskIndex": 66,
+    "description": "你的选择中有一些刺激或不易吞咽的食物，可以继续优化饮食习惯。",
+    "advice": "减少过烫、辛辣、油炸或偏硬食物的频率，多选择清蒸、炖煮类食物。"
+  },
+  {
+    "id": "high_risk",
+    "name": "高风险人格",
+    "riskLevel": "高风险",
+    "minRiskIndex": 66,
+    "maxRiskIndex": 100,
+    "description": "你的选择中高温、辛辣、油炸或腌制食物较多，饮食刺激性偏强。",
+    "advice": "建议优先调整为温和、软烂、少盐少刺激的饮食，并减少腌制、烧烤和过烫食物。"
+  }
+]

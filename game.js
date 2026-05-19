@@ -3,24 +3,29 @@ const dataFiles = {
   scene: "data/scene.json",
   risk: "data/risk.json",
   persona: "data/persona.json",
-  uiConfig: "data/ui-config.json"
+  uiConfig: "data/ui-config.json",
+  act1: "data/act1.json"
 };
 
 let gameData = null;
-let currentSceneIndex = 0;
-let selectedFoodId = null;
-let playerSelections = [];
+let activeAct = null;
+let actState = {
+  actId: null,
+  sceneId: null,
+  sceneIndex: 0,
+  step: "idle"
+};
+let playerChoices = [];
 
 document.addEventListener("DOMContentLoaded", () => {
-  const startButton = document.getElementById("startButton");
-  const confirmButton = document.getElementById("confirmButton");
-  const mealPlate = document.getElementById("mealPlate");
+  document.getElementById("startButton").addEventListener("click", () => {
+    startAct("act1");
+  });
 
-  startButton.addEventListener("click", handleStartClick);
-  confirmButton.addEventListener("click", handleConfirmClick);
-  mealPlate.addEventListener("dragover", handlePlateDragOver);
-  mealPlate.addEventListener("dragleave", handlePlateDragLeave);
-  mealPlate.addEventListener("drop", handlePlateDrop);
+  document.getElementById("restartActButton").addEventListener("click", () => {
+    startAct("act1");
+  });
+
   loadGameData();
 });
 
@@ -47,185 +52,237 @@ async function loadGameData() {
   }
 }
 
-function handleStartClick() {
+function startAct(actId) {
   if (!gameData) {
     showLoadError(new Error("配表还没有加载完成，请稍后再试。"));
     return;
   }
 
-  console.log("游戏开始");
-  currentSceneIndex = 0;
-  selectedFoodId = null;
-  playerSelections = [];
+  activeAct = gameData[actId];
+  playerChoices = [];
+  actState = {
+    actId,
+    sceneId: activeAct.scenes[0].id,
+    sceneIndex: 0,
+    step: "scene:start"
+  };
 
   document.getElementById("introScreen").classList.add("hidden");
-  document.getElementById("resultScreen").classList.add("hidden");
-  document.getElementById("sceneScreen").classList.remove("hidden");
+  document.getElementById("actEndScreen").classList.add("hidden");
+  document.getElementById("actScreen").classList.remove("hidden");
 
-  renderCurrentScene();
+  renderActScene();
 }
 
-function renderCurrentScene() {
-  const currentScene = gameData.scene[currentSceneIndex];
-  const sceneFoods = currentScene.foodIds.map((foodId) => {
-    return gameData.food.find((food) => food.id === foodId);
+function renderActScene() {
+  const scene = getCurrentScene();
+  const viewport = document.getElementById("actViewport");
+
+  actState.sceneId = scene.id;
+  actState.step = `${scene.id}:rendered`;
+  viewport.innerHTML = "";
+
+  const sceneElement = document.createElement("article");
+  sceneElement.className = `act-scene ${scene.background}`;
+  sceneElement.dataset.sceneId = scene.id;
+  sceneElement.appendChild(createSceneHeader(scene));
+
+  if (scene.type === "wake") {
+    renderWakeScene(scene, sceneElement);
+  } else {
+    renderChoiceScene(scene, sceneElement);
+  }
+
+  viewport.appendChild(sceneElement);
+}
+
+function createSceneHeader(scene) {
+  const header = document.createElement("div");
+  const chapter = document.createElement("p");
+  const title = document.createElement("h2");
+
+  header.className = "scene-header";
+  chapter.className = "chapter-label";
+  chapter.textContent = scene.chapter;
+  title.textContent = scene.name;
+
+  header.append(chapter, title);
+  return header;
+}
+
+function renderWakeScene(scene, sceneElement) {
+  let wakeClicks = 0;
+
+  const wakeArea = document.createElement("div");
+  const alarmMark = document.createElement("div");
+  const phonePanel = document.createElement("div");
+  const wakeHint = document.createElement("p");
+
+  wakeArea.className = "wake-area";
+  alarmMark.className = "alarm-mark";
+  phonePanel.className = "phone-panel";
+  wakeHint.className = "wake-hint";
+
+  alarmMark.textContent = "叮铃铃";
+  phonePanel.textContent = scene.phoneTime;
+  wakeHint.textContent = scene.instruction;
+
+  wakeArea.addEventListener("click", () => {
+    wakeClicks += 1;
+    actState.step = `${scene.id}:wake_click_${wakeClicks}`;
+
+    const progress = Math.min(wakeClicks / scene.wakeClickTarget, 1);
+    phonePanel.style.setProperty("--phone-opacity", String(0.08 + progress * 0.92));
+    phonePanel.style.setProperty("--phone-scale", String(0.88 + progress * 0.12));
+
+    if (wakeClicks >= scene.wakeClickTarget) {
+      wakeArea.style.pointerEvents = "none";
+      goToNextScene(scene.transition);
+    }
   });
 
-  selectedFoodId = null;
-  document.getElementById("sceneName").textContent = currentScene.name;
-  document.getElementById("sceneDescription").textContent = currentScene.description;
-  document.getElementById("confirmButton").classList.add("hidden");
-  resetMealPlate();
-
-  renderFoodCards(sceneFoods);
+  wakeArea.append(alarmMark, phonePanel, wakeHint);
+  sceneElement.appendChild(wakeArea);
 }
 
-function renderFoodCards(foods) {
-  const foodList = document.getElementById("foodList");
-  foodList.innerHTML = "";
+function renderChoiceScene(scene, sceneElement) {
+  const bubble = document.createElement("p");
+  const world = document.createElement("div");
+  const interactiveLayer = document.createElement("div");
+  const placementNote = document.createElement("div");
 
-  foods.forEach((food) => {
-    if (!food) {
+  bubble.className = "speech-bubble";
+  bubble.textContent = scene.narration;
+  world.className = "scene-world";
+  interactiveLayer.className = "interactive-layer";
+  placementNote.className = "placement-note";
+  placementNote.textContent = scene.placementText || "";
+
+  renderSceneSet(scene, world);
+
+  scene.objects.forEach((object) => {
+    const objectElement = document.createElement("button");
+    objectElement.type = "button";
+    objectElement.className = `act-object shape-${object.shape}`;
+    objectElement.textContent = object.label;
+    objectElement.addEventListener("click", () => {
+      handleActChoice(scene, object, objectElement, placementNote);
+    });
+
+    interactiveLayer.appendChild(objectElement);
+  });
+
+  sceneElement.append(bubble, world, interactiveLayer, placementNote);
+}
+
+function renderSceneSet(scene, world) {
+  if (scene.background === "kitchen") {
+    const counter = document.createElement("div");
+    const table = document.createElement("div");
+    const door = document.createElement("div");
+
+    counter.className = "counter-line";
+    table.className = "table-surface";
+    door.className = "door-shape";
+    world.append(counter, table, door);
+  }
+
+  if (scene.background === "bus-stop") {
+    const shop = document.createElement("div");
+    const bus = document.createElement("div");
+
+    shop.className = "shop-shape";
+    bus.className = "bus-shape";
+    world.append(shop, bus);
+  }
+}
+
+function handleActChoice(scene, object, objectElement, placementNote) {
+  if (actState.step.endsWith(":selected")) {
+    return;
+  }
+
+  actState.step = `${scene.id}:selected`;
+  objectElement.classList.add("selected");
+
+  playerChoices.push({
+    actId: actState.actId,
+    sceneId: scene.id,
+    choiceId: object.id,
+    label: object.label,
+    value: object.value,
+    kind: object.kind
+  });
+
+  if (object.disappearOnSelect || object.kind === "drink") {
+    objectElement.classList.add("disappeared");
+  }
+
+  if (placementNote.textContent) {
+    placementNote.classList.add("visible");
+  }
+
+  if (scene.busLeaves) {
+    document.querySelector(".bus-shape")?.classList.add("leaving");
+  }
+
+  window.setTimeout(() => {
+    goToNextScene(scene.transition);
+  }, scene.busLeaves ? 950 : 650);
+}
+
+function goToNextScene(transition) {
+  const sceneElement = document.querySelector(".act-scene");
+
+  if (transition === "horizontal") {
+    sceneElement.classList.add("transition-horizontal-out");
+  } else if (transition === "fadeEnd") {
+    sceneElement.classList.add("transition-fade-out");
+  } else {
+    sceneElement.classList.add("transition-vertical-out");
+  }
+
+  window.setTimeout(() => {
+    if (transition === "fadeEnd") {
+      endAct();
       return;
     }
 
-    const card = document.createElement("article");
-    const name = document.createElement("h3");
-    const hoverText = document.createElement("p");
-
-    card.className = "food-card";
-    card.dataset.foodId = food.id;
-    card.draggable = true;
-    hoverText.className = "food-hover-text";
-    name.textContent = food.name;
-    hoverText.textContent = food.hoverText;
-    card.addEventListener("dragstart", handleFoodDragStart);
-    card.addEventListener("dragend", handleFoodDragEnd);
-
-    card.append(name, hoverText);
-    foodList.appendChild(card);
-  });
+    actState.sceneIndex += 1;
+    actState.sceneId = activeAct.scenes[actState.sceneIndex].id;
+    actState.step = "scene:enter";
+    renderActScene();
+  }, 850);
 }
 
-function selectFood(foodId) {
-  const selectedFood = gameData.food.find((food) => food.id === foodId);
+function endAct() {
+  actState.step = "act:ended";
+  document.getElementById("actScreen").classList.add("hidden");
+  document.getElementById("actEndScreen").classList.remove("hidden");
+  console.log("Act 1 早餐 playerChoices：", playerChoices);
+  console.log("下一幕接口预留：", activeAct.nextActId);
+}
 
-  if (!selectedFood) {
-    return;
+function getCurrentScene() {
+  return activeAct.scenes[actState.sceneIndex];
+}
+
+function showLoadError(error) {
+  const container = document.querySelector(".game-container");
+  const oldErrorMessage = document.querySelector(".error-message");
+  const errorMessage = document.createElement("p");
+  const fileProtocolTip = window.location.protocol === "file:"
+    ? " 请通过本地服务器打开页面后再测试。"
+    : "";
+
+  if (oldErrorMessage) {
+    oldErrorMessage.remove();
   }
 
-  selectedFoodId = foodId;
+  errorMessage.className = "error-message";
+  errorMessage.textContent = `数据读取失败：${error.message}${fileProtocolTip}`;
 
-  document.querySelectorAll(".food-card").forEach((card) => {
-    card.classList.toggle("selected", card.dataset.foodId === foodId);
-  });
-
-  document.getElementById("plateText").textContent = selectedFood.name;
-  document.getElementById("mealPlate").classList.add("has-food");
-  document.getElementById("confirmButton").classList.remove("hidden");
-}
-
-function handleFoodDragStart(event) {
-  event.dataTransfer.setData("text/plain", event.currentTarget.dataset.foodId);
-  event.dataTransfer.effectAllowed = "move";
-  event.currentTarget.classList.add("dragging");
-}
-
-function handleFoodDragEnd(event) {
-  event.currentTarget.classList.remove("dragging");
-}
-
-function handlePlateDragOver(event) {
-  event.preventDefault();
-  event.dataTransfer.dropEffect = "move";
-  event.currentTarget.classList.add("drag-over");
-}
-
-function handlePlateDragLeave(event) {
-  event.currentTarget.classList.remove("drag-over");
-}
-
-function handlePlateDrop(event) {
-  event.preventDefault();
-  event.currentTarget.classList.remove("drag-over");
-
-  const foodId = event.dataTransfer.getData("text/plain");
-  selectFood(foodId);
-}
-
-function resetMealPlate() {
-  const mealPlate = document.getElementById("mealPlate");
-  const plateText = document.getElementById("plateText");
-
-  mealPlate.classList.remove("drag-over", "has-food");
-  plateText.textContent = "把食物拖到餐盘中";
-}
-
-function handleConfirmClick() {
-  if (!selectedFoodId) {
-    return;
-  }
-
-  playerSelections.push(selectedFoodId);
-  console.log("本餐选择：", selectedFoodId);
-
-  currentSceneIndex += 1;
-
-  if (currentSceneIndex >= gameData.scene.length) {
-    showResultScreen();
-    return;
-  }
-
-  renderCurrentScene();
-}
-
-function showResultScreen() {
-  const riskResult = calculateRisk(
-    playerSelections,
-    gameData.food,
-    gameData.scene,
-    gameData.risk
-  );
-  const persona = findPersonaByRiskIndex(riskResult.RiskIndex, gameData.persona);
-
-  document.getElementById("sceneScreen").classList.add("hidden");
-  document.getElementById("resultScreen").classList.remove("hidden");
-  document.getElementById("riskIndexText").textContent =
-    `RiskIndex：${riskResult.RiskIndex.toFixed(2)}`;
-  renderPersonaResult(persona);
-
-  console.log("玩家三次选择的 food id：", playerSelections);
-  console.log("风险计算结果：", riskResult);
-  console.log("匹配到的饮食人格：", persona);
-}
-
-function findPersonaByRiskIndex(riskIndex, personas) {
-  return personas.find((persona) => {
-    return riskIndex >= persona.minRiskIndex && riskIndex < persona.maxRiskIndex;
-  }) || personas[personas.length - 1];
-}
-
-function renderPersonaResult(persona) {
-  const personaResult = document.getElementById("personaResult");
-
-  if (!persona) {
-    personaResult.textContent = "暂未匹配到饮食人格。";
-    return;
-  }
-
-  personaResult.innerHTML = "";
-
-  const name = document.createElement("h3");
-  const riskLevel = document.createElement("p");
-  const description = document.createElement("p");
-  const advice = document.createElement("p");
-
-  name.textContent = persona.name;
-  riskLevel.textContent = `风险等级：${persona.riskLevel}`;
-  description.textContent = `人格描述：${persona.description}`;
-  advice.textContent = `改善建议：${persona.advice}`;
-
-  personaResult.append(name, riskLevel, description, advice);
+  container.appendChild(errorMessage);
 }
 
 function calculateRisk(selections, foods, scenes, risks) {
@@ -300,22 +357,4 @@ function calculateRisk(selections, foods, scenes, risks) {
     Score: score,
     RiskIndex: riskIndex
   };
-}
-
-function showLoadError(error) {
-  const container = document.querySelector(".game-container");
-  const oldErrorMessage = document.querySelector(".error-message");
-  const errorMessage = document.createElement("p");
-  const fileProtocolTip = window.location.protocol === "file:"
-    ? " 请通过本地服务器打开页面后再测试。"
-    : "";
-
-  if (oldErrorMessage) {
-    oldErrorMessage.remove();
-  }
-
-  errorMessage.className = "error-message";
-  errorMessage.textContent = `数据读取失败：${error.message}${fileProtocolTip}`;
-
-  container.appendChild(errorMessage);
 }

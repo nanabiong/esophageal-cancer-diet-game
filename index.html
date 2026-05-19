@@ -8,27 +8,22 @@
 </head>
 <body>
   <main class="game-container">
-    <section id="introScreen">
+    <section id="introScreen" class="storybook-cover">
+      <p class="cover-kicker">互动绘本测试原型</p>
       <h1>食管癌饮食数感游戏</h1>
-      <p>通过轻松的互动练习，认识食管癌饮食相关的数量和选择。</p>
-      <button id="startButton" type="button">开始游戏</button>
+      <p class="cover-narration">从一个被闹钟叫醒的早晨开始，看看你的早餐会走向哪里。</p>
+      <button id="startButton" type="button">翻开第一页</button>
     </section>
 
-    <section id="sceneScreen" class="hidden">
-      <h2 id="sceneName"></h2>
-      <p id="sceneDescription"></p>
-      <div id="foodList" class="food-list"></div>
-      <div id="mealPlate" class="meal-plate">
-        <span id="plateText">把食物拖到餐盘中</span>
-      </div>
-      <button id="confirmButton" class="hidden" type="button">确认进食</button>
+    <section id="actScreen" class="act-screen hidden">
+      <div id="actViewport" class="act-viewport"></div>
     </section>
 
-    <section id="resultScreen" class="hidden">
-      <h2>结果页</h2>
-      <p>三餐选择已完成，请打开浏览器控制台查看本轮选择记录。</p>
-      <p id="riskIndexText" class="risk-index-text"></p>
-      <div id="personaResult" class="persona-result"></div>
+    <section id="actEndScreen" class="report-card hidden">
+      <p class="chapter-label">Act 1 结束</p>
+      <h2>早餐这一页先合上了</h2>
+      <p>第一幕选择已记录。请打开浏览器控制台查看 playerChoices。</p>
+      <button id="restartActButton" type="button">重新体验早餐</button>
     </section>
   </main>
 

@@ -6,7 +6,8 @@ const dataFiles = {
   uiConfig: "data/ui-config.json",
   acts: "data/acts.json",
   choiceValues: "data/choice-values.json",
-  riskTags: "data/risk-tags.json"
+  riskTags: "data/risk-tags.json",
+  personalityResults: "data/personality-results.json"
 };
 
 const TIMING = {
@@ -36,6 +37,7 @@ document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("restartActButton").addEventListener("click", () => {
     startAct("act1_breakfast");
   });
+  setupResultCardFlip();
 
   loadGameData();
 });
@@ -1000,6 +1002,9 @@ function recordChoice(scene, interactive) {
     || interactive.riskFactors
     || [];
   const orValue = choiceValue?.orValue ?? interactive.orValue ?? 1;
+  const tendencyScores = choiceValue?.tendencyScores
+    || interactive.tendencyScores
+    || {};
 
   playerChoices.push({
     actId: actState.actId,
@@ -1007,7 +1012,8 @@ function recordChoice(scene, interactive) {
     choiceId: interactive.id,
     choiceName: choiceValue?.choiceName || interactive.resultText || interactive.name,
     riskTags,
-    orValue
+    orValue,
+    tendencyScores
   });
 }
 
@@ -1045,6 +1051,7 @@ function applyChoiceValuesToList(sceneId, interactives = []) {
 
     interactive.riskTags = choiceValue.riskTags;
     interactive.orValue = choiceValue.orValue;
+    interactive.tendencyScores = choiceValue.tendencyScores || {};
     delete interactive.riskFactors;
   });
 }
@@ -1083,19 +1090,23 @@ function endAct() {
 
   document.getElementById("actScreen").classList.add("hidden");
   document.getElementById("actEndScreen").classList.remove("hidden");
-  const riskSummary = calculateChoiceRisk(playerChoices, gameData.riskTags);
+  const resultCard = document.getElementById("resultCard");
+  const riskScoreResult = calculateRiskScore(playerChoices, gameData.riskTags);
+  const dietTendencyResult = calculateDietTendency(playerChoices, gameData.personalityResults);
   const resultPayload = {
     playerChoices,
-    Chosen: riskSummary.Chosen,
-    Appear: riskSummary.Appear,
-    Exposure: riskSummary.Exposure,
-    RiskIndex: riskSummary.RiskIndex
+    riskScoreResult,
+    dietTendencyResult
   };
 
+  resultCard?.classList.remove("is-flipped");
+  renderDietTendencyResult(dietTendencyResult);
+  renderRiskScoreResult(riskScoreResult);
   document.getElementById("choicesOutput").textContent =
     JSON.stringify(resultPayload, null, 2);
-  console.log("四幕完整 playerChoices：", playerChoices);
-  console.log("正式风险统计：", resultPayload);
+  console.log("dietTendencyResult：", dietTendencyResult);
+  console.log("riskScoreResult：", riskScoreResult);
+  console.log("playerChoices：", playerChoices);
 }
 
 function getCurrentScene() {
@@ -1133,6 +1144,91 @@ function showLoadError(error) {
   if (container) {
     container.appendChild(errorMessage);
   }
+}
+
+function setupResultCardFlip() {
+  const resultCard = document.getElementById("resultCard");
+  const showRiskButton = document.getElementById("showRiskButton");
+  const showPersonalityButton = document.getElementById("showPersonalityButton");
+
+  if (!resultCard) {
+    return;
+  }
+
+  resultCard.addEventListener("click", (event) => {
+    if (event.target.closest("button")) {
+      return;
+    }
+
+    resultCard.classList.toggle("is-flipped");
+  });
+
+  resultCard.addEventListener("keydown", (event) => {
+    if (event.key !== "Enter" && event.key !== " ") {
+      return;
+    }
+
+    event.preventDefault();
+    resultCard.classList.toggle("is-flipped");
+  });
+
+  showRiskButton?.addEventListener("click", () => {
+    resultCard.classList.add("is-flipped");
+  });
+
+  showPersonalityButton?.addEventListener("click", () => {
+    resultCard.classList.remove("is-flipped");
+  });
+}
+
+function calculateRiskScore(playerChoices, riskTags) {
+  let score = 0;
+  let scoreMax = 0;
+
+  const chosenByTag = {};
+
+  playerChoices.forEach((choice) => {
+    (choice.riskTags || []).forEach((tag) => {
+      chosenByTag[tag] = (chosenByTag[tag] || 0) + 1;
+    });
+  });
+
+  const factorStats = riskTags.map((riskTag) => {
+    const tag = riskTag.tag;
+    const chosen = chosenByTag[tag] || 0;
+    const appear = Number(riskTag.appear) || 0;
+    const orValue = Number(riskTag.orValue) || 1;
+    const logOR = Number(riskTag.logOR) || 0;
+    const exposure = appear > 0 ? Math.pow(chosen / appear, 0.5) : 0;
+    const contribution = exposure * logOR;
+
+    score += contribution;
+    scoreMax += logOR;
+
+    return {
+      tag,
+      chosen,
+      appear,
+      exposure: roundNumber(exposure, 3),
+      orValue,
+      logOR,
+      contribution: roundNumber(contribution, 3)
+    };
+  });
+
+  const riskIndex = scoreMax === 0 ? 0 : (score / scoreMax) * 100;
+  const topFactors = factorStats
+    .filter((factor) => factor.chosen > 0)
+    .sort((a, b) => b.contribution - a.contribution)
+    .slice(0, 3);
+
+  return {
+    factorStats,
+    score: roundNumber(score, 3),
+    scoreMax: roundNumber(scoreMax, 3),
+    riskIndex: roundNumber(riskIndex, 1),
+    topFactors
+  };
 }
 
 function calculateChoiceRisk(choices, riskTags) {
@@ -1179,6 +1275,158 @@ function calculateChoiceRisk(choices, riskTags) {
     Score: score,
     RiskIndex: scoreMax === 0 ? 0 : (score / scoreMax) * 100
   };
+}
+
+function calculateDietTendency(playerChoices, personalityResults) {
+  const dimensionScores = {
+    L: 0,
+    V: 0,
+    C: 0,
+    K: 0,
+    A: 0,
+    G: 0,
+    O: 0,
+    D: 0
+  };
+
+  playerChoices.forEach((choice) => {
+    const choiceValue = getChoiceValue(choice.sceneId, choice.choiceId);
+    const tendencyScores = choice.tendencyScores || choiceValue?.tendencyScores || {};
+
+    Object.entries(tendencyScores).forEach(([dimension, score]) => {
+      if (dimensionScores[dimension] === undefined) {
+        return;
+      }
+
+      dimensionScores[dimension] += Number(score) || 0;
+    });
+  });
+
+  const pairResults = {
+    LV: calculateTendencyPair("L", "V", dimensionScores),
+    CK: calculateTendencyPair("C", "K", dimensionScores),
+    AG: calculateTendencyPair("A", "G", dimensionScores),
+    OD: calculateTendencyPair("O", "D", dimensionScores)
+  };
+  const basePersonalityCode = `${pairResults.LV.winner}${pairResults.CK.winner}${pairResults.AG.winner}`;
+  const rhythmCode = pairResults.OD.winner;
+  const fullPersonalityCode = `${basePersonalityCode}-${rhythmCode}`;
+  const personalityResult = personalityResults.find((result) => (
+    result.code === basePersonalityCode
+  )) || null;
+
+  return {
+    dimensionScores,
+    pairResults,
+    basePersonalityCode,
+    rhythmCode,
+    fullPersonalityCode,
+    personalityResult
+  };
+}
+
+function calculateTendencyPair(left, right, dimensionScores) {
+  const leftScore = dimensionScores[left] || 0;
+  const rightScore = dimensionScores[right] || 0;
+  const total = leftScore + rightScore;
+  const winner = rightScore > leftScore ? right : left;
+  const winningScore = winner === left ? leftScore : rightScore;
+  const percent = total === 0
+    ? 50
+    : Math.round((winningScore / total) * 100);
+
+  return {
+    left,
+    right,
+    leftScore,
+    rightScore,
+    winner,
+    percent
+  };
+}
+
+function renderDietTendencyResult(dietTendencyResult) {
+  const summaryElement = document.getElementById("dietTendencySummary");
+  const personality = dietTendencyResult.personalityResult;
+  const pairResults = dietTendencyResult.pairResults;
+  const rhythmPair = pairResults.OD;
+
+  if (!summaryElement) {
+    return;
+  }
+
+  summaryElement.innerHTML = `
+    <p class="personality-code">${dietTendencyResult.fullPersonalityCode}</p>
+    <h3>${personality?.name || "未匹配人格"}</h3>
+    <p class="personality-title">${personality?.title || dietTendencyResult.basePersonalityCode}</p>
+    <p class="rhythm-note">节奏：${getDimensionLabel(dietTendencyResult.rhythmCode)} ${dietTendencyResult.rhythmCode} ${rhythmPair.percent}%</p>
+    <p>${personality?.description || "当前人格结果缺少配置文案。"}</p>
+    ${personality?.advice ? `<p>${personality.advice}</p>` : ""}
+    <ul class="tendency-pairs">
+      ${renderTendencyPair("L ↔ V", pairResults.LV)}
+      ${renderTendencyPair("C ↔ K", pairResults.CK)}
+      ${renderTendencyPair("A ↔ G", pairResults.AG)}
+      ${renderTendencyPair("O ↔ D", pairResults.OD)}
+    </ul>
+  `;
+}
+
+function renderTendencyPair(label, pairResult) {
+  return `<li>${label}：${pairResult.winner} ${pairResult.percent}%</li>`;
+}
+
+function renderRiskScoreResult(riskScoreResult) {
+  const summaryElement = document.getElementById("riskScoreSummary");
+  const topFactorNames = riskScoreResult.topFactors.map((factor) => factor.tag);
+  const riskText = topFactorNames.length > 0
+    ? `你的风险主要来自：${topFactorNames.join("、")}。`
+    : "本次选择没有命中明显风险标签。";
+
+  if (!summaryElement) {
+    return;
+  }
+
+  summaryElement.innerHTML = `
+    <p class="risk-card-kicker">风险分数计算</p>
+    <h3>${riskScoreResult.riskIndex} / 100</h3>
+    <p class="score-line">Score: ${riskScoreResult.score} / ${riskScoreResult.scoreMax}</p>
+    <p>${riskText}</p>
+    <div class="top-factor-list">
+      ${riskScoreResult.topFactors.map(renderTopRiskFactor).join("")}
+    </div>
+    <p class="risk-disclaimer">这不是医学诊断，而是基于本次游戏选择生成的饮食风险倾向。</p>
+  `;
+}
+
+function renderTopRiskFactor(factor) {
+  return `
+    <article class="top-factor-item">
+      <h4>${factor.tag}</h4>
+      <p>Chosen / Appear：${factor.chosen} / ${factor.appear}</p>
+      <p>Exposure：${factor.exposure}</p>
+      <p>Contribution：${factor.contribution}</p>
+    </article>
+  `;
+}
+
+function getDimensionLabel(code) {
+  const labels = {
+    L: "温和型",
+    V: "刺激型",
+    C: "柔软型",
+    K: "硬核型",
+    A: "新鲜派",
+    G: "边缘派",
+    O: "仪式型",
+    D: "冲刺型"
+  };
+
+  return labels[code] || code;
+}
+
+function roundNumber(value, digits) {
+  const base = 10 ** digits;
+  return Math.round(value * base) / base;
 }
 
 function calculateRisk(selections, foods, scenes, risks) {

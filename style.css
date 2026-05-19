@@ -878,9 +878,59 @@ button:disabled:hover {
   transform: translateX(-50%);
 }
 
+.report-card {
+  justify-content: flex-start;
+  overflow-y: auto;
+}
+
+.result-card {
+  width: min(760px, calc(100vw - 32px));
+  min-height: 430px;
+  margin: 4px 0 18px;
+  perspective: 1200px;
+  cursor: pointer;
+}
+
+.result-card-inner {
+  position: relative;
+  width: 100%;
+  min-height: 430px;
+  transition: transform 0.6s ease;
+  transform-style: preserve-3d;
+}
+
+.result-card.is-flipped .result-card-inner {
+  transform: rotateY(180deg);
+}
+
+.result-card-face {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 24px;
+  border: 2px solid #2f2a25;
+  border-radius: 20px;
+  background: #fffaf0;
+  text-align: left;
+  box-shadow: 8px 10px 0 rgba(47, 42, 37, 0.13);
+  backface-visibility: hidden;
+}
+
+.result-card-back {
+  transform: rotateY(180deg);
+}
+
+.result-card-face button {
+  align-self: center;
+  margin-top: 12px;
+}
+
 .choices-output {
   width: min(100%, 720px);
-  max-height: 300px;
+  max-height: 150px;
   overflow: auto;
   padding: 16px;
   border: 2px solid #2f2a25;
@@ -888,6 +938,87 @@ button:disabled:hover {
   background: #fffaf0;
   text-align: left;
   white-space: pre-wrap;
+}
+
+.diet-tendency-summary {
+  width: 100%;
+  max-height: 330px;
+  margin: 0;
+  padding: 0;
+  overflow: auto;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  text-align: left;
+  box-shadow: none;
+}
+
+.diet-tendency-summary h3,
+.risk-score-summary h3 {
+  margin: 0 0 8px;
+  font-size: 30px;
+}
+
+.diet-tendency-summary p,
+.risk-score-summary p {
+  margin: 0 0 8px;
+  line-height: 1.6;
+}
+
+.personality-code {
+  display: inline-block;
+  padding: 4px 10px;
+  border: 1px dashed #2f2a25;
+  border-radius: 999px;
+  background: #fff1bd;
+  font-weight: 700;
+}
+
+.personality-title,
+.rhythm-note {
+  font-weight: 700;
+}
+
+.tendency-pairs {
+  margin: 10px 0;
+  padding-left: 20px;
+  line-height: 1.7;
+}
+
+.risk-score-summary {
+  width: 100%;
+  max-height: 330px;
+  overflow: auto;
+}
+
+.risk-card-kicker,
+.score-line,
+.risk-disclaimer {
+  font-weight: 700;
+}
+
+.top-factor-list {
+  display: grid;
+  gap: 10px;
+  width: 100%;
+  margin: 12px 0;
+}
+
+.top-factor-item {
+  padding: 10px 12px;
+  border: 1px dashed #2f2a25;
+  border-radius: 12px;
+  background: #fff4d8;
+}
+
+.top-factor-item h4 {
+  margin: 0 0 6px;
+  font-size: 17px;
+}
+
+.top-factor-item p {
+  margin: 0 0 3px;
+  line-height: 1.4;
 }
 
 @media (max-width: 760px) {

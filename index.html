@@ -21,8 +21,21 @@
 
     <section id="actEndScreen" class="report-card hidden">
       <p class="chapter-label">临时结果页</p>
-      <h2>四幕流程已走完</h2>
-      <p>所有选择已记录。也可以打开浏览器控制台查看 playerChoices。</p>
+      <h2>你的饮食结算卡</h2>
+      <p>点击卡片，翻开背面查看风险来源。</p>
+      <div id="resultCard" class="result-card" role="button" tabindex="0" aria-label="点击翻转结果卡片">
+        <div class="result-card-inner">
+          <section class="result-card-face result-card-front" aria-label="饮食人格结果">
+            <div id="dietTendencySummary" class="diet-tendency-summary"></div>
+            <button id="showRiskButton" type="button">查看风险来源</button>
+          </section>
+
+          <section class="result-card-face result-card-back" aria-label="风险分数结果">
+            <div id="riskScoreSummary" class="risk-score-summary"></div>
+            <button id="showPersonalityButton" type="button">返回人格卡</button>
+          </section>
+        </div>
+      </div>
       <pre id="choicesOutput" class="choices-output"></pre>
       <button id="restartActButton" type="button">重新开始四幕流程</button>
     </section>

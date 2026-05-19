@@ -4,7 +4,9 @@ const dataFiles = {
   risk: "data/risk.json",
   persona: "data/persona.json",
   uiConfig: "data/ui-config.json",
-  acts: "data/acts.json"
+  acts: "data/acts.json",
+  choiceValues: "data/choice-values.json",
+  riskTags: "data/risk-tags.json"
 };
 
 const TIMING = {
@@ -56,6 +58,7 @@ async function loadGameData() {
     );
 
     gameData = Object.fromEntries(entries);
+    applyChoiceValuesToActs();
     console.log("配表读取成功：", gameData);
     startButton.disabled = false;
     startButton.textContent = "翻开第一页";
@@ -618,6 +621,7 @@ function renderDragToSlotScene(scene, sceneElement) {
 
 function renderEatingClicksScene(scene, sceneElement) {
   let finishedCount = 0;
+  let sceneStartTime = null;
 
   const bubble = document.createElement("p");
   const world = document.createElement("div");
@@ -646,12 +650,18 @@ function renderEatingClicksScene(scene, sceneElement) {
         return;
       }
 
+      if (sceneStartTime === null) {
+        sceneStartTime = performance.now();
+      }
+
       clicks += 1;
-      recordChoice(scene, {
-        ...interactive,
-        id: `${interactive.id}_${clicks}`,
-        resultText: `${interactive.resultText} ${clicks}/${requiredClicks}`
-      });
+      if (!scene.timingChoices) {
+        recordChoice(scene, {
+          ...interactive,
+          id: `${interactive.id}_${clicks}`,
+          resultText: `${interactive.resultText} ${clicks}/${requiredClicks}`
+        });
+      }
       feedbackNote.textContent = interactive.resultText;
       feedbackNote.classList.add("visible");
       objectElement.textContent = `${interactive.name} ${clicks} / ${requiredClicks}`;
@@ -664,6 +674,7 @@ function renderEatingClicksScene(scene, sceneElement) {
 
       if (finishedCount >= scene.interactives.length) {
         actState.step = `${scene.sceneId}:selected`;
+        recordTimedEatingChoice(scene, sceneStartTime || performance.now());
         window.setTimeout(() => {
           goToNextScene(scene.transition);
         }, TIMING.feedbackHold);
@@ -679,7 +690,32 @@ function renderEatingClicksScene(scene, sceneElement) {
     interactiveLayer.classList.remove("is-waiting");
     interactiveLayer.classList.add("is-ready");
     actState.step = `${scene.sceneId}:ready`;
+    sceneStartTime = performance.now();
   }, TIMING.interactivesDelay);
+}
+
+function recordTimedEatingChoice(scene, sceneStartTime) {
+  if (!scene.timingChoices) {
+    return;
+  }
+
+  const elapsedSeconds = (performance.now() - sceneStartTime) / 1000;
+  const timingChoice = scene.timingChoices.find((choice) => {
+    const minSeconds = choice.minSeconds ?? 0;
+    const maxSeconds = choice.maxSeconds ?? Number.POSITIVE_INFINITY;
+    return elapsedSeconds >= minSeconds && elapsedSeconds < maxSeconds;
+  });
+
+  if (!timingChoice) {
+    return;
+  }
+
+  recordChoice(scene, {
+    id: timingChoice.choiceId,
+    name: timingChoice.choiceName,
+    resultText: timingChoice.choiceName
+  });
+  console.log(`Scene ${scene.sceneId} 完成用时：${elapsedSeconds.toFixed(2)}s`);
 }
 
 function renderAreaChoiceGridScene(scene, sceneElement) {
@@ -958,12 +994,58 @@ function handleActChoice(scene, interactive, objectElement, feedbackNote) {
 }
 
 function recordChoice(scene, interactive) {
+  const choiceValue = getChoiceValue(scene.sceneId, interactive.id);
+  const riskTags = choiceValue?.riskTags
+    || interactive.riskTags
+    || interactive.riskFactors
+    || [];
+  const orValue = choiceValue?.orValue ?? interactive.orValue ?? 1;
+
   playerChoices.push({
     actId: actState.actId,
     sceneId: scene.sceneId,
     choiceId: interactive.id,
-    choiceName: interactive.resultText || interactive.name,
-    riskFactors: interactive.riskFactors || []
+    choiceName: choiceValue?.choiceName || interactive.resultText || interactive.name,
+    riskTags,
+    orValue
+  });
+}
+
+function getChoiceValue(sceneId, choiceId) {
+  return gameData?.choiceValues?.find((choiceValue) => (
+    choiceValue.sceneId === sceneId && choiceValue.choiceId === choiceId
+  ));
+}
+
+function applyChoiceValuesToActs() {
+  if (!gameData?.acts || !gameData?.choiceValues) {
+    return;
+  }
+
+  gameData.acts.forEach((act) => {
+    act.scenes.forEach((scene) => {
+      applyChoiceValuesToList(scene.sceneId, scene.interactives);
+
+      if (scene.areas) {
+        scene.areas.forEach((area) => {
+          applyChoiceValuesToList(scene.sceneId, area.options);
+        });
+      }
+    });
+  });
+}
+
+function applyChoiceValuesToList(sceneId, interactives = []) {
+  interactives.forEach((interactive) => {
+    const choiceValue = getChoiceValue(sceneId, interactive.id);
+
+    if (!choiceValue) {
+      return;
+    }
+
+    interactive.riskTags = choiceValue.riskTags;
+    interactive.orValue = choiceValue.orValue;
+    delete interactive.riskFactors;
   });
 }
 
@@ -1001,9 +1083,19 @@ function endAct() {
 
   document.getElementById("actScreen").classList.add("hidden");
   document.getElementById("actEndScreen").classList.remove("hidden");
+  const riskSummary = calculateChoiceRisk(playerChoices, gameData.riskTags);
+  const resultPayload = {
+    playerChoices,
+    Chosen: riskSummary.Chosen,
+    Appear: riskSummary.Appear,
+    Exposure: riskSummary.Exposure,
+    RiskIndex: riskSummary.RiskIndex
+  };
+
   document.getElementById("choicesOutput").textContent =
-    JSON.stringify(playerChoices, null, 2);
+    JSON.stringify(resultPayload, null, 2);
   console.log("四幕完整 playerChoices：", playerChoices);
+  console.log("正式风险统计：", resultPayload);
 }
 
 function getCurrentScene() {
@@ -1041,6 +1133,52 @@ function showLoadError(error) {
   if (container) {
     container.appendChild(errorMessage);
   }
+}
+
+function calculateChoiceRisk(choices, riskTags) {
+  const chosen = {};
+  const appear = {};
+  const exposure = {};
+  let score = 0;
+  let scoreMax = 0;
+
+  riskTags.forEach((riskTag) => {
+    chosen[riskTag.tag] = 0;
+    appear[riskTag.tag] = Number(riskTag.appear) || 0;
+    exposure[riskTag.tag] = 0;
+  });
+
+  choices.forEach((choice) => {
+    (choice.riskTags || []).forEach((tag) => {
+      if (chosen[tag] === undefined) {
+        chosen[tag] = 0;
+        appear[tag] = 0;
+        exposure[tag] = 0;
+      }
+
+      chosen[tag] += 1;
+    });
+  });
+
+  riskTags.forEach((riskTag) => {
+    const tag = riskTag.tag;
+    const logOr = Number(riskTag.logOR) || 0;
+
+    exposure[tag] = appear[tag] === 0
+      ? 0
+      : Math.sqrt(chosen[tag] / appear[tag]);
+
+    score += exposure[tag] * logOr;
+    scoreMax += logOr;
+  });
+
+  return {
+    Chosen: chosen,
+    Appear: appear,
+    Exposure: exposure,
+    Score: score,
+    RiskIndex: scoreMax === 0 ? 0 : (score / scoreMax) * 100
+  };
 }
 
 function calculateRisk(selections, foods, scenes, risks) {

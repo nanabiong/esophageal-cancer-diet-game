@@ -1,0 +1,474 @@
+[
+  {
+    "sceneId": "act1_scene_1_2",
+    "choiceId": "baguette_cheese",
+    "choiceName": "切片法棍配奶酪",
+    "riskTags": ["硬质饮食"],
+    "orExpression": "2.107",
+    "orValue": 2.107
+  },
+  {
+    "sceneId": "act1_scene_1_2",
+    "choiceId": "hot_claypot_porridge",
+    "choiceName": "热气腾腾的砂锅粥",
+    "riskTags": ["热烫饮食"],
+    "orExpression": "1.931",
+    "orValue": 1.931
+  },
+  {
+    "sceneId": "act1_scene_1_2",
+    "choiceId": "egg_ham_sandwich",
+    "choiceName": "鸡蛋火腿三明治",
+    "riskTags": [],
+    "orExpression": "1",
+    "orValue": 1
+  },
+  {
+    "sceneId": "act1_scene_1_2",
+    "choiceId": "front_door_no_breakfast",
+    "choiceName": "不吃早餐",
+    "riskTags": ["不规律进食"],
+    "orExpression": "1.779",
+    "orValue": 1.779
+  },
+  {
+    "sceneId": "act1_scene_1_3",
+    "choiceId": "walk_and_eat",
+    "choiceName": "边走边吃快速解决",
+    "riskTags": ["快速进食"],
+    "orExpression": "1.917",
+    "orValue": 1.917
+  },
+  {
+    "sceneId": "act1_scene_1_3",
+    "choiceId": "sit_and_eat",
+    "choiceName": "坐下慢慢吃",
+    "riskTags": [],
+    "orExpression": "1",
+    "orValue": 1
+  },
+  {
+    "sceneId": "act1_scene_1_3",
+    "choiceId": "quick_bites",
+    "choiceName": "吃两口就赶紧出门",
+    "riskTags": ["不规律进食"],
+    "orExpression": "1.779",
+    "orValue": 1.779
+  },
+  {
+    "sceneId": "act1_scene_1_4",
+    "choiceId": "hot_ceylon_tea",
+    "choiceName": "热气腾腾的锡兰红茶",
+    "riskTags": ["热茶"],
+    "orExpression": "2.04",
+    "orValue": 2.04
+  },
+  {
+    "sceneId": "act1_scene_1_4",
+    "choiceId": "room_temp_milk",
+    "choiceName": "常温牛奶",
+    "riskTags": [],
+    "orExpression": "1",
+    "orValue": 1
+  },
+  {
+    "sceneId": "act1_scene_1_4",
+    "choiceId": "iced_coffee",
+    "choiceName": "冰咖啡",
+    "riskTags": [],
+    "orExpression": "1",
+    "orValue": 1
+  },
+  {
+    "sceneId": "act1_scene_1_4",
+    "choiceId": "bus_door_no_drink",
+    "choiceName": "不买了",
+    "riskTags": [],
+    "orExpression": "1",
+    "orValue": 1
+  },
+  {
+    "sceneId": "act2_scene_2_1",
+    "choiceId": "fried_chicken_burger_set",
+    "choiceName": "炸鸡和汉堡套餐",
+    "riskTags": ["油炸饮食"],
+    "orExpression": "1.574",
+    "orValue": 1.574
+  },
+  {
+    "sceneId": "act2_scene_2_1",
+    "choiceId": "sausage_healthy_bibimbap",
+    "choiceName": "烤肠健康拌饭",
+    "riskTags": ["加工肉类"],
+    "orExpression": "1.41",
+    "orValue": 1.41
+  },
+  {
+    "sceneId": "act2_scene_2_1",
+    "choiceId": "kimchi_beef_spicy_ramen",
+    "choiceName": "泡菜牛肉辛拉面",
+    "riskTags": ["高盐饮食", "腌制饮食"],
+    "orExpression": "1.547*1.462",
+    "orValue": 2.261714
+  },
+  {
+    "sceneId": "act2_scene_2_1",
+    "choiceId": "rainbow_bento",
+    "choiceName": "七彩便当",
+    "riskTags": [],
+    "orExpression": "1",
+    "orValue": 1
+  },
+  {
+    "sceneId": "act2_scene_2_2",
+    "choiceId": "eat_in_busy_cafeteria",
+    "choiceName": "在人来人往的食堂吃",
+    "riskTags": ["快速进食"],
+    "orExpression": "1.917",
+    "orValue": 1.917
+  },
+  {
+    "sceneId": "act2_scene_2_2",
+    "choiceId": "eat_with_friends",
+    "choiceName": "在餐桌上和朋友吃",
+    "riskTags": [],
+    "orExpression": "1",
+    "orValue": 1
+  },
+  {
+    "sceneId": "act2_scene_2_2",
+    "choiceId": "eat_at_work_desk",
+    "choiceName": "一边工作一边吃",
+    "riskTags": ["不规律进食"],
+    "orExpression": "1.779",
+    "orValue": 1.779
+  },
+  {
+    "sceneId": "act2_scene_2_2",
+    "choiceId": "eat_on_outdoor_bench",
+    "choiceName": "户外长椅上慢慢吃",
+    "riskTags": [],
+    "orExpression": "1",
+    "orValue": 1
+  },
+  {
+    "sceneId": "act2_scene_2_3",
+    "choiceId": "stewed_pear_white_tea",
+    "choiceName": "炖梨老白茶",
+    "riskTags": ["热茶"],
+    "orExpression": "2.04",
+    "orValue": 2.04
+  },
+  {
+    "sceneId": "act2_scene_2_3",
+    "choiceId": "spicy_braised_snack",
+    "choiceName": "辣卤味零食",
+    "riskTags": ["高盐饮食", "辛辣饮食"],
+    "orExpression": "1.547*1.523",
+    "orValue": 2.355081
+  },
+  {
+    "sceneId": "act2_scene_2_3",
+    "choiceId": "latte",
+    "choiceName": "拿铁",
+    "riskTags": [],
+    "orExpression": "1",
+    "orValue": 1
+  },
+  {
+    "sceneId": "act2_scene_2_3",
+    "choiceId": "lemon_soda",
+    "choiceName": "柠檬苏打水",
+    "riskTags": [],
+    "orExpression": "1",
+    "orValue": 1
+  },
+  {
+    "sceneId": "act2_scene_2_3",
+    "choiceId": "betel_nut",
+    "choiceName": "槟榔",
+    "riskTags": ["槟榔"],
+    "orExpression": "3.05",
+    "orValue": 3.05
+  },
+  {
+    "sceneId": "act2_scene_2_3",
+    "choiceId": "spicy_hot_oden",
+    "choiceName": "又辣又烫的关东煮",
+    "riskTags": ["热烫饮食", "辛辣饮食"],
+    "orExpression": "1.931*1.523",
+    "orValue": 2.940913
+  },
+  {
+    "sceneId": "act2_scene_2_3",
+    "choiceId": "parfait_cup",
+    "choiceName": "芭菲杯",
+    "riskTags": [],
+    "orExpression": "1",
+    "orValue": 1
+  },
+  {
+    "sceneId": "act3_scene_3_1",
+    "choiceId": "scalding_tripe",
+    "choiceName": "滚烫的毛肚",
+    "riskTags": ["热烫饮食", "辛辣饮食"],
+    "orExpression": "1.931*1.523",
+    "orValue": 2.940913
+  },
+  {
+    "sceneId": "act3_scene_3_1",
+    "choiceId": "small_sausage",
+    "choiceName": "小腊肠",
+    "riskTags": ["腌制饮食", "高盐饮食"],
+    "orExpression": "1.462*1.547",
+    "orValue": 2.261714
+  },
+  {
+    "sceneId": "act3_scene_3_1",
+    "choiceId": "clear_soup_vegetables",
+    "choiceName": "清汤锅里的蔬菜",
+    "riskTags": [],
+    "orExpression": "1",
+    "orValue": 1
+  },
+  {
+    "sceneId": "act3_scene_3_1",
+    "choiceId": "luncheon_meat",
+    "choiceName": "午餐肉",
+    "riskTags": ["加工肉类"],
+    "orExpression": "1.41",
+    "orValue": 1.41
+  },
+  {
+    "sceneId": "act3_scene_3_1",
+    "choiceId": "fried_bean_curd_stick",
+    "choiceName": "响铃卷、油条",
+    "riskTags": ["油炸饮食"],
+    "orExpression": "1.574",
+    "orValue": 1.574
+  },
+  {
+    "sceneId": "act3_scene_3_1",
+    "choiceId": "crispy_meat_cartilage",
+    "choiceName": "带肉脆骨",
+    "riskTags": ["硬质饮食"],
+    "orExpression": "2.107",
+    "orValue": 2.107
+  },
+  {
+    "sceneId": "act3_scene_3_2",
+    "choiceId": "whisky",
+    "choiceName": "威士忌",
+    "riskTags": ["高量饮酒"],
+    "orExpression": "5.38",
+    "orValue": 5.38
+  },
+  {
+    "sceneId": "act3_scene_3_2",
+    "choiceId": "beer",
+    "choiceName": "啤酒",
+    "riskTags": ["饮酒"],
+    "orExpression": "1.550/2.32",
+    "orValue": 1.55
+  },
+  {
+    "sceneId": "act3_scene_3_2",
+    "choiceId": "soft_drink",
+    "choiceName": "饮料",
+    "riskTags": [],
+    "orExpression": "1",
+    "orValue": 1
+  },
+  {
+    "sceneId": "act3_scene_3_2",
+    "choiceId": "lemon_water_hotpot",
+    "choiceName": "柠檬水",
+    "riskTags": [],
+    "orExpression": "1",
+    "orValue": 1
+  },
+  {
+    "sceneId": "act3_scene_3_3",
+    "choiceId": "hotpot_eating_0_7s",
+    "choiceName": "所有交互结束所用时间 0-7s",
+    "riskTags": ["热烫饮食", "快速进食"],
+    "orExpression": "1.931*1.917",
+    "orValue": 3.701727
+  },
+  {
+    "sceneId": "act3_scene_3_3",
+    "choiceId": "hotpot_eating_7_10s",
+    "choiceName": "所有交互结束所用时间 7-10s",
+    "riskTags": ["快速进食"],
+    "orExpression": "1.917",
+    "orValue": 1.917
+  },
+  {
+    "sceneId": "act3_scene_3_3",
+    "choiceId": "hotpot_eating_over_10s",
+    "choiceName": "所有交互结束所用时间 10s以上",
+    "riskTags": [],
+    "orExpression": "1",
+    "orValue": 1
+  },
+  {
+    "sceneId": "act4_scene_4_1",
+    "choiceId": "spicy_fried_chicken",
+    "choiceName": "香辣炸鸡",
+    "riskTags": ["油炸饮食", "辛辣饮食"],
+    "orExpression": "1.574*1.523",
+    "orValue": 2.397202
+  },
+  {
+    "sceneId": "act4_scene_4_1",
+    "choiceId": "scalding_claypot_rice_noodle",
+    "choiceName": "烫口的砂锅米线",
+    "riskTags": ["热烫饮食"],
+    "orExpression": "1.931",
+    "orValue": 1.931
+  },
+  {
+    "sceneId": "act4_scene_4_1",
+    "choiceId": "smoked_bacon_fried_rice",
+    "choiceName": "熏腊肉炒饭",
+    "riskTags": ["加工肉类", "高盐饮食"],
+    "orExpression": "1.41*1.547",
+    "orValue": 2.18127
+  },
+  {
+    "sceneId": "act4_scene_4_1",
+    "choiceId": "late_area_1_none",
+    "choiceName": "不要",
+    "riskTags": [],
+    "orExpression": "1",
+    "orValue": 1
+  },
+  {
+    "sceneId": "act4_scene_4_1",
+    "choiceId": "pickled_fish",
+    "choiceName": "腌鱼",
+    "riskTags": ["腌制饮食"],
+    "orExpression": "1.462",
+    "orValue": 1.462
+  },
+  {
+    "sceneId": "act4_scene_4_1",
+    "choiceId": "bacon_sausage",
+    "choiceName": "腊肉香肠",
+    "riskTags": ["加工肉类"],
+    "orExpression": "1.41",
+    "orValue": 1.41
+  },
+  {
+    "sceneId": "act4_scene_4_1",
+    "choiceId": "late_area_2_none",
+    "choiceName": "不要",
+    "riskTags": [],
+    "orExpression": "1",
+    "orValue": 1
+  },
+  {
+    "sceneId": "act4_scene_4_1",
+    "choiceId": "late_beer",
+    "choiceName": "啤酒",
+    "riskTags": ["饮酒"],
+    "orExpression": "1.55",
+    "orValue": 1.55
+  },
+  {
+    "sceneId": "act4_scene_4_1",
+    "choiceId": "late_water",
+    "choiceName": "水",
+    "riskTags": [],
+    "orExpression": "1",
+    "orValue": 1
+  },
+  {
+    "sceneId": "act4_scene_4_1",
+    "choiceId": "late_milk_tea",
+    "choiceName": "奶茶",
+    "riskTags": [],
+    "orExpression": "1",
+    "orValue": 1
+  },
+  {
+    "sceneId": "act4_scene_4_1",
+    "choiceId": "late_area_3_none",
+    "choiceName": "不要",
+    "riskTags": [],
+    "orExpression": "1",
+    "orValue": 1
+  },
+  {
+    "sceneId": "act4_scene_4_1",
+    "choiceId": "late_fruit",
+    "choiceName": "水果",
+    "riskTags": [],
+    "orExpression": "1",
+    "orValue": 1
+  },
+  {
+    "sceneId": "act4_scene_4_1",
+    "choiceId": "late_pickles",
+    "choiceName": "咸菜",
+    "riskTags": ["高盐饮食"],
+    "orExpression": "1.547",
+    "orValue": 1.547
+  },
+  {
+    "sceneId": "act4_scene_4_1",
+    "choiceId": "late_area_4_none",
+    "choiceName": "不要",
+    "riskTags": [],
+    "orExpression": "1",
+    "orValue": 1
+  },
+  {
+    "sceneId": "act4_scene_4_2",
+    "choiceId": "reheat_tomorrow",
+    "choiceName": "明天热一热继续吃",
+    "riskTags": ["霉变饮食"],
+    "orExpression": "1.564",
+    "orValue": 1.564
+  },
+  {
+    "sceneId": "act4_scene_4_2",
+    "choiceId": "throw_away",
+    "choiceName": "直接倒掉",
+    "riskTags": [],
+    "orExpression": "1",
+    "orValue": 1
+  },
+  {
+    "sceneId": "act4_scene_4_2",
+    "choiceId": "leave_in_fridge",
+    "choiceName": "放着再说",
+    "riskTags": ["霉变饮食"],
+    "orExpression": "1.564",
+    "orValue": 1.564
+  },
+  {
+    "sceneId": "act4_scene_4_3",
+    "choiceId": "keep_working_late",
+    "choiceName": "继续熬夜工作",
+    "riskTags": ["不规则生活"],
+    "orExpression": "1",
+    "orValue": 1
+  },
+  {
+    "sceneId": "act4_scene_4_3",
+    "choiceId": "scroll_phone_in_bed",
+    "choiceName": "躺下刷会儿手机",
+    "riskTags": ["反流倾向"],
+    "orExpression": "1",
+    "orValue": 1
+  },
+  {
+    "sceneId": "act4_scene_4_3",
+    "choiceId": "shower_and_sleep",
+    "choiceName": "休息一会儿就睡觉",
+    "riskTags": [],
+    "orExpression": "1",
+    "orValue": 1
+  }
+]

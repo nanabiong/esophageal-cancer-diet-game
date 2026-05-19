@@ -1,0 +1,98 @@
+[
+  {
+    "tag": "不规律进食",
+    "appear": 3,
+    "orValue": 1.779,
+    "logOR": 0.25
+  },
+  {
+    "tag": "高盐饮食",
+    "appear": 5,
+    "orValue": 1.547,
+    "logOR": 0.189
+  },
+  {
+    "tag": "加工肉类",
+    "appear": 4,
+    "orValue": 1.41,
+    "logOR": 0.149
+  },
+  {
+    "tag": "快速进食",
+    "appear": 4,
+    "orValue": 1.917,
+    "logOR": 0.283
+  },
+  {
+    "tag": "霉变饮食",
+    "appear": 2,
+    "orValue": 1.564,
+    "logOR": 0.194
+  },
+  {
+    "tag": "热茶",
+    "appear": 2,
+    "orValue": 2.04,
+    "logOR": 0.31
+  },
+  {
+    "tag": "热烫饮食",
+    "appear": 5,
+    "orValue": 1.931,
+    "logOR": 0.286
+  },
+  {
+    "tag": "辛辣饮食",
+    "appear": 4,
+    "orValue": 1.523,
+    "logOR": 0.183
+  },
+  {
+    "tag": "腌制饮食",
+    "appear": 3,
+    "orValue": 1.462,
+    "logOR": 0.165
+  },
+  {
+    "tag": "饮酒",
+    "appear": 2,
+    "orValue": 1.55,
+    "logOR": 0.19
+  },
+  {
+    "tag": "高量饮酒",
+    "appear": 1,
+    "orValue": 5.38,
+    "logOR": 0.731
+  },
+  {
+    "tag": "硬质饮食",
+    "appear": 2,
+    "orValue": 2.107,
+    "logOR": 0.324
+  },
+  {
+    "tag": "油炸饮食",
+    "appear": 3,
+    "orValue": 1.574,
+    "logOR": 0.197
+  },
+  {
+    "tag": "槟榔",
+    "appear": 1,
+    "orValue": 3.05,
+    "logOR": 0.484
+  },
+  {
+    "tag": "不规则生活",
+    "appear": 1,
+    "orValue": 1,
+    "logOR": 0
+  },
+  {
+    "tag": "反流倾向",
+    "appear": 1,
+    "orValue": 1,
+    "logOR": 0
+  }
+]

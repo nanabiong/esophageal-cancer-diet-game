@@ -554,7 +554,26 @@
         "transition": "fadeEnd",
         "nextScene": null,
         "background": "hotpot",
-        "chapter": "Act 3 / Scene 3-3"
+        "chapter": "Act 3 / Scene 3-3",
+        "timingChoices": [
+          {
+            "choiceId": "hotpot_eating_0_7s",
+            "choiceName": "所有交互结束所用时间 0-7s",
+            "minSeconds": 0,
+            "maxSeconds": 7
+          },
+          {
+            "choiceId": "hotpot_eating_7_10s",
+            "choiceName": "所有交互结束所用时间 7-10s",
+            "minSeconds": 7,
+            "maxSeconds": 10
+          },
+          {
+            "choiceId": "hotpot_eating_over_10s",
+            "choiceName": "所有交互结束所用时间 10s以上",
+            "minSeconds": 10
+          }
+        ]
       }
     ]
   },

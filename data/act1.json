@@ -1,130 +1,166 @@
 {
-  "id": "act1",
+  "id": "act1_breakfast",
   "title": "Act 1 早餐",
-  "nextActId": "act2",
+  "startScene": "act1_scene_1_1",
+  "nextActId": "act2_lunch",
   "scenes": [
     {
       "id": "act1_scene_1_1",
-      "chapter": "Act 1 / Scene 1-1",
       "name": "幕1封面 / 闹钟",
-      "type": "wake",
-      "background": "dark",
       "narration": "闹钟在黑暗里一下一下响起。",
-      "instruction": "点击任意区域 5 次，让手机屏幕慢慢亮起来。",
+      "background": "dark",
+      "transition": "vertical",
+      "nextScene": "act1_scene_1_2",
+      "chapter": "Act 1 / Scene 1-1",
+      "sceneType": "wake",
       "wakeClickTarget": 5,
       "phoneTime": "07:42",
-      "transition": "vertical"
+      "interactives": [
+        {
+          "id": "wake_phone_screen",
+          "name": "手机闹钟",
+          "type": "wake",
+          "riskFactors": [],
+          "hoverText": "点击 5 次，让手机屏幕慢慢亮起来。",
+          "resultText": "手机时间逐渐显现"
+        }
+      ]
     },
     {
       "id": "act1_scene_1_2",
-      "chapter": "Act 1 / Scene 1-2",
       "name": "家门口餐桌 / 厨房",
-      "type": "choice",
-      "background": "kitchen",
       "narration": "再不走要迟到了，早饭就选它吧！",
+      "background": "kitchen",
       "transition": "horizontal",
-      "objects": [
+      "nextScene": "act1_scene_1_3",
+      "chapter": "Act 1 / Scene 1-2",
+      "sceneType": "choice",
+      "interactives": [
         {
           "id": "baguette_cheese",
-          "label": "切片法棍配奶酪",
-          "value": "切片法棍配奶酪",
-          "kind": "food",
+          "name": "切片法棍配奶酪",
+          "type": "food",
+          "riskFactors": ["hard_texture"],
+          "hoverText": "质地偏硬，赶时间时可能不太容易慢慢咀嚼。",
+          "resultText": "选择了切片法棍配奶酪",
           "shape": "long-bread"
         },
         {
           "id": "hot_claypot_porridge",
-          "label": "热气腾腾的砂锅粥",
-          "value": "热气腾腾的砂锅粥",
-          "kind": "food",
+          "name": "热气腾腾的砂锅粥",
+          "type": "food",
+          "riskFactors": ["high_temperature", "soft_texture"],
+          "hoverText": "粥很软，但刚出锅时温度可能偏高。",
+          "resultText": "选择了热气腾腾的砂锅粥",
           "shape": "hot-bowl"
         },
         {
           "id": "egg_ham_sandwich",
-          "label": "鸡蛋火腿三明治",
-          "value": "鸡蛋火腿三明治",
-          "kind": "food",
+          "name": "鸡蛋火腿三明治",
+          "type": "food",
+          "riskFactors": ["high_protein", "high_salt"],
+          "hoverText": "蛋白质较丰富，但火腿可能带来较高盐分。",
+          "resultText": "选择了鸡蛋火腿三明治",
           "shape": "sandwich"
         },
         {
           "id": "front_door_no_breakfast",
-          "label": "大门",
-          "value": "不吃早餐",
-          "kind": "door",
+          "name": "大门",
+          "type": "skip",
+          "riskFactors": ["low_nutrition"],
+          "hoverText": "直接出门，记录为不吃早餐。",
+          "resultText": "不吃早餐",
           "shape": "door"
         }
       ]
     },
     {
       "id": "act1_scene_1_3",
-      "chapter": "Act 1 / Scene 1-3",
       "name": "家门口餐桌 / 厨房",
-      "type": "choice",
-      "background": "kitchen",
       "narration": "要怎么吃才好呢？",
+      "background": "kitchen",
       "transition": "vertical",
+      "nextScene": "act1_scene_1_4",
+      "chapter": "Act 1 / Scene 1-3",
+      "sceneType": "choice",
       "placementText": "食物被放到了你选择的位置。",
-      "objects": [
+      "interactives": [
         {
           "id": "walk_and_eat",
-          "label": "餐巾和包",
-          "value": "边走边吃快速解决",
-          "kind": "habit",
+          "name": "餐巾和包",
+          "type": "habit",
+          "riskFactors": ["low_nutrition"],
+          "hoverText": "边走边吃，容易吃得很快。",
+          "resultText": "边走边吃快速解决",
           "shape": "bag"
         },
         {
           "id": "sit_and_eat",
-          "label": "椅子、水杯和餐盘",
-          "value": "坐下慢慢吃",
-          "kind": "habit",
+          "name": "椅子、水杯和餐盘",
+          "type": "habit",
+          "riskFactors": [],
+          "hoverText": "坐下来慢慢吃，留一点时间给身体。",
+          "resultText": "坐下慢慢吃",
           "shape": "table-seat"
         },
         {
           "id": "quick_bites",
-          "label": "门口椅子",
-          "value": "吃两口就赶紧出门",
-          "kind": "habit",
+          "name": "门口椅子",
+          "type": "habit",
+          "riskFactors": ["low_nutrition"],
+          "hoverText": "只吃两口就出门，早餐摄入可能不足。",
+          "resultText": "吃两口就赶紧出门",
           "shape": "small-chair"
         }
       ]
     },
     {
       "id": "act1_scene_1_4",
-      "chapter": "Act 1 / Scene 1-4",
       "name": "公交站旁边的小店",
-      "type": "choice",
-      "background": "bus-stop",
       "narration": "公交车旁边可以再买些喝的。",
+      "background": "bus-stop",
       "transition": "fadeEnd",
+      "nextScene": null,
+      "chapter": "Act 1 / Scene 1-4",
+      "sceneType": "choice",
       "busLeaves": true,
-      "objects": [
+      "interactives": [
         {
           "id": "hot_ceylon_tea",
-          "label": "热气腾腾的锡兰红茶",
-          "value": "热气腾腾的锡兰红茶",
-          "kind": "drink",
+          "name": "热气腾腾的锡兰红茶",
+          "type": "drink",
+          "riskFactors": ["high_temperature"],
+          "hoverText": "热饮需要放凉一点再喝。",
+          "resultText": "买了热气腾腾的锡兰红茶",
           "shape": "hot-cup",
           "disappearOnSelect": true
         },
         {
           "id": "room_temp_milk",
-          "label": "常温牛奶",
-          "value": "常温牛奶",
-          "kind": "drink",
+          "name": "常温牛奶",
+          "type": "drink",
+          "riskFactors": ["high_protein"],
+          "hoverText": "常温饮品，刺激性相对较低。",
+          "resultText": "买了常温牛奶",
           "shape": "milk"
         },
         {
           "id": "iced_coffee",
-          "label": "冰咖啡",
-          "value": "冰咖啡",
-          "kind": "drink",
+          "name": "冰咖啡",
+          "type": "drink",
+          "riskFactors": ["cold_stimulation", "low_nutrition"],
+          "hoverText": "冰饮可能带来低温刺激。",
+          "resultText": "买了冰咖啡",
           "shape": "iced-cup",
           "disappearOnSelect": true
         },
         {
           "id": "bus_door_no_drink",
-          "label": "公交车门",
-          "value": "不买了",
-          "kind": "door",
+          "name": "公交车门",
+          "type": "skip",
+          "riskFactors": [],
+          "hoverText": "不买饮品，直接上车。",
+          "resultText": "不买了",
           "shape": "bus-door"
         }
       ]

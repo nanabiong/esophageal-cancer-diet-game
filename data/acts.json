@@ -1,0 +1,817 @@
+[
+  {
+    "actId": "act1_breakfast",
+    "actTitle": "Act 1 早餐",
+    "startScene": "act1_scene_1_1",
+    "nextActId": "act2_lunch",
+    "scenes": [
+      {
+        "sceneId": "act1_scene_1_1",
+        "sceneTitle": "幕1封面 / 闹钟",
+        "narration": "闹钟在黑暗里一下一下响起。",
+        "interactionType": "wake",
+        "interactives": [
+          {
+            "id": "wake_phone_screen",
+            "name": "手机闹钟",
+            "type": "wake",
+            "hoverText": "点击 5 次，让手机屏幕慢慢亮起来。",
+            "riskFactors": [],
+            "resultText": "手机时间逐渐显现"
+          }
+        ],
+        "transition": "vertical",
+        "nextScene": "act1_scene_1_2",
+        "background": "dark",
+        "chapter": "Act 1 / Scene 1-1",
+        "wakeClickTarget": 5,
+        "phoneTime": "07:42"
+      },
+      {
+        "sceneId": "act1_scene_1_2",
+        "sceneTitle": "家门口餐桌 / 厨房",
+        "narration": "再不走要迟到了，早饭就选它吧！",
+        "interactionType": "choice",
+        "interactives": [
+          {
+            "id": "baguette_cheese",
+            "name": "切片法棍配奶酪",
+            "type": "food",
+            "hoverText": "质地偏硬，赶时间时可能不太容易慢慢咀嚼。",
+            "riskFactors": ["hard_texture"],
+            "resultText": "选择了切片法棍配奶酪",
+            "shape": "long-bread"
+          },
+          {
+            "id": "hot_claypot_porridge",
+            "name": "热气腾腾的砂锅粥",
+            "type": "food",
+            "hoverText": "粥很软，但刚出锅时温度可能偏高。",
+            "riskFactors": ["high_temperature", "soft_texture"],
+            "resultText": "选择了热气腾腾的砂锅粥",
+            "shape": "hot-bowl"
+          },
+          {
+            "id": "egg_ham_sandwich",
+            "name": "鸡蛋火腿三明治",
+            "type": "food",
+            "hoverText": "蛋白质较丰富，但火腿可能带来较高盐分。",
+            "riskFactors": ["high_protein", "high_salt"],
+            "resultText": "选择了鸡蛋火腿三明治",
+            "shape": "sandwich"
+          },
+          {
+            "id": "front_door_no_breakfast",
+            "name": "大门",
+            "type": "skip",
+            "hoverText": "直接出门，记录为不吃早餐。",
+            "riskFactors": ["low_nutrition"],
+            "resultText": "不吃早餐",
+            "shape": "door"
+          }
+        ],
+        "transition": "horizontal",
+        "nextScene": "act1_scene_1_3",
+        "background": "kitchen",
+        "chapter": "Act 1 / Scene 1-2"
+      },
+      {
+        "sceneId": "act1_scene_1_3",
+        "sceneTitle": "家门口餐桌 / 厨房",
+        "narration": "要怎么吃才好呢？",
+        "interactionType": "choice",
+        "interactives": [
+          {
+            "id": "walk_and_eat",
+            "name": "餐巾和包",
+            "type": "habit",
+            "hoverText": "边走边吃，容易吃得很快。",
+            "riskFactors": ["low_nutrition"],
+            "resultText": "边走边吃快速解决",
+            "shape": "bag"
+          },
+          {
+            "id": "sit_and_eat",
+            "name": "椅子、水杯和餐盘",
+            "type": "habit",
+            "hoverText": "坐下来慢慢吃，留一点时间给身体。",
+            "riskFactors": [],
+            "resultText": "坐下慢慢吃",
+            "shape": "table-seat"
+          },
+          {
+            "id": "quick_bites",
+            "name": "门口椅子",
+            "type": "habit",
+            "hoverText": "只吃两口就出门，早餐摄入可能不足。",
+            "riskFactors": ["low_nutrition"],
+            "resultText": "吃两口就赶紧出门",
+            "shape": "small-chair"
+          }
+        ],
+        "transition": "vertical",
+        "nextScene": "act1_scene_1_4",
+        "background": "kitchen",
+        "chapter": "Act 1 / Scene 1-3"
+      },
+      {
+        "sceneId": "act1_scene_1_4",
+        "sceneTitle": "公交站旁边的小店",
+        "narration": "公交车旁边可以再买些喝的。",
+        "interactionType": "choice",
+        "interactives": [
+          {
+            "id": "hot_ceylon_tea",
+            "name": "热气腾腾的锡兰红茶",
+            "type": "drink",
+            "hoverText": "热饮需要放凉一点再喝。",
+            "riskFactors": ["high_temperature"],
+            "resultText": "买了热气腾腾的锡兰红茶",
+            "shape": "hot-cup",
+            "disappearOnSelect": true
+          },
+          {
+            "id": "room_temp_milk",
+            "name": "常温牛奶",
+            "type": "drink",
+            "hoverText": "常温饮品，刺激性相对较低。",
+            "riskFactors": ["high_protein"],
+            "resultText": "买了常温牛奶",
+            "shape": "milk"
+          },
+          {
+            "id": "iced_coffee",
+            "name": "冰咖啡",
+            "type": "drink",
+            "hoverText": "冰饮可能带来低温刺激。",
+            "riskFactors": ["cold_stimulation", "low_nutrition"],
+            "resultText": "买了冰咖啡",
+            "shape": "iced-cup",
+            "disappearOnSelect": true
+          },
+          {
+            "id": "bus_door_no_drink",
+            "name": "公交车门",
+            "type": "skip",
+            "hoverText": "不买饮品，直接上车。",
+            "riskFactors": [],
+            "resultText": "不买了",
+            "shape": "bus-door"
+          }
+        ],
+        "transition": "fadeEnd",
+        "nextScene": null,
+        "background": "bus-stop",
+        "chapter": "Act 1 / Scene 1-4",
+        "busLeaves": true
+      }
+    ]
+  },
+  {
+    "actId": "act2_lunch",
+    "actTitle": "Act 2 午餐",
+    "startScene": "act2_scene_2_0",
+    "nextActId": "act3_dinner_hotpot",
+    "scenes": [
+      {
+        "sceneId": "act2_scene_2_0",
+        "sceneTitle": "中午——工作与进食",
+        "narration": "电脑屏幕亮着，午饭时间也被工作挤得很窄。",
+        "interactionType": "coverClick",
+        "interactives": [
+          {
+            "id": "act2_cover_click",
+            "name": "办公桌",
+            "type": "continue",
+            "hoverText": "点击任意区域进入午餐选择。",
+            "riskFactors": [],
+            "resultText": "进入午餐时间"
+          }
+        ],
+        "transition": "vertical",
+        "nextScene": "act2_scene_2_1",
+        "background": "office",
+        "chapter": "Act 2 / Scene 2-0"
+      },
+      {
+        "sceneId": "act2_scene_2_1",
+        "sceneTitle": "自助食堂选菜区",
+        "narration": "午饭想吃……",
+        "interactionType": "dragToPlate",
+        "interactives": [
+          {
+            "id": "fried_chicken_burger_set",
+            "name": "炸鸡和汉堡套餐",
+            "type": "food",
+            "hoverText": "油炸和高脂组合，适合先作为风险占位观察。",
+            "riskFactors": ["fried_food", "low_nutrition"],
+            "resultText": "选择了炸鸡和汉堡套餐",
+            "shape": "lunch-a"
+          },
+          {
+            "id": "sausage_healthy_bibimbap",
+            "name": "烤肠健康拌饭",
+            "type": "food",
+            "hoverText": "看起来均衡，但烤肠可能带来高盐和加工肉风险。",
+            "riskFactors": ["high_salt", "smoked_grilled_food"],
+            "resultText": "选择了烤肠健康拌饭",
+            "shape": "lunch-b"
+          },
+          {
+            "id": "kimchi_beef_spicy_ramen",
+            "name": "泡菜牛肉辛拉面",
+            "type": "food",
+            "hoverText": "辛辣、热汤和腌制风味叠在一起。",
+            "riskFactors": ["spicy_food", "high_temperature", "pickled_food"],
+            "resultText": "选择了泡菜牛肉辛拉面",
+            "shape": "lunch-c"
+          },
+          {
+            "id": "rainbow_bento",
+            "name": "七彩便当",
+            "type": "food",
+            "hoverText": "品类更丰富，刺激性相对低。",
+            "riskFactors": [],
+            "resultText": "选择了七彩便当",
+            "shape": "lunch-d"
+          }
+        ],
+        "transition": "horizontal",
+        "nextScene": "act2_scene_2_2",
+        "background": "cafeteria",
+        "chapter": "Act 2 / Scene 2-1"
+      },
+      {
+        "sceneId": "act2_scene_2_2",
+        "sceneTitle": "午餐吃法选择",
+        "narration": "想怎么吃午餐呢？",
+        "interactionType": "carousel",
+        "interactives": [
+          {
+            "id": "eat_in_busy_cafeteria",
+            "name": "在人来人往的食堂吃",
+            "type": "habit",
+            "hoverText": "环境匆忙，容易快速吃完。",
+            "riskFactors": ["low_nutrition"],
+            "resultText": "快速吃完"
+          },
+          {
+            "id": "eat_with_friends",
+            "name": "在餐桌上和朋友吃",
+            "type": "habit",
+            "hoverText": "一起吃饭，节奏通常更自然。",
+            "riskFactors": [],
+            "resultText": "在餐桌上和朋友吃"
+          },
+          {
+            "id": "eat_at_work_desk",
+            "name": "电脑办公桌前",
+            "type": "habit",
+            "hoverText": "一边工作一边吃，容易忽略进食速度和感受。",
+            "riskFactors": ["low_nutrition"],
+            "resultText": "一边工作一边吃"
+          },
+          {
+            "id": "eat_on_outdoor_bench",
+            "name": "户外长椅上",
+            "type": "habit",
+            "hoverText": "换个地方，慢慢吃完。",
+            "riskFactors": [],
+            "resultText": "慢慢吃"
+          }
+        ],
+        "transition": "vertical",
+        "nextScene": "act2_scene_2_3",
+        "background": "cafeteria",
+        "chapter": "Act 2 / Scene 2-2"
+      },
+      {
+        "sceneId": "act2_scene_2_3",
+        "sceneTitle": "电脑和办公桌",
+        "narration": "工作累的时候，就靠吃东西提提神。",
+        "interactionType": "multiPick",
+        "maxChoices": 3,
+        "interactives": [
+          {
+            "id": "stewed_pear_white_tea",
+            "name": "炖梨老白茶",
+            "type": "snack",
+            "hoverText": "温和饮品，占位为低刺激选择。",
+            "riskFactors": [],
+            "resultText": "选择了炖梨老白茶",
+            "shape": "snack-a"
+          },
+          {
+            "id": "spicy_braised_snack",
+            "name": "辣卤味零食",
+            "type": "snack",
+            "hoverText": "辛辣、重口味，适合记录刺激性。",
+            "riskFactors": ["spicy_food", "high_salt"],
+            "resultText": "选择了辣卤味零食",
+            "shape": "snack-b"
+          },
+          {
+            "id": "latte",
+            "name": "拿铁",
+            "type": "drink",
+            "hoverText": "咖啡饮品，作为午后提神占位。",
+            "riskFactors": [],
+            "resultText": "选择了拿铁",
+            "shape": "snack-c"
+          },
+          {
+            "id": "lemon_soda",
+            "name": "柠檬苏打水",
+            "type": "drink",
+            "hoverText": "气泡和酸味可能带来刺激感。",
+            "riskFactors": ["low_nutrition"],
+            "resultText": "选择了柠檬苏打水",
+            "shape": "snack-d"
+          },
+          {
+            "id": "betel_nut",
+            "name": "槟榔",
+            "type": "snack",
+            "hoverText": "高风险提神选择，后续需要重点标记。",
+            "riskFactors": ["hard_texture", "low_nutrition"],
+            "resultText": "选择了槟榔",
+            "shape": "snack-e"
+          },
+          {
+            "id": "spicy_hot_oden",
+            "name": "又辣又烫的关东煮",
+            "type": "snack",
+            "hoverText": "辛辣和高温同时出现。",
+            "riskFactors": ["spicy_food", "high_temperature"],
+            "resultText": "选择了又辣又烫的关东煮",
+            "shape": "snack-f"
+          },
+          {
+            "id": "parfait_cup",
+            "name": "芭菲杯",
+            "type": "snack",
+            "hoverText": "偏冷甜品，占位为低温刺激。",
+            "riskFactors": ["cold_stimulation", "low_nutrition"],
+            "resultText": "选择了芭菲杯",
+            "shape": "snack-g"
+          }
+        ],
+        "transition": "fadeEnd",
+        "nextScene": null,
+        "background": "office",
+        "chapter": "Act 2 / Scene 2-3"
+      }
+    ]
+  },
+  {
+    "actId": "act3_dinner_hotpot",
+    "actTitle": "Act 3 晚餐 / 火锅",
+    "startScene": "act3_scene_3_0",
+    "nextActId": "act4_late_night_snack",
+    "scenes": [
+      {
+        "sceneId": "act3_scene_3_0",
+        "sceneTitle": "夜晚——聚会与火锅",
+        "narration": "热气升起来，朋友们围坐在桌边。",
+        "interactionType": "coverClick",
+        "interactives": [
+          {
+            "id": "act3_cover_click",
+            "name": "火锅桌",
+            "type": "continue",
+            "hoverText": "点击任意区域进入火锅晚餐。",
+            "riskFactors": [],
+            "resultText": "进入火锅时间"
+          }
+        ],
+        "transition": "vertical",
+        "nextScene": "act3_scene_3_1",
+        "background": "hotpot",
+        "chapter": "Act 3 / Scene 3-0"
+      },
+      {
+        "sceneId": "act3_scene_3_1",
+        "sceneTitle": "火锅餐桌前",
+        "narration": "累了一天了，先吃点爱吃的。",
+        "interactionType": "dragMultiToPlate",
+        "minChoices": 3,
+        "interactives": [
+          {
+            "id": "scalding_tripe",
+            "name": "滚烫的毛肚",
+            "type": "hotpot_food",
+            "hoverText": "刚从锅里捞出来，温度很高。",
+            "riskFactors": ["high_temperature"],
+            "resultText": "夹了滚烫的毛肚",
+            "shape": "hotpot-a"
+          },
+          {
+            "id": "small_sausage",
+            "name": "小腊肠",
+            "type": "hotpot_food",
+            "hoverText": "加工肉类，盐分和烟熏风味需要留意。",
+            "riskFactors": ["high_salt", "smoked_grilled_food"],
+            "resultText": "夹了小腊肠",
+            "shape": "hotpot-b"
+          },
+          {
+            "id": "clear_soup_vegetables",
+            "name": "清汤锅里的蔬菜",
+            "type": "hotpot_food",
+            "hoverText": "清汤蔬菜，刺激性较低。",
+            "riskFactors": [],
+            "resultText": "夹了清汤锅里的蔬菜",
+            "shape": "hotpot-c"
+          },
+          {
+            "id": "luncheon_meat",
+            "name": "午餐肉",
+            "type": "hotpot_food",
+            "hoverText": "加工肉类，盐分较高。",
+            "riskFactors": ["high_salt"],
+            "resultText": "夹了午餐肉",
+            "shape": "hotpot-d"
+          },
+          {
+            "id": "fried_bean_curd_stick",
+            "name": "响铃卷、油条",
+            "type": "hotpot_food",
+            "hoverText": "油炸类下锅后吸汤，油脂和温度都要注意。",
+            "riskFactors": ["fried_food", "high_temperature"],
+            "resultText": "夹了响铃卷和油条",
+            "shape": "hotpot-e"
+          },
+          {
+            "id": "crispy_meat_cartilage",
+            "name": "带肉脆骨",
+            "type": "hotpot_food",
+            "hoverText": "质地偏硬，需要充分咀嚼。",
+            "riskFactors": ["hard_texture"],
+            "resultText": "夹了带肉脆骨",
+            "shape": "hotpot-f"
+          }
+        ],
+        "transition": "horizontal",
+        "nextScene": "act3_scene_3_2",
+        "background": "hotpot",
+        "chapter": "Act 3 / Scene 3-1"
+      },
+      {
+        "sceneId": "act3_scene_3_2",
+        "sceneTitle": "碰杯之前",
+        "narration": "今天的第5杯，干杯！",
+        "interactionType": "dragToSlot",
+        "interactives": [
+          {
+            "id": "whisky",
+            "name": "威士忌",
+            "type": "drink",
+            "hoverText": "酒精饮品，作为聚会风险占位。",
+            "riskFactors": ["low_nutrition"],
+            "resultText": "选择了威士忌碰杯",
+            "shape": "cup-a"
+          },
+          {
+            "id": "beer",
+            "name": "啤酒",
+            "type": "drink",
+            "hoverText": "酒精饮品，记录为聚会饮酒选择。",
+            "riskFactors": ["low_nutrition"],
+            "resultText": "选择了啤酒碰杯",
+            "shape": "cup-b"
+          },
+          {
+            "id": "soft_drink",
+            "name": "饮料",
+            "type": "drink",
+            "hoverText": "非酒精饮料，营养价值有限。",
+            "riskFactors": ["low_nutrition"],
+            "resultText": "选择了饮料碰杯",
+            "shape": "cup-c"
+          },
+          {
+            "id": "lemon_water_hotpot",
+            "name": "柠檬水",
+            "type": "drink",
+            "hoverText": "清爽饮品，刺激性较低。",
+            "riskFactors": [],
+            "resultText": "选择了柠檬水碰杯",
+            "shape": "cup-d"
+          }
+        ],
+        "transition": "vertical",
+        "nextScene": "act3_scene_3_3",
+        "background": "toast",
+        "chapter": "Act 3 / Scene 3-2"
+      },
+      {
+        "sceneId": "act3_scene_3_3",
+        "sceneTitle": "火锅餐桌前",
+        "narration": "干饭时间到。",
+        "interactionType": "eatingClicks",
+        "interactives": [
+          {
+            "id": "greens_bites",
+            "name": "青菜",
+            "type": "eat",
+            "hoverText": "点击 2 次吃完。",
+            "riskFactors": [],
+            "resultText": "吃了一口青菜",
+            "shape": "eat-a",
+            "requiredClicks": 2
+          },
+          {
+            "id": "tomato_mushroom_bites",
+            "name": "番茄菌菇",
+            "type": "eat",
+            "hoverText": "点击 2 次吃完。",
+            "riskFactors": [],
+            "resultText": "吃了一口番茄菌菇",
+            "shape": "eat-b",
+            "requiredClicks": 2
+          },
+          {
+            "id": "meatball_bites",
+            "name": "肉丸",
+            "type": "eat",
+            "hoverText": "点击 3 次吃完。",
+            "riskFactors": ["high_salt"],
+            "resultText": "吃了一口肉丸",
+            "shape": "eat-c",
+            "requiredClicks": 3
+          },
+          {
+            "id": "fatty_beef_bites",
+            "name": "肥牛卷",
+            "type": "eat",
+            "hoverText": "点击 3 次吃完。",
+            "riskFactors": [],
+            "resultText": "吃了一口肥牛卷",
+            "shape": "eat-d",
+            "requiredClicks": 3
+          }
+        ],
+        "transition": "fadeEnd",
+        "nextScene": null,
+        "background": "hotpot",
+        "chapter": "Act 3 / Scene 3-3"
+      }
+    ]
+  },
+  {
+    "actId": "act4_late_night_snack",
+    "actTitle": "Act 4 夜宵",
+    "startScene": "act4_scene_4_0",
+    "nextActId": null,
+    "scenes": [
+      {
+        "sceneId": "act4_scene_4_0",
+        "sceneTitle": "深夜——饥饿袭来",
+        "narration": "房间安静下来，桌上的空位开始显得很明显。",
+        "interactionType": "coverClick",
+        "interactives": [
+          {
+            "id": "act4_cover_click",
+            "name": "深夜房间",
+            "type": "continue",
+            "hoverText": "点击任意区域进入夜宵选择。",
+            "riskFactors": [],
+            "resultText": "进入夜宵时间"
+          }
+        ],
+        "transition": "vertical",
+        "nextScene": "act4_scene_4_1",
+        "background": "night-room",
+        "chapter": "Act 4 / Scene 4-0"
+      },
+      {
+        "sceneId": "act4_scene_4_1",
+        "sceneTitle": "深夜外卖拼桌",
+        "narration": "要不要点个外卖呢？",
+        "interactionType": "areaChoiceGrid",
+        "interactives": [],
+        "areas": [
+          {
+            "id": "late_area_1",
+            "name": "区域1",
+            "options": [
+              {
+                "id": "spicy_fried_chicken",
+                "name": "香辣炸鸡",
+                "type": "late_food",
+                "hoverText": "辛辣与油炸叠加。",
+                "riskFactors": ["spicy_food", "fried_food"],
+                "resultText": "区域1选择了香辣炸鸡"
+              },
+              {
+                "id": "scalding_claypot_rice_noodle",
+                "name": "烫口的砂锅米线",
+                "type": "late_food",
+                "hoverText": "热汤温度偏高。",
+                "riskFactors": ["high_temperature"],
+                "resultText": "区域1选择了烫口的砂锅米线"
+              },
+              {
+                "id": "smoked_bacon_fried_rice",
+                "name": "熏腊肉炒饭",
+                "type": "late_food",
+                "hoverText": "烟熏腌腊与高盐风险。",
+                "riskFactors": ["smoked_grilled_food", "high_salt"],
+                "resultText": "区域1选择了熏腊肉炒饭"
+              },
+              {
+                "id": "late_area_1_none",
+                "name": "不要",
+                "type": "skip",
+                "hoverText": "这个区域不点。",
+                "riskFactors": [],
+                "resultText": "区域1不要"
+              }
+            ]
+          },
+          {
+            "id": "late_area_2",
+            "name": "区域2",
+            "options": [
+              {
+                "id": "pickled_fish",
+                "name": "腌鱼",
+                "type": "late_food",
+                "hoverText": "腌制食物，盐分较高。",
+                "riskFactors": ["pickled_food", "high_salt"],
+                "resultText": "区域2选择了腌鱼"
+              },
+              {
+                "id": "bacon_sausage",
+                "name": "腊肉香肠",
+                "type": "late_food",
+                "hoverText": "腌腊加工肉类。",
+                "riskFactors": ["high_salt", "smoked_grilled_food"],
+                "resultText": "区域2选择了腊肉香肠"
+              },
+              {
+                "id": "late_area_2_none",
+                "name": "不要",
+                "type": "skip",
+                "hoverText": "这个区域不点。",
+                "riskFactors": [],
+                "resultText": "区域2不要"
+              }
+            ]
+          },
+          {
+            "id": "late_area_3",
+            "name": "区域3",
+            "options": [
+              {
+                "id": "late_beer",
+                "name": "啤酒",
+                "type": "drink",
+                "hoverText": "深夜酒精饮品。",
+                "riskFactors": ["low_nutrition"],
+                "resultText": "区域3选择了啤酒"
+              },
+              {
+                "id": "late_water",
+                "name": "水",
+                "type": "drink",
+                "hoverText": "刺激性较低。",
+                "riskFactors": [],
+                "resultText": "区域3选择了水"
+              },
+              {
+                "id": "late_milk_tea",
+                "name": "奶茶",
+                "type": "drink",
+                "hoverText": "夜间甜饮，营养价值有限。",
+                "riskFactors": ["low_nutrition"],
+                "resultText": "区域3选择了奶茶"
+              },
+              {
+                "id": "late_area_3_none",
+                "name": "不要",
+                "type": "skip",
+                "hoverText": "这个区域不点。",
+                "riskFactors": [],
+                "resultText": "区域3不要"
+              }
+            ]
+          },
+          {
+            "id": "late_area_4",
+            "name": "区域4",
+            "options": [
+              {
+                "id": "late_fruit",
+                "name": "水果",
+                "type": "late_food",
+                "hoverText": "相对温和的夜宵搭配。",
+                "riskFactors": [],
+                "resultText": "区域4选择了水果"
+              },
+              {
+                "id": "late_pickles",
+                "name": "咸菜",
+                "type": "late_food",
+                "hoverText": "腌制和高盐。",
+                "riskFactors": ["pickled_food", "high_salt"],
+                "resultText": "区域4选择了咸菜"
+              },
+              {
+                "id": "late_area_4_none",
+                "name": "不要",
+                "type": "skip",
+                "hoverText": "这个区域不点。",
+                "riskFactors": [],
+                "resultText": "区域4不要"
+              }
+            ]
+          }
+        ],
+        "transition": "horizontal",
+        "nextScene": "act4_scene_4_2",
+        "background": "night-room",
+        "chapter": "Act 4 / Scene 4-1"
+      },
+      {
+        "sceneId": "act4_scene_4_2",
+        "sceneTitle": "吃不下的外卖",
+        "narration": "吃不下的怎么处理呢？",
+        "interactionType": "dragLeftover",
+        "interactives": [
+          {
+            "id": "reheat_tomorrow",
+            "name": "微波炉旁",
+            "type": "leftover",
+            "hoverText": "明天热一热继续吃。",
+            "riskFactors": [],
+            "resultText": "明天热一热继续吃",
+            "shape": "leftover-a"
+          },
+          {
+            "id": "throw_away",
+            "name": "垃圾桶",
+            "type": "leftover",
+            "hoverText": "直接倒掉。",
+            "riskFactors": [],
+            "resultText": "直接倒掉",
+            "shape": "leftover-b"
+          },
+          {
+            "id": "leave_in_fridge",
+            "name": "冰箱",
+            "type": "leftover",
+            "hoverText": "放着再说。",
+            "riskFactors": [],
+            "resultText": "放着再说",
+            "shape": "leftover-c"
+          }
+        ],
+        "transition": "vertical",
+        "nextScene": "act4_scene_4_3",
+        "background": "night-room",
+        "chapter": "Act 4 / Scene 4-2",
+        "feedbackHold": 2000
+      },
+      {
+        "sceneId": "act4_scene_4_3",
+        "sceneTitle": "一天结束前",
+        "narration": "在一天结束前，你还要干点什么吗？",
+        "interactionType": "stickyNotes",
+        "interactives": [
+          {
+            "id": "keep_working_late",
+            "name": "电脑和奋斗表情",
+            "type": "night_habit",
+            "hoverText": "继续熬夜工作。",
+            "riskFactors": ["low_nutrition"],
+            "resultText": "继续熬夜工作",
+            "shape": "note-a"
+          },
+          {
+            "id": "scroll_phone_in_bed",
+            "name": "侧躺玩手机小人",
+            "type": "night_habit",
+            "hoverText": "躺下刷会儿手机。",
+            "riskFactors": [],
+            "resultText": "躺下刷会儿手机",
+            "shape": "note-b"
+          },
+          {
+            "id": "shower_and_sleep",
+            "name": "洗澡睡觉小人",
+            "type": "night_habit",
+            "hoverText": "休息一会儿就睡觉。",
+            "riskFactors": [],
+            "resultText": "休息一会儿就睡觉",
+            "shape": "note-c"
+          }
+        ],
+        "transition": "fadeEnd",
+        "nextScene": null,
+        "background": "night-room",
+        "chapter": "Act 4 / Scene 4-3"
+      }
+    ]
+  }
+]

@@ -4,32 +4,34 @@
 
 body {
   margin: 0;
-  min-height: 100vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
   font-family: "Microsoft YaHei", "PingFang SC", Arial, sans-serif;
   background: #f3ebdc;
   color: #2f2a25;
 }
 
+.game-stage,
 .game-container {
-  width: min(94vw, 1040px);
-  padding: 24px;
-}
-
-.hidden {
-  display: none;
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  padding: 0;
+  overflow: hidden;
 }
 
 .storybook-cover,
 .report-card,
 .act-screen {
-  min-height: 620px;
-  border: 2px solid #2f2a25;
-  border-radius: 22px;
+  width: 100vw;
+  height: 100vh;
+  min-height: 100vh;
+  border: 0;
+  border-radius: 0;
   background: #fffaf0;
-  box-shadow: 12px 14px 0 rgba(47, 42, 37, 0.13);
+  box-shadow: none;
   overflow: hidden;
 }
 
@@ -39,7 +41,7 @@ body {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 48px;
+  padding: clamp(24px, 5vw, 72px);
   text-align: center;
 }
 
@@ -57,13 +59,13 @@ body {
 h1 {
   max-width: 680px;
   margin: 0 0 18px;
-  font-size: 50px;
+  font-size: clamp(38px, 5vw, 72px);
   line-height: 1.18;
 }
 
 h2 {
   margin: 0 0 12px;
-  font-size: 34px;
+  font-size: clamp(28px, 3.5vw, 52px);
 }
 
 p {
@@ -72,19 +74,31 @@ p {
 }
 
 button {
-  padding: 12px 22px;
+  padding: 10px 18px;
   border: 2px solid #2f2a25;
-  border-radius: 999px;
-  background: #f0c878;
+  border-radius: 14px;
+  background: #fff1bd;
   color: #2f2a25;
   font-size: 16px;
   font-weight: 700;
   cursor: pointer;
-  box-shadow: 4px 5px 0 rgba(47, 42, 37, 0.18);
+  box-shadow: 3px 4px 0 rgba(47, 42, 37, 0.14);
+  transform: rotate(-1deg);
 }
 
 button:hover {
-  background: #f8dfa8;
+  background: #ffe2a0;
+  border-style: dashed;
+}
+
+button:disabled {
+  opacity: 0.58;
+  cursor: not-allowed;
+}
+
+button:disabled:hover {
+  background: #fff1bd;
+  border-style: solid;
 }
 
 .act-screen {
@@ -94,14 +108,18 @@ button:hover {
 
 .act-viewport {
   position: relative;
-  min-height: 620px;
+  width: 100vw;
+  height: 100vh;
+  min-height: 100vh;
   overflow: hidden;
 }
 
 .act-scene {
   position: absolute;
   inset: 0;
-  padding: 34px;
+  width: 100vw;
+  height: 100vh;
+  padding: clamp(24px, 3vw, 48px);
   transition: transform 0.85s ease, opacity 0.85s ease;
 }
 
@@ -838,9 +856,26 @@ button:hover {
   opacity: 0;
 }
 
+.hidden {
+  display: none !important;
+}
+
 .error-message {
+  position: fixed;
+  left: 50%;
+  bottom: 32px;
+  z-index: 50;
+  width: min(720px, calc(100vw - 32px));
+  margin: 0;
+  padding: 12px 16px;
+  border: 2px solid #9b2f24;
+  border-radius: 14px;
+  background: #fffaf0;
   color: #9b2f24;
   font-weight: 700;
+  text-align: center;
+  box-shadow: 4px 5px 0 rgba(47, 42, 37, 0.12);
+  transform: translateX(-50%);
 }
 
 .choices-output {
@@ -856,16 +891,18 @@ button:hover {
 }
 
 @media (max-width: 760px) {
+  .game-stage,
   .game-container {
     width: 100%;
-    padding: 12px;
+    height: 100vh;
+    padding: 0;
   }
 
   .storybook-cover,
   .report-card,
   .act-screen,
   .act-viewport {
-    min-height: 640px;
+    min-height: 100vh;
   }
 
   h1 {
@@ -873,7 +910,7 @@ button:hover {
   }
 
   .act-scene {
-    padding: 22px;
+    padding: 18px;
   }
 
   .act-object {

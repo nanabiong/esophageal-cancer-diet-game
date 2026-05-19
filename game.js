@@ -23,7 +23,11 @@ let actState = {
 let playerChoices = [];
 
 document.addEventListener("DOMContentLoaded", () => {
-  document.getElementById("startButton").addEventListener("click", () => {
+  const startButton = document.getElementById("startButton");
+
+  startButton.disabled = true;
+  startButton.textContent = "加载中...";
+  startButton.addEventListener("click", () => {
     startAct("act1_breakfast");
   });
 
@@ -35,6 +39,8 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 async function loadGameData() {
+  const startButton = document.getElementById("startButton");
+
   try {
     const entries = await Promise.all(
       Object.entries(dataFiles).map(async ([key, path]) => {
@@ -51,8 +57,12 @@ async function loadGameData() {
 
     gameData = Object.fromEntries(entries);
     console.log("配表读取成功：", gameData);
+    startButton.disabled = false;
+    startButton.textContent = "翻开第一页";
   } catch (error) {
     console.error("配表读取失败：", error);
+    startButton.disabled = true;
+    startButton.textContent = "加载失败";
     showLoadError(error);
   }
 }
@@ -1009,7 +1019,12 @@ function getActById(actId) {
 }
 
 function showLoadError(error) {
-  const container = document.querySelector(".game-container");
+  const container =
+    document.querySelector("#introScreen:not(.hidden)") ||
+    document.querySelector("#actScreen:not(.hidden)") ||
+    document.querySelector("#actEndScreen:not(.hidden)") ||
+    document.querySelector(".game-stage") ||
+    document.querySelector(".game-container");
   const oldErrorMessage = document.querySelector(".error-message");
   const errorMessage = document.createElement("p");
   const fileProtocolTip = window.location.protocol === "file:"
@@ -1023,7 +1038,9 @@ function showLoadError(error) {
   errorMessage.className = "error-message";
   errorMessage.textContent = `数据读取失败：${error.message}${fileProtocolTip}`;
 
-  container.appendChild(errorMessage);
+  if (container) {
+    container.appendChild(errorMessage);
+  }
 }
 
 function calculateRisk(selections, foods, scenes, risks) {

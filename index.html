@@ -7,38 +7,44 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <main class="game-stage">
-    <section id="introScreen" class="storybook-cover">
-      <p class="cover-kicker">互动绘本测试原型</p>
-      <h1>食管癌饮食数感游戏</h1>
-      <p class="cover-narration">从一个被闹钟叫醒的早晨开始，看看你的早餐会走向哪里。</p>
-      <button id="startButton" type="button">翻开第一页</button>
-    </section>
-
-    <section id="actScreen" class="act-screen hidden">
-      <div id="actViewport" class="act-viewport"></div>
-    </section>
-
-    <section id="actEndScreen" class="report-card hidden">
-      <p class="chapter-label">临时结果页</p>
-      <h2>你的饮食结算卡</h2>
-      <p>点击卡片，翻开背面查看风险来源。</p>
-      <div id="resultCard" class="result-card" role="button" tabindex="0" aria-label="点击翻转结果卡片">
-        <div class="result-card-inner">
-          <section class="result-card-face result-card-front" aria-label="饮食人格结果">
-            <div id="dietTendencySummary" class="diet-tendency-summary"></div>
-            <button id="showRiskButton" type="button">查看风险来源</button>
+  <main id="app" class="game-stage">
+    <div class="comic-stage">
+      <div class="frame-viewport">
+        <div id="frameTrack" class="frame-track">
+          <section id="introScreen" class="scene-frame storybook-cover active">
+            <p class="cover-kicker">互动绘本测试原型</p>
+            <h1>食管癌饮食数感游戏</h1>
+            <p class="cover-narration">从一个被闹钟叫醒的早晨开始，看看你的早餐会走向哪里。</p>
+            <button id="startButton" type="button">翻开第一页</button>
           </section>
 
-          <section class="result-card-face result-card-back" aria-label="风险分数结果">
-            <div id="riskScoreSummary" class="risk-score-summary"></div>
-            <button id="showPersonalityButton" type="button">返回人格卡</button>
+          <section id="actScreen" class="act-screen hidden">
+            <div id="actViewport" class="act-viewport"></div>
+          </section>
+
+          <section id="actEndScreen" class="scene-frame report-card hidden">
+            <p class="chapter-label">临时结果页</p>
+            <h2>你的饮食结算卡</h2>
+            <p>点击卡片，翻开背面查看风险来源。</p>
+            <div id="resultCard" class="result-card" role="button" tabindex="0" aria-label="点击翻转结果卡片">
+              <div class="result-card-inner">
+                <section class="result-card-face result-card-front" aria-label="饮食人格结果">
+                  <div id="dietTendencySummary" class="diet-tendency-summary"></div>
+                  <button id="showRiskButton" type="button">查看风险来源</button>
+                </section>
+
+                <section class="result-card-face result-card-back" aria-label="风险分数结果">
+                  <div id="riskScoreSummary" class="risk-score-summary"></div>
+                  <button id="showPersonalityButton" type="button">返回人格卡</button>
+                </section>
+              </div>
+            </div>
+            <pre id="choicesOutput" class="choices-output"></pre>
+            <button id="restartActButton" type="button">重新开始四幕流程</button>
           </section>
         </div>
       </div>
-      <pre id="choicesOutput" class="choices-output"></pre>
-      <button id="restartActButton" type="button">重新开始四幕流程</button>
-    </section>
+    </div>
   </main>
 
   <script src="game.js"></script>

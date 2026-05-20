@@ -24,6 +24,7 @@ let actState = {
   step: "idle"
 };
 let playerChoices = [];
+let isFrameTransitioning = false;
 
 document.addEventListener("DOMContentLoaded", () => {
   const startButton = document.getElementById("startButton");
@@ -99,21 +100,31 @@ function startAct(actId) {
 
   document.getElementById("introScreen").classList.add("hidden");
   document.getElementById("actEndScreen").classList.add("hidden");
-  document.getElementById("actScreen").classList.remove("hidden");
+  document.getElementById("actEndScreen").classList.remove("active");
+  document.getElementById("actScreen").classList.add("hidden");
 
   renderActScene();
 }
 
 function renderActScene() {
   const scene = getCurrentScene();
-  const viewport = document.getElementById("actViewport");
+  const viewport = document.getElementById("frameTrack");
 
   actState.sceneId = scene.sceneId;
   actState.step = `${scene.sceneId}:rendered`;
-  viewport.innerHTML = "";
+  viewport.querySelectorAll(".act-scene").forEach((frame) => frame.remove());
 
+  const sceneElement = createActSceneElement(scene);
+
+  viewport.appendChild(sceneElement);
+  requestAnimationFrame(() => {
+    sceneElement.classList.add("active", "scene-entered");
+  });
+}
+
+function createActSceneElement(scene) {
   const sceneElement = document.createElement("article");
-  sceneElement.className = `act-scene ${scene.background}`;
+  sceneElement.className = `scene-frame act-scene ${scene.background}`;
   sceneElement.dataset.sceneId = scene.sceneId;
   sceneElement.appendChild(createSceneHeader(scene));
 
@@ -143,10 +154,7 @@ function renderActScene() {
     renderChoiceScene(scene, sceneElement);
   }
 
-  viewport.appendChild(sceneElement);
-  requestAnimationFrame(() => {
-    sceneElement.classList.add("scene-entered");
-  });
+  return sceneElement;
 }
 
 function createSceneHeader(scene) {
@@ -1057,27 +1065,94 @@ function applyChoiceValuesToList(sceneId, interactives = []) {
 }
 
 function goToNextScene(transition) {
-  const sceneElement = document.querySelector(".act-scene");
   const currentScene = getCurrentScene();
 
-  if (transition === "horizontal") {
-    sceneElement.classList.add("transition-horizontal-out");
-  } else if (transition === "fadeEnd") {
-    sceneElement.classList.add("transition-fade-out");
-  } else {
-    sceneElement.classList.add("transition-vertical-out");
+  if (isFrameTransitioning) {
+    return;
   }
 
-  window.setTimeout(() => {
-    if (!currentScene.nextScene) {
-      endAct();
-      return;
-    }
+  if (!currentScene.nextScene) {
+    const sceneElement = document.querySelector(".act-scene.active");
+    sceneElement?.classList.add(getLeaveClass(getTransitionDirection(currentScene, transition)), "is-moving");
 
-    actState.sceneId = currentScene.nextScene;
-    actState.step = "scene:enter";
+    window.setTimeout(() => {
+      endAct();
+    }, TIMING.transition);
+    return;
+  }
+
+  transitionToScene(currentScene.nextScene, getTransitionDirection(currentScene, transition));
+}
+
+function transitionToScene(nextSceneId, direction = "slide-left") {
+  const viewport = document.getElementById("frameTrack");
+  const currentFrame = viewport.querySelector(".act-scene.active");
+  const nextScene = getSceneById(nextSceneId);
+  const nextFrame = createActSceneElement(nextScene);
+
+  if (!viewport || !currentFrame || !nextScene) {
+    actState.sceneId = nextSceneId;
     renderActScene();
+    return;
+  }
+
+  isFrameTransitioning = true;
+  actState.step = "scene:transition";
+  nextFrame.classList.add(getEnterClass(direction), "is-moving");
+  viewport.appendChild(nextFrame);
+
+  requestAnimationFrame(() => {
+    currentFrame.classList.add(getLeaveClass(direction), "is-moving");
+    currentFrame.classList.remove("active");
+    nextFrame.classList.remove(getEnterClass(direction));
+    nextFrame.classList.add("active", "scene-entered");
+  });
+
+  window.setTimeout(() => {
+    currentFrame.remove();
+    nextFrame.classList.remove("is-moving");
+    actState.sceneId = nextSceneId;
+    actState.step = `${nextSceneId}:ready`;
+    isFrameTransitioning = false;
   }, TIMING.transition);
+}
+
+function getTransitionDirection(scene, fallbackTransition) {
+  if (scene.transitionDirection) {
+    return scene.transitionDirection;
+  }
+
+  if (fallbackTransition === "vertical") {
+    return "slide-up";
+  }
+
+  if (fallbackTransition === "horizontal") {
+    return "slide-left";
+  }
+
+  return "slide-left";
+}
+
+function getEnterClass(direction) {
+  const classes = {
+    "slide-left": "enter-from-right",
+    "slide-right": "enter-from-left",
+    "slide-up": "enter-from-bottom",
+    "slide-down": "enter-from-top"
+  };
+
+  return classes[direction] || classes["slide-left"];
+}
+
+function getLeaveClass(direction) {
+  const classes = {
+    "slide-left": "leave-to-left",
+    "slide-right": "leave-to-right",
+    "slide-up": "leave-to-top",
+    "slide-down": "leave-to-bottom"
+  };
+
+  return classes[direction] || classes["slide-left"];
 }
 
 function endAct() {
@@ -1088,8 +1163,11 @@ function endAct() {
     return;
   }
 
+  const endScreen = document.getElementById("actEndScreen");
   document.getElementById("actScreen").classList.add("hidden");
-  document.getElementById("actEndScreen").classList.remove("hidden");
+  document.querySelectorAll(".act-scene").forEach((frame) => frame.remove());
+  endScreen.classList.remove("hidden", "active", "enter-from-right");
+  endScreen.classList.add("enter-from-right", "is-moving");
   const resultCard = document.getElementById("resultCard");
   const riskScoreResult = calculateRiskScore(playerChoices, gameData.riskTags);
   const dietTendencyResult = calculateDietTendency(playerChoices, gameData.personalityResults);
@@ -1107,6 +1185,15 @@ function endAct() {
   console.log("dietTendencyResult：", dietTendencyResult);
   console.log("riskScoreResult：", riskScoreResult);
   console.log("playerChoices：", playerChoices);
+
+  requestAnimationFrame(() => {
+    endScreen.classList.remove("enter-from-right");
+    endScreen.classList.add("active");
+  });
+
+  window.setTimeout(() => {
+    endScreen.classList.remove("is-moving");
+  }, TIMING.transition);
 }
 
 function getCurrentScene() {

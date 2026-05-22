@@ -1,0 +1,242 @@
+[
+  {
+    "sceneId": "breakfast",
+    "sceneName": "Scene 1 早餐",
+    "steps": [
+      {
+        "stepId": "breakfast_food",
+        "chapter": "Scene 1 / Step 1",
+        "title": "早餐吃什么？",
+        "narration": "早晨时间不多，先选一样想吃的早餐。",
+        "transitionDirection": "slide-left",
+        "choices": [
+          {
+            "choiceId": "breakfast_porridge",
+            "choiceName": "热粥",
+            "riskTags": ["热烫饮食"],
+            "tendencyScores": { "C": 1, "L": 1 }
+          },
+          {
+            "choiceId": "breakfast_sandwich",
+            "choiceName": "三明治",
+            "riskTags": [],
+            "tendencyScores": { "A": 1 }
+          },
+          {
+            "choiceId": "breakfast_skip",
+            "choiceName": "不吃早餐",
+            "riskTags": ["不规律进食"],
+            "tendencyScores": { "D": 1 }
+          }
+        ]
+      },
+      {
+        "stepId": "breakfast_how",
+        "chapter": "Scene 1 / Step 2",
+        "title": "早餐怎么吃？",
+        "narration": "这顿早餐，是坐下来吃，还是边走边解决？",
+        "transitionDirection": "slide-up",
+        "choices": [
+          {
+            "choiceId": "breakfast_slow",
+            "choiceName": "坐下慢慢吃",
+            "riskTags": [],
+            "tendencyScores": { "O": 1, "L": 1 }
+          },
+          {
+            "choiceId": "breakfast_fast",
+            "choiceName": "边走边吃",
+            "riskTags": ["快速进食"],
+            "tendencyScores": { "D": 1 }
+          },
+          {
+            "choiceId": "breakfast_two_bites",
+            "choiceName": "吃两口就出门",
+            "riskTags": ["不规律进食"],
+            "tendencyScores": { "D": 1, "G": 1 }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "sceneId": "lunch",
+    "sceneName": "Scene 2 午餐",
+    "steps": [
+      {
+        "stepId": "lunch_food",
+        "chapter": "Scene 2 / Step 1",
+        "title": "午餐吃什么？",
+        "narration": "中午来到食堂，餐盘里会出现什么？",
+        "transitionDirection": "slide-left",
+        "choices": [
+          {
+            "choiceId": "lunch_bento",
+            "choiceName": "七彩便当",
+            "riskTags": [],
+            "tendencyScores": { "A": 1, "O": 1 }
+          },
+          {
+            "choiceId": "lunch_fried",
+            "choiceName": "炸鸡汉堡",
+            "riskTags": ["油炸饮食"],
+            "tendencyScores": { "K": 1, "V": 1 }
+          },
+          {
+            "choiceId": "lunch_spicy_noodle",
+            "choiceName": "泡菜辛拉面",
+            "riskTags": ["高盐饮食", "腌制饮食"],
+            "tendencyScores": { "V": 1, "G": 1 }
+          }
+        ]
+      },
+      {
+        "stepId": "lunch_how",
+        "chapter": "Scene 2 / Step 2",
+        "title": "午餐怎么吃？",
+        "narration": "工作日的午餐，总是在时间和心情之间摇摆。",
+        "transitionDirection": "slide-right",
+        "choices": [
+          {
+            "choiceId": "lunch_with_friends",
+            "choiceName": "和朋友一起吃",
+            "riskTags": [],
+            "tendencyScores": { "O": 1, "A": 1 }
+          },
+          {
+            "choiceId": "lunch_at_desk",
+            "choiceName": "电脑前边工作边吃",
+            "riskTags": ["不规律进食"],
+            "tendencyScores": { "D": 1, "G": 1 }
+          },
+          {
+            "choiceId": "lunch_quick",
+            "choiceName": "在人群里快速吃完",
+            "riskTags": ["快速进食"],
+            "tendencyScores": { "D": 1 }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "sceneId": "dinner",
+    "sceneName": "Scene 3 晚餐",
+    "steps": [
+      {
+        "stepId": "dinner_food",
+        "chapter": "Scene 3 / Step 1",
+        "title": "晚餐吃什么？",
+        "narration": "一天快结束了，晚餐常常变得更丰盛。",
+        "transitionDirection": "slide-left",
+        "choices": [
+          {
+            "choiceId": "dinner_hotpot",
+            "choiceName": "热辣火锅",
+            "riskTags": ["热烫饮食", "辛辣饮食"],
+            "tendencyScores": { "V": 1, "K": 1 }
+          },
+          {
+            "choiceId": "dinner_vegetables",
+            "choiceName": "清汤蔬菜",
+            "riskTags": [],
+            "tendencyScores": { "L": 1, "A": 1 }
+          },
+          {
+            "choiceId": "dinner_processed_meat",
+            "choiceName": "午餐肉拼盘",
+            "riskTags": ["加工肉类"],
+            "tendencyScores": { "K": 1, "G": 1 }
+          }
+        ]
+      },
+      {
+        "stepId": "dinner_drink",
+        "chapter": "Scene 3 / Step 2",
+        "title": "喝什么 / 怎么吃？",
+        "narration": "晚餐的节奏，往往由杯子和筷子一起决定。",
+        "transitionDirection": "slide-up",
+        "choices": [
+          {
+            "choiceId": "dinner_beer",
+            "choiceName": "啤酒",
+            "riskTags": ["饮酒"],
+            "tendencyScores": { "V": 1, "G": 1 }
+          },
+          {
+            "choiceId": "dinner_water",
+            "choiceName": "柠檬水",
+            "riskTags": [],
+            "tendencyScores": { "L": 1 }
+          },
+          {
+            "choiceId": "dinner_fast_eat",
+            "choiceName": "趁热快速吃",
+            "riskTags": ["热烫饮食", "快速进食"],
+            "tendencyScores": { "D": 1, "V": 1 }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "sceneId": "late_night",
+    "sceneName": "Scene 4 夜宵",
+    "steps": [
+      {
+        "stepId": "night_food",
+        "chapter": "Scene 4 / Step 1",
+        "title": "夜宵吃什么？",
+        "narration": "夜深了，桌面上的空位开始变得明显。",
+        "transitionDirection": "slide-left",
+        "choices": [
+          {
+            "choiceId": "night_fried_chicken",
+            "choiceName": "香辣炸鸡",
+            "riskTags": ["油炸饮食", "辛辣饮食"],
+            "tendencyScores": { "V": 1, "K": 1 }
+          },
+          {
+            "choiceId": "night_fruit",
+            "choiceName": "水果",
+            "riskTags": [],
+            "tendencyScores": { "A": 1, "L": 1 }
+          },
+          {
+            "choiceId": "night_pickles",
+            "choiceName": "咸菜配粥",
+            "riskTags": ["高盐饮食"],
+            "tendencyScores": { "G": 1 }
+          }
+        ]
+      },
+      {
+        "stepId": "night_behavior",
+        "chapter": "Scene 4 / Step 2",
+        "title": "睡前做什么？",
+        "narration": "一天结束前，最后一个选择也会留下痕迹。",
+        "transitionDirection": "slide-down",
+        "choices": [
+          {
+            "choiceId": "night_sleep",
+            "choiceName": "洗澡睡觉",
+            "riskTags": [],
+            "tendencyScores": { "O": 1, "L": 1 }
+          },
+          {
+            "choiceId": "night_work",
+            "choiceName": "继续熬夜工作",
+            "riskTags": ["不规则生活"],
+            "tendencyScores": { "D": 1, "G": 1 }
+          },
+          {
+            "choiceId": "night_leftover",
+            "choiceName": "剩菜明天再热",
+            "riskTags": ["霉变饮食"],
+            "tendencyScores": { "G": 1 }
+          }
+        ]
+      }
+    ]
+  }
+]

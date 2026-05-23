@@ -9,6 +9,9 @@ const ACT3_STATES = {
   DRINK_CHOICE: "act3_state_02_drink_choice"
 };
 
+const DESIGN_WIDTH = 1920;
+const DESIGN_HEIGHT = 920;
+
 let act3Choices = null;
 let act3Layouts = null;
 let currentState = null;
@@ -24,6 +27,7 @@ let transitionDuration = 900;
 document.addEventListener("DOMContentLoaded", async () => {
   try {
     await loadAct3Data();
+    setupStageScale();
     updateStageHeader("第三幕低保真原型", "夜晚——聚会与火锅");
     initializeStage();
     applyState(ACT3_STATES.TITLE, { animate: true });
@@ -52,6 +56,37 @@ async function loadAct3Data() {
   console.log("Act 3 数据读取完成：", { act3Choices, act3Layouts });
 }
 
+function setupStageScale() {
+  updateStageScale();
+  window.addEventListener("resize", updateStageScale);
+}
+
+function updateStageScale() {
+  const stageScaleShell = document.getElementById("frameTrack");
+  const gameStage = document.querySelector(".act3-frame");
+
+  if (!stageScaleShell) {
+    return;
+  }
+
+  const scale = Math.min(
+    window.innerWidth / DESIGN_WIDTH,
+    window.innerHeight / DESIGN_HEIGHT,
+    1
+  );
+  const scaledWidth = DESIGN_WIDTH * scale;
+  const scaledHeight = DESIGN_HEIGHT * scale;
+
+  stageScaleShell.style.width = `${scaledWidth}px`;
+  stageScaleShell.style.height = `${scaledHeight}px`;
+
+  if (gameStage) {
+    gameStage.style.width = `${DESIGN_WIDTH}px`;
+    gameStage.style.height = `${DESIGN_HEIGHT}px`;
+    gameStage.style.transform = `scale(${scale})`;
+  }
+}
+
 function updateStageHeader(label, title) {
   const labelElement = document.querySelector(".prototype-label");
   const titleElement = document.querySelector(".stage-ui h1");
@@ -69,7 +104,7 @@ function initializeStage() {
   const frameTrack = document.getElementById("frameTrack");
   const frame = document.createElement("section");
 
-  frame.className = "scene-frame active act3-frame";
+  frame.className = "scene-frame active act3-frame game-stage";
   frame.dataset.state = "act3_object_stage";
   objectLayer = document.createElement("div");
   objectLayer.className = "act3-object-layer";
@@ -77,13 +112,14 @@ function initializeStage() {
   frame.addEventListener("click", handleStageClick);
   frameTrack.innerHTML = "";
   frameTrack.appendChild(frame);
+  updateStageScale();
 }
 
 function showLoadError(error) {
   const frameTrack = document.getElementById("frameTrack");
   const frame = document.createElement("section");
 
-  frame.className = "scene-frame active act3-frame";
+  frame.className = "scene-frame active act3-frame game-stage";
   frame.innerHTML = `
     <div class="act3-error-panel">
       <h2>数据读取失败</h2>
@@ -93,6 +129,7 @@ function showLoadError(error) {
   `;
   frameTrack.innerHTML = "";
   frameTrack.appendChild(frame);
+  updateStageScale();
   console.error(error);
 }
 

@@ -1,7 +1,7 @@
-{
+﻿{
   "stage": {
-    "width": 1440,
-    "height": 900
+    "width": 1920,
+    "height": 920
   },
   "defaults": {
     "duration": 900,
@@ -9,19 +9,19 @@
   },
   "sharedChildren": {
     "hotpotTable": {
-      "act3_s01_target_spicyPot": { "type": "foodTarget", "x": 276, "y": 220, "width": 148, "height": 222, "opacity": 1, "scale": 1, "zIndex": 4 },
-      "act3_s01_target_clearPot": { "type": "foodTarget", "x": 124, "y": 220, "width": 148, "height": 222, "opacity": 1, "scale": 1, "zIndex": 4 },
-      "act3_s01_food_vegetable": { "type": "food", "x": 175, "y": 93, "width": 189, "height": 111, "opacity": 1, "scale": 1, "zIndex": 8 },
-      "act3_s01_food_luncheonMeat": { "type": "food", "x": 378, "y": 93, "width": 89, "height": 141, "opacity": 1, "scale": 1, "zIndex": 8 },
-      "act3_s01_food_sausage": { "type": "food", "x": 481, "y": 110, "width": 159, "height": 55, "opacity": 1, "scale": 1, "zIndex": 8 },
-      "act3_s01_food_youtiao": { "type": "food", "x": 481, "y": 181, "width": 150, "height": 54, "opacity": 1, "scale": 1, "zIndex": 8 },
-      "act3_s01_food_maodu": { "type": "food", "x": 435, "y": 240, "width": 213, "height": 141, "opacity": 1, "scale": 1, "zIndex": 8 },
-      "act3_s01_food_daiRouCuiGu": { "type": "food", "x": 427, "y": 396, "width": 173, "height": 123, "opacity": 1, "scale": 1, "zIndex": 8 },
-      "act3_s01_food_beefSlices": { "type": "food", "x": 15, "y": 174, "width": 168, "height": 344, "opacity": 1, "scale": 1, "zIndex": 8 }
+      "act3_s01_target_spicyPot": { "type": "foodTarget", "x": 154, "y": 300, "width": 185, "height": 276, "opacity": 1, "scale": 1, "zIndex": 4 },
+      "act3_s01_target_clearPot": { "type": "foodTarget", "x": 340, "y": 300, "width": 185, "height": 276, "opacity": 1, "scale": 1, "zIndex": 4 },
+      "act3_s01_food_vegetable": { "type": "food", "x": 217, "y": 140, "width": 236, "height": 139, "opacity": 1, "scale": 1, "zIndex": 8 },
+      "act3_s01_food_luncheonMeat": { "type": "food", "x": 470, "y": 140, "width": 112, "height": 178, "opacity": 1, "scale": 1, "zIndex": 8 },
+      "act3_s01_food_sausage": { "type": "food", "x": 598, "y": 163, "width": 198, "height": 68, "opacity": 1, "scale": 1, "zIndex": 8 },
+      "act3_s01_food_youtiao": { "type": "food", "x": 598, "y": 250, "width": 198, "height": 68, "opacity": 1, "scale": 1, "zIndex": 8 },
+      "act3_s01_food_maodu": { "type": "food", "x": 539, "y": 325, "width": 264, "height": 174, "opacity": 1, "scale": 1, "zIndex": 8 },
+      "act3_s01_food_daiRouCuiGu": { "type": "food", "x": 531, "y": 518, "width": 216, "height": 154, "opacity": 1, "scale": 1, "zIndex": 8 },
+      "act3_s01_food_beefSlices": { "type": "food", "x": 18, "y": 241, "width": 209, "height": 428, "opacity": 1, "scale": 1, "zIndex": 8 }
     },
     "cheersZone": {
-      "act3_s02_otherCup": { "type": "cup", "x": 45, "y": 78, "width": 150, "height": 95, "opacity": 1, "scale": 1, "zIndex": 6, "content": "朋友的杯子" },
-      "act3_s02_target_emptyCup": { "type": "drinkTarget", "x": 280, "y": 78, "width": 150, "height": 95, "opacity": 1, "scale": 1, "zIndex": 6, "content": "空杯位置" }
+      "act3_s02_otherCup": { "type": "cup", "x": 43, "y": 72, "width": 151, "height": 206, "opacity": 1, "scale": 1, "zIndex": 6, "content": "朋友的杯子" },
+      "act3_s02_target_emptyCup": { "type": "drinkTarget", "x": 368, "y": 72, "width": 151, "height": 206, "opacity": 1, "scale": 1, "zIndex": 6, "content": "空杯位置" }
     },
     "drinkTable": {
       "act3_s02_drink_highAlcohol": { "type": "drink", "x": 25, "y": 53, "width": 120, "height": 92, "opacity": 1, "scale": 1, "zIndex": 7 },
@@ -35,10 +35,10 @@
       "objects": {
         "act3_s00_main_title": {
           "type": "titleFrame",
-          "x": 337,
-          "y": 237,
-          "width": 765,
-          "height": 426,
+          "x": 538,
+          "y": 265,
+          "width": 845,
+          "height": 391,
           "opacity": 1,
           "scale": 1,
           "zIndex": 2,
@@ -62,10 +62,10 @@
       "objects": {
         "act3_s00_main_title": {
           "type": "titleFrame",
-          "x": 924,
-          "y": 82,
-          "width": 454,
-          "height": 253,
+          "x": 1198,
+          "y": 69,
+          "width": 620,
+          "height": 287,
           "opacity": 1,
           "scale": 1,
           "zIndex": 5,
@@ -73,10 +73,10 @@
         },
         "act3_s01_main_hotpotTable": {
           "type": "hotpotTable",
-          "x": 61,
-          "y": 258,
-          "width": 832,
-          "height": 572,
+          "x": 88,
+          "y": 135,
+          "width": 1035,
+          "height": 711.74,
           "opacity": 1,
           "scale": 1,
           "zIndex": 1,
@@ -85,10 +85,10 @@
         },
         "act3_s01_narration_2": {
           "type": "bubble",
-          "x": 930,
-          "y": 640,
-          "width": 430,
-          "height": 110,
+          "x": 1372,
+          "y": 730,
+          "width": 446,
+          "height": 119,
           "opacity": 1,
           "scale": 1,
           "zIndex": 6,
@@ -101,10 +101,10 @@
       "objects": {
         "act3_s01_main_hotpotTable": {
           "type": "hotpotTable",
-          "x": 61,
-          "y": 146,
-          "width": 832,
-          "height": 572,
+          "x": 88,
+          "y": 69,
+          "width": 1035,
+          "height": 711,
           "opacity": 1,
           "scale": 1,
           "zIndex": 1,
@@ -112,10 +112,10 @@
         },
         "act3_s02_targetzone_cheers": {
           "type": "cheersZone",
-          "x": 645,
-          "y": 590,
-          "width": 465,
-          "height": 290,
+          "x": 1015,
+          "y": 554,
+          "width": 549,
+          "height": 313,
           "opacity": 1,
           "scale": 1,
           "zIndex": 4,
@@ -124,10 +124,10 @@
         },
         "act3_s02_main_drinkTable": {
           "type": "drinkTable",
-          "x": 1205,
-          "y": 185,
-          "width": 170,
-          "height": 620,
+          "x": 1622,
+          "y": 0,
+          "width": 196,
+          "height": 867,
           "opacity": 1,
           "scale": 1,
           "zIndex": 5,

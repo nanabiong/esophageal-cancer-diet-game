@@ -9,6 +9,10 @@ const ACT3_STATES = {
   DRINK_CHOICE: "act3_state_02_drink_choice"
 };
 
+const DESIGN_STAGE_WIDTH = 1440;
+const DESIGN_STAGE_HEIGHT = 900;
+const SAFE_PADDING = 4;
+
 let act3Choices = null;
 let act3Layouts = null;
 let currentState = null;
@@ -24,6 +28,8 @@ let transitionDuration = 900;
 document.addEventListener("DOMContentLoaded", async () => {
   try {
     await loadAct3Data();
+    updateStageScale();
+    window.addEventListener("resize", updateStageScale);
     updateStageHeader("第三幕低保真原型", "夜晚——聚会与火锅");
     initializeStage();
     applyState(ACT3_STATES.TITLE, { animate: true });
@@ -31,6 +37,17 @@ document.addEventListener("DOMContentLoaded", async () => {
     showLoadError(error);
   }
 });
+
+function updateStageScale() {
+  const availableWidth = window.innerWidth - SAFE_PADDING * 2;
+  const availableHeight = window.innerHeight - SAFE_PADDING * 2;
+  const scale = Math.min(
+    availableWidth / DESIGN_STAGE_WIDTH,
+    availableHeight / DESIGN_STAGE_HEIGHT
+  );
+
+  document.documentElement.style.setProperty("--stage-scale", String(Math.max(scale, 0)));
+}
 
 async function loadAct3Data() {
   const [choicesResponse, layoutsResponse] = await Promise.all([
@@ -333,7 +350,13 @@ function updateChildObjectContent(child, childId, childConfig) {
 
     child.dataset.type = "food";
     child.dataset.id = food.id;
-    child.textContent = wasSelected ? child.textContent : food.name;
+    if (!wasSelected) {
+      renderAssetOrLabel(child, {
+        image: food.image,
+        label: food.name,
+        alt: food.name
+      });
+    }
     child.draggable = !wasSelected;
     bindDragSource(child, "food", food.id);
   }
@@ -354,10 +377,42 @@ function updateChildObjectContent(child, childId, childConfig) {
 
     child.dataset.type = "drink";
     child.dataset.id = drink.id;
-    child.textContent = wasSelected ? child.textContent : drink.name;
+    if (!wasSelected) {
+      renderAssetOrLabel(child, {
+        image: drink.image,
+        label: drink.name,
+        alt: drink.name
+      });
+    }
     child.draggable = !wasSelected;
     bindDragSource(child, "drink", drink.id);
   }
+}
+
+function renderAssetOrLabel(element, assetConfig) {
+  element.innerHTML = "";
+
+  const label = document.createElement("span");
+  label.className = "asset-label";
+  label.textContent = assetConfig.label || "";
+  element.appendChild(label);
+
+  if (!assetConfig.image) {
+    return;
+  }
+
+  const image = document.createElement("img");
+  image.className = "asset-image";
+  image.src = assetConfig.image;
+  image.alt = assetConfig.alt || assetConfig.label || "";
+  image.addEventListener("load", () => {
+    element.classList.add("has-asset-image");
+  });
+  image.addEventListener("error", () => {
+    image.remove();
+    element.classList.remove("has-asset-image");
+  });
+  element.appendChild(image);
 }
 
 function updateChildObjectLayout(child, childConfig, parentConfig) {

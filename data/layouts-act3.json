@@ -7,6 +7,29 @@
     "duration": 900,
     "easing": "cubic-bezier(0.65, 0, 0.22, 1)"
   },
+  "sharedChildren": {
+    "hotpotTable": {
+      "act3_s01_target_spicyPot": { "type": "foodTarget", "x": 159, "y": 152, "width": 170, "height": 138, "opacity": 1, "scale": 1, "zIndex": 4 },
+      "act3_s01_target_clearPot": { "type": "foodTarget", "x": 324, "y": 152, "width": 170, "height": 138, "opacity": 1, "scale": 1, "zIndex": 4 },
+      "act3_s01_food_vegetable": { "type": "food", "x": 199, "y": 62, "width": 150, "height": 88, "opacity": 1, "scale": 1, "zIndex": 8 },
+      "act3_s01_food_luncheonMeat": { "type": "food", "x": 394, "y": 80, "width": 88, "height": 125, "opacity": 1, "scale": 1, "zIndex": 8 },
+      "act3_s01_food_sausage": { "type": "food", "x": 504, "y": 72, "width": 150, "height": 54, "opacity": 1, "scale": 1, "zIndex": 8 },
+      "act3_s01_food_youtiao": { "type": "food", "x": 504, "y": 144, "width": 150, "height": 54, "opacity": 1, "scale": 1, "zIndex": 8 },
+      "act3_s01_food_maodu": { "type": "food", "x": 459, "y": 222, "width": 170, "height": 96, "opacity": 1, "scale": 1, "zIndex": 8 },
+      "act3_s01_food_daiRouCuiGu": { "type": "food", "x": 429, "y": 402, "width": 170, "height": 106, "opacity": 1, "scale": 1, "zIndex": 8 },
+      "act3_s01_food_beefSlices": { "type": "food", "x": 34, "y": 307, "width": 170, "height": 240, "opacity": 1, "scale": 1, "zIndex": 8 }
+    },
+    "cheersZone": {
+      "act3_s02_otherCup": { "type": "cup", "x": 45, "y": 78, "width": 150, "height": 95, "opacity": 1, "scale": 1, "zIndex": 6, "content": "朋友的杯子" },
+      "act3_s02_target_emptyCup": { "type": "drinkTarget", "x": 280, "y": 78, "width": 150, "height": 95, "opacity": 1, "scale": 1, "zIndex": 6, "content": "空杯位置" }
+    },
+    "drinkTable": {
+      "act3_s02_drink_highAlcohol": { "type": "drink", "x": 25, "y": 53, "width": 120, "height": 92, "opacity": 1, "scale": 1, "zIndex": 7 },
+      "act3_s02_drink_lowAlcohol": { "type": "drink", "x": 25, "y": 180, "width": 120, "height": 92, "opacity": 1, "scale": 1, "zIndex": 7 },
+      "act3_s02_drink_softDrink": { "type": "drink", "x": 25, "y": 307, "width": 120, "height": 92, "opacity": 1, "scale": 1, "zIndex": 7 },
+      "act3_s02_drink_lemonWater": { "type": "drink", "x": 25, "y": 434, "width": 120, "height": 92, "opacity": 1, "scale": 1, "zIndex": 7 }
+    }
+  },
   "states": {
     "act3_state_00_title_intro": {
       "objects": {
@@ -57,7 +80,8 @@
           "opacity": 1,
           "scale": 1,
           "zIndex": 1,
-          "enterFrom": "enterFromBottom"
+          "enterFrom": "enterFromBottom",
+          "childrenRef": "hotpotTable"
         },
         "act3_s01_narration_2": {
           "type": "bubble",
@@ -70,34 +94,7 @@
           "zIndex": 6,
           "enterFrom": "enterFromBottom",
           "content": "累了一天了，先吃点爱吃的。把 3 个菜拖进清汤锅或辣锅。"
-        },
-        "act3_s01_target_spicyPot": {
-          "type": "foodTarget",
-          "x": 220,
-          "y": 390,
-          "width": 170,
-          "height": 138,
-          "opacity": 1,
-          "scale": 1,
-          "zIndex": 4
-        },
-        "act3_s01_target_clearPot": {
-          "type": "foodTarget",
-          "x": 385,
-          "y": 390,
-          "width": 170,
-          "height": 138,
-          "opacity": 1,
-          "scale": 1,
-          "zIndex": 4
-        },
-        "act3_s01_food_vegetable": { "type": "food", "x": 260, "y": 300, "width": 150, "height": 88, "opacity": 1, "scale": 1, "zIndex": 8 },
-        "act3_s01_food_luncheonMeat": { "type": "food", "x": 455, "y": 318, "width": 88, "height": 125, "opacity": 1, "scale": 1, "zIndex": 8 },
-        "act3_s01_food_sausage": { "type": "food", "x": 565, "y": 310, "width": 150, "height": 54, "opacity": 1, "scale": 1, "zIndex": 8 },
-        "act3_s01_food_youtiao": { "type": "food", "x": 565, "y": 382, "width": 150, "height": 54, "opacity": 1, "scale": 1, "zIndex": 8 },
-        "act3_s01_food_maodu": { "type": "food", "x": 520, "y": 460, "width": 170, "height": 96, "opacity": 1, "scale": 1, "zIndex": 8 },
-        "act3_s01_food_daiRouCuiGu": { "type": "food", "x": 490, "y": 640, "width": 170, "height": 106, "opacity": 1, "scale": 1, "zIndex": 8 },
-        "act3_s01_food_beefSlices": { "type": "food", "x": 95, "y": 545, "width": 170, "height": 240, "opacity": 1, "scale": 1, "zIndex": 8 }
+        }
       }
     },
     "act3_state_02_food_choice_after_select": {
@@ -110,7 +107,8 @@
           "height": 520,
           "opacity": 1,
           "scale": 1,
-          "zIndex": 1
+          "zIndex": 1,
+          "childrenRef": "hotpotTable"
         }
       },
       "exit": {
@@ -127,7 +125,8 @@
           "height": 520,
           "opacity": 1,
           "scale": 1,
-          "zIndex": 1
+          "zIndex": 1,
+          "childrenRef": "hotpotTable"
         },
         "act3_s02_targetzone_cheers": {
           "type": "cheersZone",
@@ -138,10 +137,9 @@
           "opacity": 1,
           "scale": 1,
           "zIndex": 5,
-          "enterFrom": "scaleFromTopLeft"
+          "enterFrom": "scaleFromTopLeft",
+          "childrenRef": "cheersZone"
         },
-        "act3_s02_otherCup": { "type": "cup", "x": 735, "y": 598, "width": 150, "height": 95, "opacity": 1, "scale": 1, "zIndex": 6, "content": "朋友的杯子" },
-        "act3_s02_target_emptyCup": { "type": "drinkTarget", "x": 970, "y": 598, "width": 150, "height": 95, "opacity": 1, "scale": 1, "zIndex": 6, "content": "空杯位置" },
         "act3_s02_narration_3": {
           "type": "bubble",
           "x": 620,
@@ -157,15 +155,9 @@
     },
     "act3_state_04_drink_choice": {
       "objects": {
-        "act3_s01_main_hotpotTable": { "type": "hotpotTable", "x": 70, "y": 160, "width": 930, "height": 590, "opacity": 1, "scale": 1, "zIndex": 1 },
-        "act3_s02_targetzone_cheers": { "type": "cheersZone", "x": 675, "y": 570, "width": 465, "height": 220, "opacity": 1, "scale": 1, "zIndex": 4 },
-        "act3_s02_otherCup": { "type": "cup", "x": 720, "y": 648, "width": 150, "height": 95, "opacity": 1, "scale": 1, "zIndex": 6, "content": "朋友的杯子" },
-        "act3_s02_target_emptyCup": { "type": "drinkTarget", "x": 955, "y": 648, "width": 150, "height": 95, "opacity": 1, "scale": 1, "zIndex": 6, "content": "空杯位置" },
-        "act3_s02_main_drinkTable": { "type": "drinkTable", "x": 1205, "y": 185, "width": 170, "height": 620, "opacity": 1, "scale": 1, "zIndex": 5, "enterFrom": "enterFromTop" },
-        "act3_s02_drink_highAlcohol": { "type": "drink", "x": 1230, "y": 238, "width": 120, "height": 92, "opacity": 1, "scale": 1, "zIndex": 7 },
-        "act3_s02_drink_lowAlcohol": { "type": "drink", "x": 1230, "y": 365, "width": 120, "height": 92, "opacity": 1, "scale": 1, "zIndex": 7 },
-        "act3_s02_drink_softDrink": { "type": "drink", "x": 1230, "y": 492, "width": 120, "height": 92, "opacity": 1, "scale": 1, "zIndex": 7 },
-        "act3_s02_drink_lemonWater": { "type": "drink", "x": 1230, "y": 619, "width": 120, "height": 92, "opacity": 1, "scale": 1, "zIndex": 7 },
+        "act3_s01_main_hotpotTable": { "type": "hotpotTable", "x": 70, "y": 160, "width": 930, "height": 590, "opacity": 1, "scale": 1, "zIndex": 1, "childrenRef": "hotpotTable" },
+        "act3_s02_targetzone_cheers": { "type": "cheersZone", "x": 675, "y": 570, "width": 465, "height": 220, "opacity": 1, "scale": 1, "zIndex": 4, "childrenRef": "cheersZone" },
+        "act3_s02_main_drinkTable": { "type": "drinkTable", "x": 1205, "y": 185, "width": 170, "height": 620, "opacity": 1, "scale": 1, "zIndex": 5, "enterFrom": "enterFromTop", "childrenRef": "drinkTable" },
         "act3_s02_narration_4": {
           "type": "bubble",
           "x": 610,

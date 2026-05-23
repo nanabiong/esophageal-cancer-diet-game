@@ -141,7 +141,11 @@ function applyState(stateId, options = {}) {
     updateObjectLayout(element, objectConfig, { immediate: !options.animate });
   });
 
-  [...objectLayer.querySelectorAll(".act3-scene-object")].forEach((element) => {
+  [...objectLayer.children].forEach((element) => {
+    if (!element.classList.contains("act3-scene-object")) {
+      return;
+    }
+
     if (targetObjects[element.dataset.objectId]) {
       return;
     }
@@ -208,63 +212,15 @@ function updateObjectContent(element, objectId, objectConfig) {
   }
 
   if (objectConfig.type === "hotpotTable") {
-    element.innerHTML = `
-      <div class="act3-table-surface">
-        <span class="act3-table-title">act3_s01_main_hotpotTable</span>
-        <span class="act3-table-note">低保真占位画框</span>
-      </div>
-    `;
-  }
-
-  if (objectConfig.type === "foodTarget") {
-    const target = act3Choices.foodTargets.find((item) => item.id === objectId);
-
-    element.dataset.targetId = target.id;
-    element.dataset.targetName = target.name;
-    element.innerHTML = `
-      <strong>${target.name}</strong>
-      <span class="act3-pot-counter">${getPotCount(target.id)} 个菜</span>
-    `;
-    bindDropTarget(element, "food");
-  }
-
-  if (objectConfig.type === "food") {
-    const food = act3Choices.foods.find((item) => item.id === objectId);
-
-    element.dataset.type = "food";
-    element.dataset.id = food.id;
-    element.textContent = food.name;
-    element.draggable = !element.classList.contains("is-selected");
-    bindDragSource(element, "food", food.id);
+    ensureHotpotTableContent(element);
   }
 
   if (objectConfig.type === "cheersZone") {
-    element.textContent = "act3_s02_targetzone_cheers";
-  }
-
-  if (objectConfig.type === "cup") {
-    element.textContent = objectConfig.content || "朋友的杯子";
-  }
-
-  if (objectConfig.type === "drinkTarget") {
-    element.dataset.targetId = "act3_s02_target_emptyCup";
-    element.dataset.targetName = act3Choices.drinkTarget.name;
-    element.textContent = objectConfig.content || "空杯位置";
-    bindDropTarget(element, "drink");
+    ensureSimpleFrameLabel(element, "act3_s02_targetzone_cheers");
   }
 
   if (objectConfig.type === "drinkTable") {
-    element.innerHTML = "<strong>饮品列表</strong>";
-  }
-
-  if (objectConfig.type === "drink") {
-    const drink = act3Choices.drinks.find((item) => item.id === objectId);
-
-    element.dataset.type = "drink";
-    element.dataset.id = drink.id;
-    element.textContent = drink.name;
-    element.draggable = !element.classList.contains("is-selected");
-    bindDragSource(element, "drink", drink.id);
+    ensureSimpleFrameLabel(element, "饮品列表");
   }
 
   if (objectConfig.type === "complete") {
@@ -275,6 +231,149 @@ function updateObjectContent(element, objectId, objectConfig) {
       <pre class="act3-debug-output">${JSON.stringify(playerChoices, null, 2)}</pre>
     `;
   }
+
+  syncChildObjects(element, objectConfig);
+}
+
+function ensureHotpotTableContent(element) {
+  if (element.querySelector(".act3-table-surface")) {
+    return;
+  }
+
+  const surface = document.createElement("div");
+  surface.className = "act3-table-surface";
+  surface.innerHTML = `
+    <span class="act3-table-title">act3_s01_main_hotpotTable</span>
+    <span class="act3-table-note">低保真占位画框</span>
+  `;
+  element.appendChild(surface);
+}
+
+function ensureSimpleFrameLabel(element, text) {
+  if (element.querySelector(".act3-frame-label")) {
+    element.querySelector(".act3-frame-label").textContent = text;
+    return;
+  }
+
+  const label = document.createElement("strong");
+  label.className = "act3-frame-label";
+  label.textContent = text;
+  element.appendChild(label);
+}
+
+function syncChildObjects(parentElement, objectConfig) {
+  const children = getChildrenConfig(objectConfig);
+
+  if (!children) {
+    return;
+  }
+
+  Object.entries(children).forEach(([childId, childConfig]) => {
+    let child = parentElement.querySelector(`[data-object-id="${childId}"]`);
+
+    if (!child) {
+      child = createChildObjectElement(childId, childConfig);
+      parentElement.appendChild(child);
+    }
+
+    updateChildObjectContent(child, childId, childConfig);
+    updateChildObjectLayout(child, childConfig, objectConfig);
+  });
+}
+
+function getChildrenConfig(objectConfig) {
+  if (objectConfig.children) {
+    return objectConfig.children;
+  }
+
+  if (objectConfig.childrenRef) {
+    return act3Layouts.sharedChildren?.[objectConfig.childrenRef] || null;
+  }
+
+  return null;
+}
+
+function createChildObjectElement(childId, childConfig) {
+  let child;
+
+  if (childConfig.type === "food" || childConfig.type === "drink") {
+    child = document.createElement("button");
+    child.type = "button";
+  } else {
+    child = document.createElement("div");
+  }
+
+  child.id = childId;
+  child.dataset.objectId = childId;
+  child.dataset.objectType = childConfig.type;
+  child.className = getChildObjectClassName(childConfig.type);
+  return child;
+}
+
+function updateChildObjectContent(child, childId, childConfig) {
+  const wasSelected = child.classList.contains("is-selected");
+
+  child.className = getChildObjectClassName(childConfig.type);
+
+  if (wasSelected) {
+    child.classList.add("is-selected");
+  }
+
+  child.dataset.objectType = childConfig.type;
+
+  if (childConfig.type === "foodTarget") {
+    const target = act3Choices.foodTargets.find((item) => item.id === childId);
+
+    child.dataset.targetId = target.id;
+    child.dataset.targetName = target.name;
+    child.innerHTML = `
+      <strong>${target.name}</strong>
+      <span class="act3-pot-counter">${getPotCount(target.id)} 个菜</span>
+    `;
+    bindDropTarget(child, "food");
+  }
+
+  if (childConfig.type === "food") {
+    const food = act3Choices.foods.find((item) => item.id === childId);
+
+    child.dataset.type = "food";
+    child.dataset.id = food.id;
+    child.textContent = wasSelected ? child.textContent : food.name;
+    child.draggable = !wasSelected;
+    bindDragSource(child, "food", food.id);
+  }
+
+  if (childConfig.type === "cup") {
+    child.textContent = childConfig.content || "朋友的杯子";
+  }
+
+  if (childConfig.type === "drinkTarget") {
+    child.dataset.targetId = "act3_s02_target_emptyCup";
+    child.dataset.targetName = act3Choices.drinkTarget.name;
+    child.textContent = child.classList.contains("filled") ? child.textContent : (childConfig.content || "空杯位置");
+    bindDropTarget(child, "drink");
+  }
+
+  if (childConfig.type === "drink") {
+    const drink = act3Choices.drinks.find((item) => item.id === childId);
+
+    child.dataset.type = "drink";
+    child.dataset.id = drink.id;
+    child.textContent = wasSelected ? child.textContent : drink.name;
+    child.draggable = !wasSelected;
+    bindDragSource(child, "drink", drink.id);
+  }
+}
+
+function updateChildObjectLayout(child, childConfig, parentConfig) {
+  child.style.left = `${(childConfig.x / parentConfig.width) * 100}%`;
+  child.style.top = `${(childConfig.y / parentConfig.height) * 100}%`;
+  child.style.width = `${(childConfig.width / parentConfig.width) * 100}%`;
+  child.style.height = `${(childConfig.height / parentConfig.height) * 100}%`;
+  child.style.opacity = childConfig.opacity ?? 1;
+  child.style.zIndex = childConfig.zIndex ?? 1;
+  child.style.transformOrigin = childConfig.transformOrigin || "left top";
+  child.style.transform = `scale(${childConfig.scale ?? 1})`;
 }
 
 function updateObjectLayout(element, objectConfig, options = {}) {
@@ -397,6 +496,18 @@ function getObjectClassName(type) {
   };
 
   return classes[type] || "act3-scene-object act3-panel";
+}
+
+function getChildObjectClassName(type) {
+  const classes = {
+    foodTarget: "act3-child-object act3-panel act3-pot",
+    food: "act3-child-object act3-object act3-food",
+    cup: "act3-child-object act3-cup other-cup",
+    drinkTarget: "act3-child-object act3-cup empty-cup",
+    drink: "act3-child-object act3-object act3-drink"
+  };
+
+  return classes[type] || "act3-child-object";
 }
 
 function getObjectElement(objectId) {

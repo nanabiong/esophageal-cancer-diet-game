@@ -313,7 +313,7 @@ button:disabled {
 }
 
 .act3-scene-object.no-transition {
-  transition: none;
+  transition: none !important;
 }
 
 .act3-child-object {

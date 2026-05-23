@@ -9,15 +9,15 @@
   },
   "sharedChildren": {
     "hotpotTable": {
-      "act3_s01_target_spicyPot": { "type": "foodTarget", "x": 159, "y": 152, "width": 170, "height": 138, "opacity": 1, "scale": 1, "zIndex": 4 },
-      "act3_s01_target_clearPot": { "type": "foodTarget", "x": 324, "y": 152, "width": 170, "height": 138, "opacity": 1, "scale": 1, "zIndex": 4 },
-      "act3_s01_food_vegetable": { "type": "food", "x": 199, "y": 62, "width": 150, "height": 88, "opacity": 1, "scale": 1, "zIndex": 8 },
-      "act3_s01_food_luncheonMeat": { "type": "food", "x": 394, "y": 80, "width": 88, "height": 125, "opacity": 1, "scale": 1, "zIndex": 8 },
-      "act3_s01_food_sausage": { "type": "food", "x": 504, "y": 72, "width": 150, "height": 54, "opacity": 1, "scale": 1, "zIndex": 8 },
-      "act3_s01_food_youtiao": { "type": "food", "x": 504, "y": 144, "width": 150, "height": 54, "opacity": 1, "scale": 1, "zIndex": 8 },
-      "act3_s01_food_maodu": { "type": "food", "x": 459, "y": 222, "width": 170, "height": 96, "opacity": 1, "scale": 1, "zIndex": 8 },
-      "act3_s01_food_daiRouCuiGu": { "type": "food", "x": 429, "y": 402, "width": 170, "height": 106, "opacity": 1, "scale": 1, "zIndex": 8 },
-      "act3_s01_food_beefSlices": { "type": "food", "x": 34, "y": 307, "width": 170, "height": 240, "opacity": 1, "scale": 1, "zIndex": 8 }
+      "act3_s01_target_spicyPot": { "type": "foodTarget", "x": 276, "y": 220, "width": 148, "height": 222, "opacity": 1, "scale": 1, "zIndex": 4 },
+      "act3_s01_target_clearPot": { "type": "foodTarget", "x": 124, "y": 220, "width": 148, "height": 222, "opacity": 1, "scale": 1, "zIndex": 4 },
+      "act3_s01_food_vegetable": { "type": "food", "x": 175, "y": 93, "width": 189, "height": 111, "opacity": 1, "scale": 1, "zIndex": 8 },
+      "act3_s01_food_luncheonMeat": { "type": "food", "x": 378, "y": 93, "width": 89, "height": 141, "opacity": 1, "scale": 1, "zIndex": 8 },
+      "act3_s01_food_sausage": { "type": "food", "x": 481, "y": 110, "width": 159, "height": 55, "opacity": 1, "scale": 1, "zIndex": 8 },
+      "act3_s01_food_youtiao": { "type": "food", "x": 481, "y": 181, "width": 150, "height": 54, "opacity": 1, "scale": 1, "zIndex": 8 },
+      "act3_s01_food_maodu": { "type": "food", "x": 435, "y": 240, "width": 213, "height": 141, "opacity": 1, "scale": 1, "zIndex": 8 },
+      "act3_s01_food_daiRouCuiGu": { "type": "food", "x": 427, "y": 396, "width": 173, "height": 123, "opacity": 1, "scale": 1, "zIndex": 8 },
+      "act3_s01_food_beefSlices": { "type": "food", "x": 15, "y": 174, "width": 168, "height": 344, "opacity": 1, "scale": 1, "zIndex": 8 }
     },
     "cheersZone": {
       "act3_s02_otherCup": { "type": "cup", "x": 45, "y": 78, "width": 150, "height": 95, "opacity": 1, "scale": 1, "zIndex": 6, "content": "朋友的杯子" },
@@ -31,7 +31,7 @@
     }
   },
   "states": {
-    "act3_state_00_title_intro": {
+    "act3_state_00_title": {
       "objects": {
         "act3_s00_main_title": {
           "type": "titleFrame",
@@ -74,7 +74,7 @@
         "act3_s01_main_hotpotTable": {
           "type": "hotpotTable",
           "x": 61,
-          "y": 238,
+          "y": 258,
           "width": 832,
           "height": 572,
           "opacity": 1,
@@ -97,32 +97,14 @@
         }
       }
     },
-    "act3_state_02_food_choice_after_select": {
+    "act3_state_02_drink_choice": {
       "objects": {
         "act3_s01_main_hotpotTable": {
           "type": "hotpotTable",
-          "x": 70,
-          "y": 140,
-          "width": 810,
-          "height": 520,
-          "opacity": 1,
-          "scale": 1,
-          "zIndex": 1,
-          "childrenRef": "hotpotTable"
-        }
-      },
-      "exit": {
-        "act3_s00_main_title": "exitToRight"
-      }
-    },
-    "act3_state_03_cheers_frame_enter": {
-      "objects": {
-        "act3_s01_main_hotpotTable": {
-          "type": "hotpotTable",
-          "x": 70,
-          "y": 145,
-          "width": 810,
-          "height": 520,
+          "x": 61,
+          "y": 146,
+          "width": 832,
+          "height": 572,
           "opacity": 1,
           "scale": 1,
           "zIndex": 1,
@@ -130,34 +112,28 @@
         },
         "act3_s02_targetzone_cheers": {
           "type": "cheersZone",
-          "x": 690,
-          "y": 520,
-          "width": 460,
-          "height": 220,
+          "x": 645,
+          "y": 590,
+          "width": 465,
+          "height": 290,
           "opacity": 1,
           "scale": 1,
-          "zIndex": 5,
+          "zIndex": 4,
           "enterFrom": "scaleFromTopLeft",
           "childrenRef": "cheersZone"
         },
-        "act3_s02_narration_3": {
-          "type": "bubble",
-          "x": 620,
-          "y": 65,
-          "width": 430,
-          "height": 96,
+        "act3_s02_main_drinkTable": {
+          "type": "drinkTable",
+          "x": 1205,
+          "y": 185,
+          "width": 170,
+          "height": 620,
           "opacity": 1,
           "scale": 1,
-          "zIndex": 6,
-          "content": "今天的第 5 杯，干杯。新的小画框从角落里展开。"
-        }
-      }
-    },
-    "act3_state_04_drink_choice": {
-      "objects": {
-        "act3_s01_main_hotpotTable": { "type": "hotpotTable", "x": 70, "y": 160, "width": 930, "height": 590, "opacity": 1, "scale": 1, "zIndex": 1, "childrenRef": "hotpotTable" },
-        "act3_s02_targetzone_cheers": { "type": "cheersZone", "x": 675, "y": 570, "width": 465, "height": 220, "opacity": 1, "scale": 1, "zIndex": 4, "childrenRef": "cheersZone" },
-        "act3_s02_main_drinkTable": { "type": "drinkTable", "x": 1205, "y": 185, "width": 170, "height": 620, "opacity": 1, "scale": 1, "zIndex": 5, "enterFrom": "enterFromTop", "childrenRef": "drinkTable" },
+          "zIndex": 5,
+          "enterFrom": "enterFromTop",
+          "childrenRef": "drinkTable"
+        },
         "act3_s02_narration_4": {
           "type": "bubble",
           "x": 610,
@@ -169,21 +145,9 @@
           "zIndex": 6,
           "content": "选一杯放到空杯位置，完成碰杯。"
         }
-      }
-    },
-    "act3_state_05_complete": {
-      "objects": {
-        "act3_complete_panel": {
-          "type": "complete",
-          "x": 390,
-          "y": 255,
-          "width": 660,
-          "height": 300,
-          "opacity": 1,
-          "scale": 1,
-          "zIndex": 10,
-          "enterFrom": "scaleFromTopLeft"
-        }
+      },
+      "exit": {
+        "act3_s00_main_title": "exitToRight"
       }
     }
   }

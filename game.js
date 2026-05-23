@@ -4,12 +4,9 @@ const act3Files = {
 };
 
 const ACT3_STATES = {
-  TITLE_INTRO: "act3_state_00_title_intro",
+  TITLE: "act3_state_00_title",
   FOOD_CHOICE: "act3_state_01_food_choice",
-  FOOD_AFTER_SELECT: "act3_state_02_food_choice_after_select",
-  CHEERS_ENTER: "act3_state_03_cheers_frame_enter",
-  DRINK_CHOICE: "act3_state_04_drink_choice",
-  COMPLETE: "act3_state_05_complete"
+  DRINK_CHOICE: "act3_state_02_drink_choice"
 };
 
 let act3Choices = null;
@@ -29,7 +26,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     await loadAct3Data();
     updateStageHeader("第三幕低保真原型", "夜晚——聚会与火锅");
     initializeStage();
-    applyState(ACT3_STATES.TITLE_INTRO, { animate: true });
+    applyState(ACT3_STATES.TITLE, { animate: true });
   } catch (error) {
     showLoadError(error);
   }
@@ -101,7 +98,7 @@ function showLoadError(error) {
 
 function handleStageClick(event) {
   if (
-    currentState !== ACT3_STATES.TITLE_INTRO ||
+    currentState !== ACT3_STATES.TITLE ||
     isStateLocked ||
     isTransitioning ||
     event.target.closest(".act3-scene-object")
@@ -124,16 +121,14 @@ function applyState(stateId, options = {}) {
 
     if (!element) {
       element = createObjectElement(objectId, objectConfig);
-      objectLayer.appendChild(element);
       updateObjectContent(element, objectId, objectConfig);
 
       if (options.animate && objectConfig.enterFrom) {
-        updateObjectLayout(element, getEnterLayout(objectConfig), { immediate: true });
-        requestAnimationFrame(() => {
-          updateObjectLayout(element, objectConfig);
-        });
+        enterNewObject(element, objectConfig);
         return;
       }
+
+      objectLayer.appendChild(element);
     } else {
       updateObjectContent(element, objectId, objectConfig);
     }
@@ -404,6 +399,21 @@ function updateObjectLayout(element, objectConfig, options = {}) {
   }
 }
 
+function enterNewObject(element, finalConfig) {
+  const initialConfig = getEnterLayout(finalConfig);
+
+  element.classList.add("no-transition");
+  updateObjectLayout(element, initialConfig, { immediate: true });
+  objectLayer.appendChild(element);
+
+  element.offsetHeight;
+
+  requestAnimationFrame(() => {
+    element.classList.remove("no-transition");
+    updateObjectLayout(element, finalConfig);
+  });
+}
+
 function getEnterLayout(objectConfig) {
   const stage = act3Layouts.stage;
   const layout = { ...objectConfig };
@@ -414,7 +424,10 @@ function getEnterLayout(objectConfig) {
   }
 
   if (objectConfig.enterFrom === "enterFromTop") {
-    layout.y = -objectConfig.height - 100;
+    layout.x = objectConfig.x;
+    layout.y = objectConfig.y - stage.height;
+    layout.width = objectConfig.width;
+    layout.height = objectConfig.height;
     layout.opacity = 1;
   }
 
@@ -461,23 +474,12 @@ function setupStateInteractions(stateId) {
     startTitleBubbles();
   }
 
-  if (stateId === ACT3_STATES.COMPLETE) {
-    console.log("Act 3 playerChoices：", playerChoices);
+  if (stateId === ACT3_STATES.DRINK_CHOICE) {
+    console.log("Act 3 进入饮品选择，当前 playerChoices：", playerChoices);
   }
 }
 
-function handleStateEntered(stateId) {
-  if (stateId === ACT3_STATES.FOOD_AFTER_SELECT) {
-    window.setTimeout(() => {
-      transitionToState(ACT3_STATES.CHEERS_ENTER);
-    }, 620);
-  }
-
-  if (stateId === ACT3_STATES.CHEERS_ENTER) {
-    window.setTimeout(() => {
-      transitionToState(ACT3_STATES.DRINK_CHOICE);
-    }, 980);
-  }
+function handleStateEntered() {
 }
 
 function getObjectClassName(type) {
@@ -669,7 +671,7 @@ function handleFoodDrop(targetElement) {
     isStateLocked = true;
     recordAct3FoodChoice();
     window.setTimeout(() => {
-      transitionToState(ACT3_STATES.FOOD_AFTER_SELECT);
+      transitionToState(ACT3_STATES.DRINK_CHOICE);
     }, 520);
   }
 }
@@ -702,10 +704,7 @@ function handleDrinkDrop(targetElement) {
   drinkButton.draggable = false;
   console.log("Act 3 饮品选择：", choice);
   console.log("Act 3 playerChoices：", playerChoices);
-
-  window.setTimeout(() => {
-    transitionToState(ACT3_STATES.COMPLETE);
-  }, 620);
+  console.log("第三幕完成，进入下一幕占位。");
 }
 
 function getPotCount(targetId) {

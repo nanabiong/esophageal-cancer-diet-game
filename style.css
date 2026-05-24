@@ -2,6 +2,11 @@
   box-sizing: border-box;
 }
 
+:root {
+  --drag-outline-color: #ff6b4a;
+  --drag-scale: 1.06;
+}
+
 html,
 body {
   margin: 0;
@@ -419,10 +424,14 @@ button:disabled {
 }
 
 .asset-image {
+  position: absolute;
+  inset: 0;
   display: block;
   width: 100%;
   height: 100%;
-  object-fit: contain;
+  max-width: none;
+  max-height: none;
+  object-fit: fill;
   pointer-events: none;
 }
 
@@ -440,6 +449,16 @@ button:disabled {
 .has-loaded-asset-image {
   background: transparent !important;
   color: transparent;
+}
+
+.has-image {
+  padding: 0 !important;
+  background: transparent !important;
+  overflow: visible;
+}
+
+.has-image .placeholder-label {
+  display: none;
 }
 
 .has-loaded-bg-image {
@@ -548,10 +567,42 @@ button:disabled {
 }
 
 .act3-object.is-selected {
-  opacity: 0.24;
   cursor: default;
   border-style: solid;
   background: #d8d1c2;
+}
+
+.act3-food,
+.act3-food:focus,
+.act3-food:focus-visible,
+.act3-food.is-dragging,
+.act3-food.is-selected,
+.drag-clone,
+.drag-clone:focus,
+.drag-clone:focus-visible {
+  outline: none !important;
+  box-shadow: none;
+}
+
+.act3-food.is-dragging {
+  opacity: 0.55;
+}
+
+.act3-food.is-used {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.act3-food.is-food-drag-locked {
+  cursor: default;
+}
+
+.act3-food.is-food-drag-locked:hover:not(:disabled),
+.act3-food.is-used:hover:not(:disabled) {
+  outline: none;
+  background: transparent;
+  transform: none;
 }
 
 .act3-food {
@@ -568,39 +619,34 @@ button:disabled {
 .act3-food[data-id="act3_s01_food_vegetable"] {
   width: 150px;
   height: 88px;
-  border-radius: 50%;
+  border-radius: 0;
 }
 
 .act3-food[data-id="act3_s01_food_maodu"] {
   width: 170px;
   height: 96px;
-  border-radius: 50%;
+  border-radius: 0;
 }
 
 .act3-food[data-id="act3_s01_food_beefSlices"] {
   width: 170px;
   height: 240px;
-  border-radius: 70% 30% 70% 30%;
-  background: transparent;
-  border-left: 54px solid #9a9a9a;
-  border-bottom: 44px solid #9a9a9a;
+  border-radius: 0;
+  background: #9a9a9a;
+  border-left: 0;
+  border-bottom: 0;
   box-shadow: none;
-  justify-content: flex-start;
-  align-items: flex-end;
-  padding: 0 0 16px 2px;
+  justify-content: center;
+  align-items: center;
+  padding: 12px;
   font-size: 20px;
-  text-align: left;
+  text-align: center;
 }
 
 .act3-food[data-id="act3_s01_food_sausage"],
 .act3-food[data-id="act3_s01_food_youtiao"] {
   width: 150px;
   min-height: 54px;
-}
-
-.act3-food[data-id="act3_s01_food_luncheonMeat"] {
-  width: 88px;
-  min-height: 125px;
 }
 
 .act3-food[data-id="act3_s01_food_daiRouCuiGu"] {

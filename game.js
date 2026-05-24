@@ -18,11 +18,13 @@ let currentState = null;
 let isTransitioning = false;
 let isStateLocked = false;
 let dragPayload = null;
+let dragPreviewElement = null;
 let selectedFoods = [];
 let playerChoices = [];
 let bubbleTimers = [];
 let objectLayer = null;
 let transitionDuration = 900;
+let isFoodChoiceLocked = false;
 
 document.addEventListener("DOMContentLoaded", async () => {
   try {
@@ -318,6 +320,7 @@ function syncObjectImage(element, objectConfig, fallbackLabel) {
   const existingImage = element.querySelector(":scope > .asset-image");
 
   element.classList.remove("has-loaded-asset-image");
+  element.classList.remove("has-image");
 
   if (!objectConfig.image) {
     existingImage?.remove();
@@ -330,9 +333,11 @@ function syncObjectImage(element, objectConfig, fallbackLabel) {
   image.alt = fallbackLabel || objectConfig.id || "";
   image.src = objectConfig.image;
   image.onload = () => {
+    element.classList.add("has-image");
     element.classList.add("has-loaded-asset-image");
   };
   image.onerror = () => {
+    element.classList.remove("has-image");
     element.classList.remove("has-loaded-asset-image");
     image.remove();
     if (!element.textContent.trim()) {
@@ -441,7 +446,8 @@ function updateChildObjectContent(child, childId, childConfig) {
       syncObjectImage(child, childConfig, food.name);
       child.textContent = wasSelected ? child.textContent : food.name;
     }
-    child.draggable = !wasSelected;
+    child.draggable = currentState === ACT3_STATES.FOOD_CHOICE && !wasSelected;
+    child.classList.toggle("is-food-drag-locked", currentState !== ACT3_STATES.FOOD_CHOICE && !wasSelected);
     bindDragSource(child, "food", food.id);
   }
 
@@ -582,11 +588,14 @@ function cleanupExitedObjects() {
 
 function setupStateInteractions(stateId) {
   if (stateId === ACT3_STATES.FOOD_CHOICE) {
+    isFoodChoiceLocked = false;
     selectedFoods = [];
     startTitleBubbles();
   }
 
   if (stateId === ACT3_STATES.DRINK_CHOICE) {
+    isFoodChoiceLocked = true;
+    lockFoodDragSources();
     console.log("Act 3 进入饮品选择，当前 playerChoices：", playerChoices);
   }
 }
@@ -697,6 +706,11 @@ function bindDragSource(element, type, id) {
       return;
     }
 
+    if (type === "food" && currentState !== ACT3_STATES.FOOD_CHOICE) {
+      event.preventDefault();
+      return;
+    }
+
     dragPayload = { type, id };
     element.classList.add("is-dragging");
     event.dataTransfer.effectAllowed = "move";
@@ -745,6 +759,10 @@ function bindDropTarget(element, acceptedType) {
 }
 
 function canAcceptDrop(acceptedType) {
+  if (acceptedType === "food" && currentState !== ACT3_STATES.FOOD_CHOICE) {
+    return false;
+  }
+
   return !isStateLocked && dragPayload && dragPayload.type === acceptedType;
 }
 
@@ -772,8 +790,8 @@ function handleFoodDrop(targetElement) {
 
   selectedFoods.push(selectedFood);
   foodButton.classList.add("is-selected");
+  foodButton.classList.add("is-used");
   foodButton.draggable = false;
-  foodButton.textContent = `${food.name} → ${target.name}`;
   targetElement.classList.add("has-drop");
   targetElement.querySelector(".act3-pot-counter").textContent = `${getPotCount(target.id)} 个菜`;
 
@@ -781,11 +799,20 @@ function handleFoodDrop(targetElement) {
 
   if (selectedFoods.length >= 3) {
     isStateLocked = true;
+    isFoodChoiceLocked = true;
     recordAct3FoodChoice();
     window.setTimeout(() => {
       transitionToState(ACT3_STATES.DRINK_CHOICE);
     }, 520);
   }
+}
+
+function lockFoodDragSources() {
+  objectLayer.querySelectorAll('.act3-food[data-type="food"]').forEach((foodElement) => {
+    foodElement.draggable = false;
+    foodElement.classList.add("is-food-drag-locked");
+    foodElement.classList.remove("is-dragging");
+  });
 }
 
 function handleDrinkDrop(targetElement) {

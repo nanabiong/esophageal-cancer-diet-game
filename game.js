@@ -18,7 +18,7 @@ let currentState = null;
 let isTransitioning = false;
 let isStateLocked = false;
 let dragPayload = null;
-let dragPreviewElement = null;
+let activeFoodDrag = null;
 let selectedFoods = [];
 const usedFoodIds = new Set();
 let playerChoices = [];
@@ -332,6 +332,7 @@ function syncObjectImage(element, objectConfig, fallbackLabel) {
 
   image.className = "asset-image";
   image.alt = fallbackLabel || objectConfig.id || "";
+  image.draggable = false;
   image.src = objectConfig.image;
   image.onload = () => {
     element.classList.add("has-image");
@@ -461,7 +462,7 @@ function updateChildObjectContent(child, childId, childConfig) {
       child.textContent = wasSelected ? child.textContent : food.name;
     }
     syncUsedFoodState(child, childId);
-    child.draggable = currentState === ACT3_STATES.FOOD_CHOICE && !isUsedFood;
+    child.draggable = false;
     child.classList.toggle("is-food-drag-locked", currentState !== ACT3_STATES.FOOD_CHOICE && !isUsedFood);
     bindDragSource(child, "food", food.id);
   }
@@ -715,6 +716,12 @@ function bindDragSource(element, type, id) {
   }
 
   element.dataset.dragBound = "true";
+
+  if (type === "food") {
+    bindFoodPointerDrag(element, id);
+    return;
+  }
+
   element.addEventListener("dragstart", (event) => {
     if (isStateLocked || element.classList.contains("is-selected")) {
       event.preventDefault();
@@ -736,6 +743,156 @@ function bindDragSource(element, type, id) {
     element.classList.remove("is-dragging");
     dragPayload = null;
   });
+}
+
+function bindFoodPointerDrag(element, id) {
+  element.addEventListener("pointerdown", (event) => {
+    if (
+      event.button !== 0 ||
+      isStateLocked ||
+      currentState !== ACT3_STATES.FOOD_CHOICE ||
+      usedFoodIds.has(id) ||
+      element.classList.contains("is-selected")
+    ) {
+      return;
+    }
+
+    event.preventDefault();
+    startFoodPointerDrag(event, element, id);
+  });
+}
+
+function startFoodPointerDrag(event, element, id) {
+  const originalParent = element.parentElement;
+  const originalNextSibling = element.nextSibling;
+  const originalStyle = {
+    left: element.style.left,
+    top: element.style.top,
+    width: element.style.width,
+    height: element.style.height,
+    zIndex: element.style.zIndex,
+    transform: element.style.transform
+  };
+  const layerRect = objectLayer.getBoundingClientRect();
+  const sourceRect = element.getBoundingClientRect();
+  const scale = layerRect.width / DESIGN_WIDTH || 1;
+  const pointerX = (event.clientX - layerRect.left) / scale;
+  const pointerY = (event.clientY - layerRect.top) / scale;
+  const startLeft = (sourceRect.left - layerRect.left) / scale;
+  const startTop = (sourceRect.top - layerRect.top) / scale;
+  const width = sourceRect.width / scale;
+  const height = sourceRect.height / scale;
+
+  activeFoodDrag = {
+    id,
+    element,
+    originalParent,
+    originalNextSibling,
+    originalStyle,
+    offsetX: pointerX - startLeft,
+    offsetY: pointerY - startTop
+  };
+
+  dragPayload = { type: "food", id };
+  element.classList.add("dragging");
+  element.classList.add("is-dragging");
+  element.style.left = `${startLeft}px`;
+  element.style.top = `${startTop}px`;
+  element.style.width = `${width}px`;
+  element.style.height = `${height}px`;
+  element.style.zIndex = "9999";
+  element.style.transform = "none";
+  objectLayer.appendChild(element);
+  moveFoodPointerDrag(event);
+
+  window.addEventListener("pointermove", moveFoodPointerDrag);
+  window.addEventListener("pointerup", finishFoodPointerDrag);
+  window.addEventListener("pointercancel", cancelFoodPointerDrag);
+}
+
+function moveFoodPointerDrag(event) {
+  if (!activeFoodDrag) {
+    return;
+  }
+
+  const layerRect = objectLayer.getBoundingClientRect();
+  const scale = layerRect.width / DESIGN_WIDTH || 1;
+  const pointerX = (event.clientX - layerRect.left) / scale;
+  const pointerY = (event.clientY - layerRect.top) / scale;
+
+  activeFoodDrag.element.style.left = `${pointerX - activeFoodDrag.offsetX}px`;
+  activeFoodDrag.element.style.top = `${pointerY - activeFoodDrag.offsetY}px`;
+}
+
+function finishFoodPointerDrag(event) {
+  if (!activeFoodDrag) {
+    return;
+  }
+
+  const dropTarget = getFoodDropTargetAtPoint(event.clientX, event.clientY);
+  const { element, id } = activeFoodDrag;
+
+  restoreFoodDragElement();
+
+  if (dropTarget) {
+    dragPayload = { type: "food", id };
+    handleFoodDrop(dropTarget);
+  }
+
+  element.classList.remove("dragging");
+  element.classList.remove("is-dragging");
+  dragPayload = null;
+  removeFoodPointerListeners();
+  activeFoodDrag = null;
+}
+
+function cancelFoodPointerDrag() {
+  if (!activeFoodDrag) {
+    return;
+  }
+
+  activeFoodDrag.element.classList.remove("dragging");
+  activeFoodDrag.element.classList.remove("is-dragging");
+  restoreFoodDragElement();
+  dragPayload = null;
+  removeFoodPointerListeners();
+  activeFoodDrag = null;
+}
+
+function restoreFoodDragElement() {
+  const { element, originalParent, originalNextSibling, originalStyle } = activeFoodDrag;
+
+  if (originalNextSibling && originalNextSibling.parentElement === originalParent) {
+    originalParent.insertBefore(element, originalNextSibling);
+  } else {
+    originalParent.appendChild(element);
+  }
+
+  element.style.left = originalStyle.left;
+  element.style.top = originalStyle.top;
+  element.style.width = originalStyle.width;
+  element.style.height = originalStyle.height;
+  element.style.zIndex = originalStyle.zIndex;
+  element.style.transform = originalStyle.transform;
+}
+
+function getFoodDropTargetAtPoint(clientX, clientY) {
+  return [...objectLayer.querySelectorAll('.act3-pot[data-target-id]')].find((target) => {
+    const rect = target.getBoundingClientRect();
+
+    return (
+      clientX >= rect.left &&
+      clientX <= rect.right &&
+      clientY >= rect.top &&
+      clientY <= rect.bottom
+    );
+  }) || null;
+}
+
+function removeFoodPointerListeners() {
+  window.removeEventListener("pointermove", moveFoodPointerDrag);
+  window.removeEventListener("pointerup", finishFoodPointerDrag);
+  window.removeEventListener("pointercancel", cancelFoodPointerDrag);
 }
 
 function bindDropTarget(element, acceptedType) {

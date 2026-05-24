@@ -4,6 +4,7 @@
 
 :root {
   --drag-outline-color: #ff6b4a;
+  --drag-outline-size: 1px;
   --drag-scale: 1.06;
 }
 
@@ -433,6 +434,8 @@ button:disabled {
   max-height: none;
   object-fit: fill;
   pointer-events: none;
+  user-select: none;
+  -webkit-user-drag: none;
 }
 
 .frame-bg-image {
@@ -575,17 +578,31 @@ button:disabled {
 .act3-food,
 .act3-food:focus,
 .act3-food:focus-visible,
+.act3-food.dragging,
 .act3-food.is-dragging,
 .act3-food.is-selected,
-.drag-clone,
-.drag-clone:focus,
-.drag-clone:focus-visible {
+.dragging {
   outline: none !important;
   box-shadow: none;
 }
 
+.act3-food.dragging,
 .act3-food.is-dragging {
-  opacity: 0.55;
+  opacity: 1;
+  border-color: transparent;
+  z-index: 9999;
+  pointer-events: none;
+}
+
+.act3-food.dragging .asset-image,
+.act3-food.is-dragging .asset-image {
+  filter:
+    drop-shadow(var(--drag-outline-size) 0 0 var(--drag-outline-color))
+    drop-shadow(calc(-1 * var(--drag-outline-size)) 0 0 var(--drag-outline-color))
+    drop-shadow(0 var(--drag-outline-size) 0 var(--drag-outline-color))
+    drop-shadow(0 calc(-1 * var(--drag-outline-size)) 0 var(--drag-outline-color));
+  transform: scale(var(--drag-scale));
+  transform-origin: center center;
 }
 
 .act3-food.is-used {
@@ -615,6 +632,8 @@ button:disabled {
   color: #151515;
   font-size: 12px;
   box-shadow: none;
+  user-select: none;
+  touch-action: none;
 }
 
 .act3-food[data-id="act3_s01_food_vegetable"] {

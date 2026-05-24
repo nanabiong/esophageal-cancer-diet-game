@@ -234,6 +234,7 @@ function createObjectElement(objectId, objectConfig) {
 function updateObjectContent(element, objectId, objectConfig) {
   element.className = getObjectClassName(objectConfig.type);
   element.dataset.objectType = objectConfig.type;
+  element.dataset.label = objectConfig.label || objectConfig.name || objectId;
 
   if (objectConfig.type === "titleFrame") {
     element.innerHTML = objectConfig.content || "";
@@ -246,6 +247,9 @@ function updateObjectContent(element, objectId, objectConfig) {
   if (objectConfig.type === "hotpotTable") {
     ensureHotpotTableContent(element);
   }
+
+  syncFrameBackgroundImage(element, objectConfig);
+  syncObjectImage(element, objectConfig, objectConfig.label || objectConfig.name || objectId);
 
   if (objectConfig.type === "cheersZone") {
     ensureSimpleFrameLabel(element, "act3_s02_targetzone_cheers");
@@ -279,6 +283,66 @@ function ensureHotpotTableContent(element) {
     <span class="act3-table-note">低保真占位画框</span>
   `;
   element.appendChild(surface);
+}
+
+function syncFrameBackgroundImage(element, objectConfig) {
+  const imagePath = objectConfig.bgImage || objectConfig.backgroundImage;
+  const existingImage = element.querySelector(":scope > .frame-bg-image");
+
+  element.classList.remove("has-loaded-bg-image");
+
+  if (!imagePath) {
+    existingImage?.remove();
+    return;
+  }
+
+  const image = existingImage || document.createElement("img");
+
+  image.className = "frame-bg-image";
+  image.alt = objectConfig.label || objectConfig.name || element.dataset.objectId || "";
+  image.src = imagePath;
+  image.onload = () => {
+    element.classList.add("has-loaded-bg-image");
+  };
+  image.onerror = () => {
+    element.classList.remove("has-loaded-bg-image");
+    image.remove();
+  };
+
+  if (!existingImage) {
+    element.prepend(image);
+  }
+}
+
+function syncObjectImage(element, objectConfig, fallbackLabel) {
+  const existingImage = element.querySelector(":scope > .asset-image");
+
+  element.classList.remove("has-loaded-asset-image");
+
+  if (!objectConfig.image) {
+    existingImage?.remove();
+    return;
+  }
+
+  const image = existingImage || document.createElement("img");
+
+  image.className = "asset-image";
+  image.alt = fallbackLabel || objectConfig.id || "";
+  image.src = objectConfig.image;
+  image.onload = () => {
+    element.classList.add("has-loaded-asset-image");
+  };
+  image.onerror = () => {
+    element.classList.remove("has-loaded-asset-image");
+    image.remove();
+    if (!element.textContent.trim()) {
+      element.textContent = fallbackLabel || "";
+    }
+  };
+
+  if (!existingImage) {
+    element.appendChild(image);
+  }
 }
 
 function ensureSimpleFrameLabel(element, text) {
@@ -352,6 +416,7 @@ function updateChildObjectContent(child, childId, childConfig) {
   }
 
   child.dataset.objectType = childConfig.type;
+  child.dataset.label = childConfig.label || childConfig.name || childId;
 
   if (childConfig.type === "foodTarget") {
     const target = act3Choices.foodTargets.find((item) => item.id === childId);
@@ -370,7 +435,12 @@ function updateChildObjectContent(child, childId, childConfig) {
 
     child.dataset.type = "food";
     child.dataset.id = food.id;
-    child.textContent = wasSelected ? child.textContent : food.name;
+    if (childConfig.image) {
+      syncObjectImage(child, childConfig, food.name);
+    } else {
+      syncObjectImage(child, childConfig, food.name);
+      child.textContent = wasSelected ? child.textContent : food.name;
+    }
     child.draggable = !wasSelected;
     bindDragSource(child, "food", food.id);
   }
@@ -391,7 +461,12 @@ function updateChildObjectContent(child, childId, childConfig) {
 
     child.dataset.type = "drink";
     child.dataset.id = drink.id;
-    child.textContent = wasSelected ? child.textContent : drink.name;
+    if (childConfig.image) {
+      syncObjectImage(child, childConfig, drink.name);
+    } else {
+      syncObjectImage(child, childConfig, drink.name);
+      child.textContent = wasSelected ? child.textContent : drink.name;
+    }
     child.draggable = !wasSelected;
     bindDragSource(child, "drink", drink.id);
   }

@@ -375,6 +375,9 @@ function syncChildObjects(parentElement, objectConfig) {
 
     if (!child) {
       child = createChildObjectElement(childId, childConfig);
+      if (childConfig.type === "food") {
+        syncUsedFoodState(child, childId);
+      }
       parentElement.appendChild(child);
     }
 
@@ -409,6 +412,11 @@ function createChildObjectElement(childId, childConfig) {
   child.dataset.objectId = childId;
   child.dataset.objectType = childConfig.type;
   child.className = getChildObjectClassName(childConfig.type);
+
+  if (childConfig.type === "food") {
+    syncUsedFoodState(child, childId);
+  }
+
   return child;
 }
 
@@ -423,6 +431,10 @@ function updateChildObjectContent(child, childId, childConfig) {
 
   child.dataset.objectType = childConfig.type;
   child.dataset.label = childConfig.label || childConfig.name || childId;
+
+  if (childConfig.type === "food") {
+    syncUsedFoodState(child, childId);
+  }
 
   if (childConfig.type === "foodTarget") {
     const target = act3Choices.foodTargets.find((item) => item.id === childId);

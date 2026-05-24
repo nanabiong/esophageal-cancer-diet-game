@@ -20,6 +20,7 @@ let isStateLocked = false;
 let dragPayload = null;
 let dragPreviewElement = null;
 let selectedFoods = [];
+const usedFoodIds = new Set();
 let playerChoices = [];
 let bubbleTimers = [];
 let objectLayer = null;
@@ -437,6 +438,7 @@ function updateChildObjectContent(child, childId, childConfig) {
 
   if (childConfig.type === "food") {
     const food = act3Choices.foods.find((item) => item.id === childId);
+    const isUsedFood = usedFoodIds.has(childId);
 
     child.dataset.type = "food";
     child.dataset.id = food.id;
@@ -446,8 +448,9 @@ function updateChildObjectContent(child, childId, childConfig) {
       syncObjectImage(child, childConfig, food.name);
       child.textContent = wasSelected ? child.textContent : food.name;
     }
-    child.draggable = currentState === ACT3_STATES.FOOD_CHOICE && !wasSelected;
-    child.classList.toggle("is-food-drag-locked", currentState !== ACT3_STATES.FOOD_CHOICE && !wasSelected);
+    syncUsedFoodState(child, childId);
+    child.draggable = currentState === ACT3_STATES.FOOD_CHOICE && !isUsedFood;
+    child.classList.toggle("is-food-drag-locked", currentState !== ACT3_STATES.FOOD_CHOICE && !isUsedFood);
     bindDragSource(child, "food", food.id);
   }
 
@@ -789,8 +792,9 @@ function handleFoodDrop(targetElement) {
   };
 
   selectedFoods.push(selectedFood);
+  usedFoodIds.add(food.id);
   foodButton.classList.add("is-selected");
-  foodButton.classList.add("is-used");
+  syncUsedFoodState(foodButton, food.id);
   foodButton.draggable = false;
   targetElement.classList.add("has-drop");
   targetElement.querySelector(".act3-pot-counter").textContent = `${getPotCount(target.id)} 个菜`;
@@ -812,7 +816,19 @@ function lockFoodDragSources() {
     foodElement.draggable = false;
     foodElement.classList.add("is-food-drag-locked");
     foodElement.classList.remove("is-dragging");
+    syncUsedFoodState(foodElement, foodElement.dataset.id);
   });
+}
+
+function syncUsedFoodState(foodElement, foodId) {
+  const isUsed = usedFoodIds.has(foodId);
+
+  foodElement.classList.toggle("is-used", isUsed);
+  foodElement.style.pointerEvents = isUsed ? "none" : "";
+
+  if (isUsed) {
+    foodElement.draggable = false;
+  }
 }
 
 function handleDrinkDrop(targetElement) {

@@ -29,6 +29,12 @@
   --cup-wiggle-rotate: 4deg;
   --cup-wiggle-duration: 520ms;
   --cup-wiggle-count: 3;
+  --hover-info-bg: rgba(255, 255, 255, 0.94);
+  --hover-info-border: #382620;
+  --hover-info-shadow: rgba(72, 56, 56, 0.18);
+  --hover-info-title-size: 22px;
+  --hover-info-body-size: 17px;
+  --hover-info-max-width: 360px;
 }
 
 html,
@@ -555,6 +561,80 @@ button:disabled {
   box-shadow: 0 0 12px rgba(255, 216, 77, 0.32);
 }
 
+.cheer-zone-breath-bubble {
+  position: absolute;
+  pointer-events: none;
+  animation: cheerBreathBubble var(--cheer-breath-duration, 1600ms) ease-in-out infinite;
+  transform-origin: center center;
+}
+
+.cheer-zone-breath-bubble img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  pointer-events: none;
+}
+
+.cheer-zone-breath-bubble.is-placeholder {
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.55);
+  box-shadow: 0 0 14px rgba(255, 216, 77, 0.28);
+}
+
+.act3-hover-info-tooltip {
+  position: absolute;
+  z-index: 9999;
+  max-width: var(--hover-info-max-width, 360px);
+  padding: 16px 18px;
+  border: 2px solid var(--hover-info-border, #222);
+  border-radius: 18px;
+  background: var(--hover-info-bg, rgba(255, 255, 255, 0.94));
+  box-shadow: 4px 4px 0 var(--hover-info-shadow, rgba(0, 0, 0, 0.18));
+  color: #222;
+  font-family: YouYuan, "幼圆", "Microsoft YaHei", sans-serif;
+  line-height: 1.55;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(6px);
+  transition:
+    opacity 160ms ease,
+    transform 160ms ease;
+}
+
+.act3-hover-info-tooltip.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.act3-hover-info-title {
+  margin-bottom: 8px;
+  font-size: var(--hover-info-title-size, 22px);
+  font-weight: 600;
+}
+
+.act3-hover-info-body {
+  font-size: var(--hover-info-body-size, 17px);
+  font-weight: 400;
+}
+
+.cheers-sparkle-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.cheers-sparkle {
+  position: absolute;
+  line-height: 1;
+  opacity: 0;
+  pointer-events: none;
+  transform: translate(-50%, -50%) scale(0.4) rotate(0deg);
+  animation: cheersSparkleBurst var(--sparkle-duration, 720ms) ease-out forwards;
+}
+
 @keyframes guideBubbleEnter {
   from {
     opacity: 0;
@@ -588,6 +668,57 @@ button:disabled {
   to {
     opacity: 0;
     transform: translateY(var(--guide-bubble-exit-y, -60px));
+  }
+}
+
+@keyframes cheersSparkleBurst {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.3) rotate(0deg);
+  }
+
+  18% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1.2) rotate(18deg);
+  }
+
+  58% {
+    opacity: 1;
+    transform:
+      translate(
+        calc(-50% + var(--sparkle-dx)),
+        calc(-50% + var(--sparkle-dy))
+      )
+      scale(1)
+      rotate(90deg);
+  }
+
+  100% {
+    opacity: 0;
+    transform:
+      translate(
+        calc(-50% + var(--sparkle-dx)),
+        calc(-50% + var(--sparkle-dy))
+      )
+      scale(0.2)
+      rotate(160deg);
+  }
+}
+
+@keyframes cheerBreathBubble {
+  0% {
+    opacity: 0.92;
+    transform: scale(var(--cheer-breath-scale-min, 0.96));
+  }
+
+  50% {
+    opacity: 1;
+    transform: scale(var(--cheer-breath-scale-max, 1.08));
+  }
+
+  100% {
+    opacity: 0.92;
+    transform: scale(var(--cheer-breath-scale-min, 0.96));
   }
 }
 

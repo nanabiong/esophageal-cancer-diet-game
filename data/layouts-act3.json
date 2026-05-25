@@ -81,9 +81,9 @@
     "parentId": "act3_s01_main_hotpotTable",
     "bounds": {
       "x": 0,
-      "y": -52,
+      "y": -59,
       "width": 1033,
-      "height": 226
+      "height": 130
     },
     "images": [
       "assets/images/act3/effects/floating-bubble-1.png",
@@ -91,7 +91,7 @@
       "assets/images/act3/effects/floating-bubble-3.png",
       "assets/images/act3/effects/floating-bubble-4.png"
     ],
-    "minSize": 130,
+    "minSize": 170,
     "maxSize": 200,
     "minSpawnDelay": 300,
     "maxSpawnDelay": 1000,
@@ -101,6 +101,20 @@
     "maxFloatDistance": 32,
     "maxCount": 5,
     "zIndex": 8
+  },
+  "cheerZoneBreathBubble": {
+    "enabled": true,
+    "parentId": "act3_s02_targetzone_cheers",
+    "id": "act3_s02_cheer_breath_bubble",
+    "x": 39,
+    "y": -38,
+    "width": 149,
+    "height": 110,
+    "image": "assets/images/act3/effects/cheer-breath-bubble.png",
+    "zIndex": 8,
+    "scaleMin": 1.1,
+    "scaleMax": 1.2,
+    "duration": 1600
   },
   "sharedChildren": {
     "hotpotTable": {

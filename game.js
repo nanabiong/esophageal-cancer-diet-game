@@ -42,6 +42,97 @@ const HOTPOT_FLOATING_BUBBLE_CONFIG = {
   maxCount: 5,
   zIndex: 8
 };
+const CHEER_ZONE_BREATH_BUBBLE_CONFIG = {
+  enabled: true,
+  parentId: "act3_s02_targetzone_cheers",
+  id: "act3_s02_cheer_breath_bubble",
+  x: 120,
+  y: -90,
+  width: 160,
+  height: 120,
+  image: "assets/images/act3/effects/cheer-breath-bubble.png",
+  zIndex: 8,
+  scaleMin: 0.96,
+  scaleMax: 1.08,
+  duration: 1600
+};
+const CHEERS_SPARKLE_CONFIG = {
+  enabled: true,
+  parentId: "act3_s02_targetzone_cheers",
+  layerId: "act3_s02_cheers_sparkle_layer",
+  count: 24,
+  colors: ["#63ceff", "#ffd84d", "#fe66aa", "#ffffff"],
+  minSize: 100,
+  maxSize: 150,
+  centerX: 0.5,
+  centerY: 0.48,
+  spreadX: 400,
+  spreadY: 300,
+  duration: 720,
+  delayFromCheersStart: 240,
+  sparkleTextOptions: ["✦", "✧", "✶", "★"]
+};
+const HOVER_TOOLTIP_CONFIG = {
+  offsetX: 24,
+  offsetY: 24,
+  maxWidth: 360,
+  showDelay: 80,
+  hideDelay: 80
+};
+const ACT3_HOVER_INFO = {
+  act3_s01_food_vegetable: {
+    title: "蔬菜",
+    body: "叶片在锅里慢慢舒展开，边缘变得柔软，吸进一点汤汁后颜色更深。夹起来时还带着水汽，是火锅里最容易被忽略、但总会被放进锅里的那一类食物。"
+  },
+  act3_s01_food_luncheonMeat: {
+    title: "午餐肉",
+    body: "方方正正的粉红色薄片，边缘被汤底煮得微微卷起。入口很软，带着均匀的咸香味，像火锅里最稳定、最不会出错的配角。"
+  },
+  act3_s01_food_sausage: {
+    title: "小腊肠",
+    body: "小小一截，煮过之后表面变得油亮，甜咸味会慢慢散进汤里。咬开时外皮有轻微弹性，里面的肉馅更紧实。"
+  },
+  act3_s01_food_youtiao: {
+    title: "油条",
+    body: "原本蓬松酥脆的油条进入锅里后，会迅速吸满汤汁，外层变软，里面还保留一点空心的结构。夹起来时比刚放进去沉了很多。"
+  },
+  act3_s01_food_maodu: {
+    title: "毛肚",
+    body: "薄薄的一片，表面有细密的纹理。在锅里轻轻涮过后会卷曲起来，入口爽脆，咀嚼时有很明显的弹性和颗粒感。"
+  },
+  act3_s01_food_daiRouCuiGu: {
+    title: "带肉脆骨",
+    body: "肉和脆骨连在一起，煮熟后边缘微微收紧。咬下去先是肉的柔韧感，然后是脆骨清脆的阻力，越嚼越有存在感。"
+  },
+  act3_s01_food_beefSlices: {
+    title: "肥牛卷",
+    body: "薄片卷成一圈，放进锅里很快展开并变色。脂肪纹理在汤里散开，入口柔软，带着火锅汤底的香气。"
+  },
+  act3_s01_target_clearPot: {
+    title: "清汤锅",
+    body: "汤色清亮，味道温和，更容易保留食材本身的口感和香气。"
+  },
+  act3_s01_target_spicyPot: {
+    title: "辣锅",
+    body: "红油翻滚，香料味浓，食材会裹上麻辣汤底的味道。"
+  },
+  act3_s02_drink_highAlcohol: {
+    title: "威士忌",
+    body: "酒精度数较高的琥珀色烈酒，入口辛辣，带有木质、烟熏或焦糖余味。"
+  },
+  act3_s02_drink_lowAlcohol: {
+    title: "啤酒",
+    body: "酒精度数较低，冰镇后杯壁会挂着水汽，泡沫细密，带有麦芽香、气泡感和轻微苦味。"
+  },
+  act3_s02_drink_softDrink: {
+    title: "蜜瓜苏打",
+    body: "不含酒精的软饮料，入口冰凉、有气泡感，会带出一种很人工、但很快乐的蜜瓜香味。"
+  },
+  act3_s02_drink_lemonWater: {
+    title: "柠檬水",
+    body: "不含酒精的软饮料，清透微酸，带有柠檬香气，口感清爽，火锅吃到一半时，它像是给嘴巴按了一下刷新键。"
+  }
+};
 
 let act3Choices = null;
 let act3Layouts = null;
@@ -69,6 +160,9 @@ let hasFoodGuideShown = false;
 let hasDrinkGuideShown = false;
 let hotpotFloatingBubbleTimer = null;
 let isHotpotFloatingBubblesActive = false;
+let hoverInfoTooltip = null;
+let hoverInfoShowTimer = null;
+let hoverInfoHideTimer = null;
 let objectLayer = null;
 let transitionDuration = 900;
 let isFoodChoiceLocked = false;
@@ -159,6 +253,7 @@ function initializeStage() {
   objectLayer = document.createElement("div");
   objectLayer.className = "act3-object-layer";
   frame.appendChild(objectLayer);
+  createHoverInfoTooltip();
   frame.addEventListener("click", handleStageClick);
   frame.addEventListener("wheel", handleIntroWheel, { passive: false });
   frameTrack.innerHTML = "";
@@ -699,6 +794,8 @@ function updateChildObjectContent(child, childId, childConfig) {
     child.classList.toggle("interactive-option", currentState === ACT3_STATES.DRINK_CHOICE && !wasSelected);
     bindDragSource(child, "drink", drink.id);
   }
+
+  bindHoverInfo(child, childId);
 }
 
 function updateChildObjectLayout(child, childConfig, parentConfig) {
@@ -825,6 +922,7 @@ function setupStateInteractions(stateId) {
   if (stateId === ACT3_STATES.DRINK_CHOICE) {
     isFoodChoiceLocked = true;
     lockFoodDragSources();
+    showCheerZoneBreathBubble();
     showDrinkGuidance();
     console.log("Act 3 进入饮品选择，当前 playerChoices：", playerChoices);
   }
@@ -1116,6 +1214,122 @@ function triggerOtherCupWiggle() {
   }, { once: true });
 }
 
+function createHoverInfoTooltip() {
+  if (hoverInfoTooltip || !objectLayer) {
+    return hoverInfoTooltip;
+  }
+
+  hoverInfoTooltip = document.createElement("div");
+  hoverInfoTooltip.id = "act3-hover-info-tooltip";
+  hoverInfoTooltip.className = "act3-hover-info-tooltip";
+  hoverInfoTooltip.style.maxWidth = `${HOVER_TOOLTIP_CONFIG.maxWidth}px`;
+  objectLayer.appendChild(hoverInfoTooltip);
+
+  return hoverInfoTooltip;
+}
+
+function bindHoverInfo(element, objectId) {
+  const hoverInfo = ACT3_HOVER_INFO[objectId];
+
+  element.classList.toggle("has-hover-info", Boolean(hoverInfo));
+
+  if (!hoverInfo || element.dataset.hoverInfoBound === "true") {
+    return;
+  }
+
+  element.dataset.hoverInfoBound = "true";
+  element.addEventListener("pointerenter", (event) => {
+    if (shouldSuppressHoverInfo(element)) {
+      return;
+    }
+
+    scheduleShowHoverInfo(objectId, event);
+  });
+  element.addEventListener("pointermove", (event) => {
+    if (hoverInfoTooltip?.classList.contains("is-visible")) {
+      positionHoverInfoTooltip(event);
+    }
+  });
+  element.addEventListener("pointerleave", scheduleHideHoverInfo);
+  element.addEventListener("pointerdown", hideHoverInfoTooltip);
+  element.addEventListener("dragstart", hideHoverInfoTooltip);
+}
+
+function shouldSuppressHoverInfo(element) {
+  return (
+    element.classList.contains("is-used") ||
+    element.classList.contains("dragging") ||
+    element.classList.contains("is-dragging")
+  );
+}
+
+function scheduleShowHoverInfo(objectId, event) {
+  window.clearTimeout(hoverInfoHideTimer);
+  window.clearTimeout(hoverInfoShowTimer);
+  hoverInfoShowTimer = window.setTimeout(() => {
+    showHoverInfoTooltip(objectId, event);
+  }, HOVER_TOOLTIP_CONFIG.showDelay);
+}
+
+function scheduleHideHoverInfo() {
+  window.clearTimeout(hoverInfoShowTimer);
+  window.clearTimeout(hoverInfoHideTimer);
+  hoverInfoHideTimer = window.setTimeout(hideHoverInfoTooltip, HOVER_TOOLTIP_CONFIG.hideDelay);
+}
+
+function showHoverInfoTooltip(objectId, event) {
+  const hoverInfo = ACT3_HOVER_INFO[objectId];
+  const tooltip = createHoverInfoTooltip();
+
+  if (!hoverInfo || !tooltip) {
+    return;
+  }
+
+  tooltip.innerHTML = `
+    <div class="act3-hover-info-title">${hoverInfo.title}</div>
+    <div class="act3-hover-info-body">${hoverInfo.body}</div>
+  `;
+  tooltip.classList.add("is-visible");
+  positionHoverInfoTooltip(event);
+}
+
+function hideHoverInfoTooltip() {
+  window.clearTimeout(hoverInfoShowTimer);
+  window.clearTimeout(hoverInfoHideTimer);
+
+  if (hoverInfoTooltip) {
+    hoverInfoTooltip.classList.remove("is-visible");
+  }
+}
+
+function positionHoverInfoTooltip(event) {
+  const tooltip = createHoverInfoTooltip();
+
+  if (!tooltip || !objectLayer) {
+    return;
+  }
+
+  const layerRect = objectLayer.getBoundingClientRect();
+  const scale = layerRect.width / DESIGN_WIDTH || 1;
+  const pointerX = (event.clientX - layerRect.left) / scale;
+  const pointerY = (event.clientY - layerRect.top) / scale;
+  const tooltipWidth = tooltip.offsetWidth / scale;
+  const tooltipHeight = tooltip.offsetHeight / scale;
+  let x = pointerX + HOVER_TOOLTIP_CONFIG.offsetX;
+  let y = pointerY + HOVER_TOOLTIP_CONFIG.offsetY;
+
+  if (x + tooltipWidth > DESIGN_WIDTH) {
+    x = pointerX - tooltipWidth - HOVER_TOOLTIP_CONFIG.offsetX;
+  }
+
+  if (y + tooltipHeight > DESIGN_HEIGHT) {
+    y = pointerY - tooltipHeight - HOVER_TOOLTIP_CONFIG.offsetY;
+  }
+
+  tooltip.style.left = `${Math.max(0, x)}px`;
+  tooltip.style.top = `${Math.max(0, y)}px`;
+}
+
 function getHotpotFloatingBubbleConfig() {
   return {
     ...HOTPOT_FLOATING_BUBBLE_CONFIG,
@@ -1242,6 +1456,151 @@ function stopHotpotFloatingBubbles() {
     .forEach((layer) => layer.remove());
 }
 
+function getCheerZoneBreathBubbleConfig() {
+  return {
+    ...CHEER_ZONE_BREATH_BUBBLE_CONFIG,
+    ...(act3Layouts.cheerZoneBreathBubble || {})
+  };
+}
+
+function ensureCheerZoneBreathBubble() {
+  const config = getCheerZoneBreathBubbleConfig();
+  const cheerZone = getObjectElement(config.parentId);
+
+  if (!config.enabled || !cheerZone) {
+    return null;
+  }
+
+  cheerZone.classList.add("allow-overflow");
+
+  let bubble = cheerZone.querySelector(`:scope > [data-object-id="${config.id}"]`);
+
+  if (!bubble) {
+    bubble = document.createElement("div");
+    bubble.dataset.objectId = config.id;
+    bubble.id = config.id;
+    bubble.className = "cheer-zone-breath-bubble";
+    cheerZone.appendChild(bubble);
+  }
+
+  bubble.style.left = `${config.x}px`;
+  bubble.style.top = `${config.y}px`;
+  bubble.style.width = `${config.width}px`;
+  bubble.style.height = `${config.height}px`;
+  bubble.style.zIndex = config.zIndex ?? 8;
+  bubble.style.setProperty("--cheer-breath-scale-min", config.scaleMin);
+  bubble.style.setProperty("--cheer-breath-scale-max", config.scaleMax);
+  bubble.style.setProperty("--cheer-breath-duration", `${config.duration}ms`);
+
+  syncCheerZoneBreathBubbleImage(bubble, config);
+
+  return bubble;
+}
+
+function syncCheerZoneBreathBubbleImage(bubble, config) {
+  const existingImage = bubble.querySelector(":scope > img");
+
+  if (!config.image) {
+    existingImage?.remove();
+    bubble.classList.add("is-placeholder");
+    return;
+  }
+
+  const image = existingImage || document.createElement("img");
+
+  image.alt = "";
+  image.draggable = false;
+  image.src = config.image;
+  image.onload = () => {
+    bubble.classList.remove("is-placeholder");
+  };
+  image.onerror = () => {
+    bubble.classList.add("is-placeholder");
+    image.remove();
+  };
+
+  if (!existingImage) {
+    bubble.appendChild(image);
+  }
+}
+
+function showCheerZoneBreathBubble() {
+  const bubble = ensureCheerZoneBreathBubble();
+
+  if (bubble) {
+    bubble.hidden = false;
+  }
+}
+
+function hideCheerZoneBreathBubble() {
+  const config = getCheerZoneBreathBubbleConfig();
+  const bubble = objectLayer?.querySelector(`[data-object-id="${config.id}"]`);
+
+  if (bubble) {
+    bubble.remove();
+  }
+}
+
+function scheduleCheersSparkles() {
+  if (!CHEERS_SPARKLE_CONFIG.enabled) {
+    return;
+  }
+
+  window.setTimeout(spawnCheersSparkles, CHEERS_SPARKLE_CONFIG.delayFromCheersStart);
+}
+
+function spawnCheersSparkles() {
+  const cheerZone = getObjectElement(CHEERS_SPARKLE_CONFIG.parentId);
+
+  if (!cheerZone) {
+    return;
+  }
+
+  cheerZone.classList.add("allow-overflow");
+
+  const layer = ensureCheersSparkleLayer(cheerZone);
+
+  if (!layer) {
+    return;
+  }
+
+  layer.querySelectorAll(".cheers-sparkle").forEach((sparkle) => sparkle.remove());
+
+  for (let index = 0; index < CHEERS_SPARKLE_CONFIG.count; index += 1) {
+    const sparkle = document.createElement("span");
+    const dx = randomBetween(-CHEERS_SPARKLE_CONFIG.spreadX / 2, CHEERS_SPARKLE_CONFIG.spreadX / 2);
+    const dy = randomBetween(-CHEERS_SPARKLE_CONFIG.spreadY / 2, CHEERS_SPARKLE_CONFIG.spreadY / 2);
+
+    sparkle.className = "cheers-sparkle";
+    sparkle.textContent = randomItem(CHEERS_SPARKLE_CONFIG.sparkleTextOptions) || "✦";
+    sparkle.style.left = `${CHEERS_SPARKLE_CONFIG.centerX * 100}%`;
+    sparkle.style.top = `${CHEERS_SPARKLE_CONFIG.centerY * 100}%`;
+    sparkle.style.color = randomItem(CHEERS_SPARKLE_CONFIG.colors) || "#ffd84d";
+    sparkle.style.fontSize = `${randomBetween(CHEERS_SPARKLE_CONFIG.minSize, CHEERS_SPARKLE_CONFIG.maxSize)}px`;
+    sparkle.style.setProperty("--sparkle-dx", `${dx}px`);
+    sparkle.style.setProperty("--sparkle-dy", `${dy}px`);
+    sparkle.style.setProperty("--sparkle-duration", `${CHEERS_SPARKLE_CONFIG.duration}ms`);
+    sparkle.addEventListener("animationend", () => {
+      sparkle.remove();
+    }, { once: true });
+    layer.appendChild(sparkle);
+  }
+}
+
+function ensureCheersSparkleLayer(cheerZone) {
+  let layer = cheerZone.querySelector(`:scope > [data-object-id="${CHEERS_SPARKLE_CONFIG.layerId}"]`);
+
+  if (!layer) {
+    layer = document.createElement("div");
+    layer.dataset.objectId = CHEERS_SPARKLE_CONFIG.layerId;
+    layer.id = CHEERS_SPARKLE_CONFIG.layerId;
+    layer.className = "cheers-sparkle-layer";
+    cheerZone.appendChild(layer);
+  }
+
+  return layer;
+}
+
 function randomBetween(min, max) {
   return min + Math.random() * (max - min);
 }
@@ -1283,6 +1642,7 @@ function bindDragSource(element, type, id) {
     }
 
     dragPayload = { type, id };
+    hideHoverInfoTooltip();
     element.classList.add("is-dragging");
     event.dataTransfer.effectAllowed = "move";
     event.dataTransfer.setData("text/plain", JSON.stringify(dragPayload));
@@ -1312,6 +1672,7 @@ function bindFoodPointerDrag(element, id) {
 }
 
 function startFoodPointerDrag(event, element, id) {
+  hideHoverInfoTooltip();
   const originalParent = element.parentElement;
   const originalNextSibling = element.nextSibling;
   const originalStyle = {
@@ -1652,6 +2013,7 @@ function playCheersAnimation(selectedDrinkElement) {
   otherCup.classList.add("cheers-left");
   selectedDrinkElement.classList.add("cheers-right");
   cheersZone.classList.add("is-cheering");
+  scheduleCheersSparkles();
 
   window.setTimeout(() => {
     otherCup.classList.remove("cheers-left");

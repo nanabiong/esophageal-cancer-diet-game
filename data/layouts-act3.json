@@ -10,27 +10,70 @@
   "introBubbles": {
     "act3_intro_bubble_1": {
       "type": "introBubble",
-      "x": 120,
-      "y": 120,
-      "width": 560,
-      "height": 160,
+      "x": 60,
+      "y": 91,
+      "width": 545,
+      "height": 136,
       "zIndex": 12,
       "image": "assets/images/act3/ui/intro-bubble-1.png",
       "text": "忙碌一天,是时候休息一下了。",
-      "textCenterY": 71,
+      "textCenterY": 50,
       "typewriterSpeed": 70
     },
     "act3_intro_bubble_2": {
       "type": "introBubble",
-      "x": 120,
-      "y": 120,
-      "width": 620,
-      "height": 160,
+      "x": 1421,
+      "y": 690,
+      "width": 440,
+      "height": 134,
       "zIndex": 12,
       "image": "assets/images/act3/ui/intro-bubble-2.png",
-      "text": "朋友把你拉进一顿热闹的火锅局。",
-      "textCenterY": 71,
+      "text": "吃顿火锅犒劳自己吧!",
+      "textCenterY": 83,
       "typewriterSpeed": 70
+    }
+  },
+  "guidanceDefaults": {
+    "foodGuideSecondDelay": 2000
+  },
+  "guidanceBubbles": {
+    "act3_guide_food_1": {
+      "type": "guidanceBubble",
+      "x": 1370,
+      "y": 711,
+      "width": 448,
+      "height": 136,
+      "zIndex": 50,
+      "image": "assets/images/act3/ui/guidance-bubble-1.png",
+      "text": "累了一天,先吃点爱吃的吧!",
+      "textCenterY": 50,
+      "typewriterSpeed": 70,
+      "stackY": 555
+    },
+    "act3_guide_food_2": {
+      "type": "guidanceBubble",
+      "x": 1219,
+      "y": 710,
+      "width": 599,
+      "height": 137,
+      "zIndex": 51,
+      "image": "assets/images/act3/ui/guidance-bubble-2.png",
+      "text": "选择3道喜欢的菜拖到喜欢的锅底中吧!",
+      "textCenterY": 50,
+      "typewriterSpeed": 70
+    },
+    "act3_guide_drink_1": {
+      "type": "guidanceBubble",
+      "x": 1169,
+      "y": 154,
+      "width": 417,
+      "height": 122.5,
+      "zIndex": 50,
+      "image": "assets/images/act3/ui/guidance-bubble-3.png",
+      "text": "本店特色!想喝点什么呢?",
+      "textCenterY": 75,
+      "typewriterSpeed": 70,
+      "enter": "floatUp"
     }
   },
   "sharedChildren": {
@@ -75,6 +118,7 @@
         },
         "act3_s00_narration_1": {
           "type": "bubble",
+          "hide": true,
           "x": 58,
           "y": 78,
           "width": 380,
@@ -83,6 +127,23 @@
           "scale": 1,
           "zIndex": 3,
           "content": "忙了一天，朋友把你拉进一顿热闹的火锅局。点击空白处继续。"
+        }
+      }
+    },
+    "act3_intro_03_title_y_aligned": {
+      "objects": {
+        "act3_s00_main_title": {
+          "type": "titleFrame",
+          "x": 459,
+          "y": 49,
+          "width": 1003,
+          "height": 460,
+          "opacity": 1,
+          "scale": 1,
+          "zIndex": 5,
+          "bgImage": "assets/images/act3/background/main-title-bg.png",
+          "hideText": true,
+          "content": "<p class=\"act3-kicker\">Act 3</p><h2>夜晚——聚会与火锅</h2><p>灰色舞台慢慢亮起，热气和聊天声靠近。</p>"
         }
       }
     },
@@ -116,6 +177,7 @@
         },
         "act3_s01_narration_2": {
           "type": "bubble",
+          "hide": true,
           "x": 1372,
           "y": 730,
           "width": 446,
@@ -171,6 +233,7 @@
         },
         "act3_s02_narration_4": {
           "type": "bubble",
+          "hide": true,
           "x": 610,
           "y": 60,
           "width": 450,

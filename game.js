@@ -15,6 +15,7 @@ const SHOW_DEBUG_LABELS = false;
 const SELECTED_DRINK_SCALE = 1.3;
 const TYPEWRITER_SPEED = 70;
 const INTRO_WHEEL_COOLDOWN = 850;
+const FOOD_GUIDE_SECOND_DELAY = 1000;
 
 let act3Choices = null;
 let act3Layouts = null;
@@ -24,6 +25,7 @@ let isStateLocked = false;
 let isIntroActive = false;
 let introStep = 0;
 let isWheelLocked = false;
+let isIntroAnimating = false;
 let activeIntroBubble = null;
 let introTypewriterTimer = null;
 let dragPayload = null;
@@ -34,6 +36,11 @@ let selectedDrinkId = null;
 let isDrinkChoiceLocked = false;
 let playerChoices = [];
 let bubbleTimers = [];
+let guidanceTimers = [];
+let guidanceTypewriterTimers = [];
+let activeGuidanceBubbles = new Map();
+let hasFoodGuideShown = false;
+let hasDrinkGuideShown = false;
 let objectLayer = null;
 let transitionDuration = 900;
 let isFoodChoiceLocked = false;
@@ -171,7 +178,7 @@ function startAct3Intro() {
 }
 
 function handleIntroWheel(event) {
-  if (!isIntroActive || event.deltaY <= 0 || isWheelLocked) {
+  if (!isIntroActive || event.deltaY <= 0 || isWheelLocked || isIntroAnimating) {
     return;
   }
 
@@ -199,10 +206,25 @@ function advanceIntroStep() {
   }
 
   if (introStep >= 3) {
-    hideIntroBubble();
-    isIntroActive = false;
-    transitionToState(ACT3_STATES.FOOD_CHOICE);
+    playIntroTitleToFoodChoice();
   }
+}
+
+function playIntroTitleToFoodChoice() {
+  hideIntroBubble();
+  isIntroAnimating = true;
+  isWheelLocked = true;
+  applyState("act3_intro_03_title_y_aligned", { animate: true, duration: 600 });
+
+  window.setTimeout(() => {
+    isIntroActive = false;
+    transitionToState(ACT3_STATES.FOOD_CHOICE, { duration: 700 });
+  }, 600);
+
+  window.setTimeout(() => {
+    isIntroAnimating = false;
+    isWheelLocked = false;
+  }, 1300);
 }
 
 function showIntroBubble(bubbleId) {
@@ -285,7 +307,13 @@ function stopTypewriter() {
 
 function applyState(stateId, options = {}) {
   const state = getStateConfig(stateId);
-  const targetObjects = state.objects || {};
+  const targetObjects = Object.fromEntries(
+    Object.entries(state.objects || {}).filter(([, objectConfig]) => (
+      objectConfig.hide !== true &&
+      objectConfig.visible !== false
+    ))
+  );
+  const stateDuration = options.duration ?? transitionDuration;
 
   currentState = stateId;
   clearBubbleTimers();
@@ -298,7 +326,7 @@ function applyState(stateId, options = {}) {
       updateObjectContent(element, objectId, objectConfig);
 
       if (options.animate && objectConfig.enterFrom) {
-        enterNewObject(element, objectConfig);
+        enterNewObject(element, objectConfig, stateDuration);
         return;
       }
 
@@ -307,7 +335,10 @@ function applyState(stateId, options = {}) {
       updateObjectContent(element, objectId, objectConfig);
     }
 
-    updateObjectLayout(element, objectConfig, { immediate: !options.animate });
+    updateObjectLayout(element, objectConfig, {
+      immediate: !options.animate,
+      duration: options.animate ? stateDuration : null
+    });
   });
 
   [...objectLayer.children].forEach((element) => {
@@ -320,7 +351,10 @@ function applyState(stateId, options = {}) {
     }
 
     if (options.animate) {
-      updateObjectLayout(element, getExitLayout(element, state), { exiting: true });
+      updateObjectLayout(element, getExitLayout(element, state), {
+        exiting: true,
+        duration: stateDuration
+      });
       element.classList.add("is-exiting");
     } else {
       element.remove();
@@ -330,25 +364,26 @@ function applyState(stateId, options = {}) {
   window.setTimeout(() => {
     cleanupExitedObjects();
     setupStateInteractions(stateId);
-  }, options.animate ? transitionDuration : 0);
+  }, options.animate ? stateDuration : 0);
 }
 
-function transitionToState(nextStateId) {
+function transitionToState(nextStateId, options = {}) {
   if (isTransitioning) {
     return;
   }
 
+  const stateDuration = options.duration ?? transitionDuration;
   isTransitioning = true;
   isStateLocked = true;
   setButtonsDisabled(true);
-  applyState(nextStateId, { animate: true });
+  applyState(nextStateId, { animate: true, duration: stateDuration });
 
   window.setTimeout(() => {
     isTransitioning = false;
     isStateLocked = false;
     setButtonsDisabled(false);
     handleStateEntered(nextStateId);
-  }, transitionDuration);
+  }, stateDuration);
 }
 
 function createObjectElement(objectId, objectConfig) {
@@ -658,6 +693,12 @@ function updateObjectLayout(element, objectConfig, options = {}) {
     element.classList.remove("no-transition");
   }
 
+  if (options.duration != null) {
+    element.style.transitionDuration = `${options.duration}ms`;
+  } else {
+    element.style.transitionDuration = "";
+  }
+
   element.style.left = `${(objectConfig.x / stage.width) * 100}%`;
   element.style.top = `${(objectConfig.y / stage.height) * 100}%`;
   element.style.width = `${(objectConfig.width / stage.width) * 100}%`;
@@ -677,7 +718,7 @@ function updateObjectLayout(element, objectConfig, options = {}) {
   }
 }
 
-function enterNewObject(element, finalConfig) {
+function enterNewObject(element, finalConfig, duration = transitionDuration) {
   const initialConfig = getEnterLayout(finalConfig);
 
   element.classList.add("no-transition");
@@ -688,7 +729,7 @@ function enterNewObject(element, finalConfig) {
 
   requestAnimationFrame(() => {
     element.classList.remove("no-transition");
-    updateObjectLayout(element, finalConfig);
+    updateObjectLayout(element, finalConfig, { duration });
   });
 }
 
@@ -750,12 +791,13 @@ function setupStateInteractions(stateId) {
   if (stateId === ACT3_STATES.FOOD_CHOICE) {
     isFoodChoiceLocked = false;
     selectedFoods = [];
-    startTitleBubbles();
+    showFoodGuidance();
   }
 
   if (stateId === ACT3_STATES.DRINK_CHOICE) {
     isFoodChoiceLocked = true;
     lockFoodDragSources();
+    showDrinkGuidance();
     console.log("Act 3 进入饮品选择，当前 playerChoices：", playerChoices);
   }
 }
@@ -852,6 +894,137 @@ function clearBubbleTimers() {
   bubbleTimers.forEach((timer) => window.clearTimeout(timer));
   bubbleTimers = [];
   document.querySelectorAll(".act3-floating-bubble").forEach((bubble) => bubble.remove());
+}
+
+function showFoodGuidance() {
+  if (hasFoodGuideShown) {
+    return;
+  }
+
+  hasFoodGuideShown = true;
+  const firstBubble = showGuidanceBubble("act3_guide_food_1");
+  const delay = act3Layouts.guidanceDefaults?.foodGuideSecondDelay ?? FOOD_GUIDE_SECOND_DELAY;
+  const timer = window.setTimeout(() => {
+    const firstConfig = act3Layouts.guidanceBubbles?.act3_guide_food_1;
+
+    if (firstBubble && firstConfig?.stackY != null) {
+      firstBubble.style.top = `${firstConfig.stackY}px`;
+      firstBubble.classList.add("is-stacked");
+    }
+
+    showGuidanceBubble("act3_guide_food_2");
+  }, delay);
+
+  guidanceTimers.push(timer);
+}
+
+function showDrinkGuidance() {
+  if (hasDrinkGuideShown) {
+    return;
+  }
+
+  hasDrinkGuideShown = true;
+  showGuidanceBubble("act3_guide_drink_1");
+}
+
+function showGuidanceBubble(bubbleId) {
+  const bubbleConfig = act3Layouts.guidanceBubbles?.[bubbleId];
+
+  if (!bubbleConfig || bubbleConfig.visible === false || bubbleConfig.hide === true) {
+    return null;
+  }
+
+  const existingBubble = activeGuidanceBubbles.get(bubbleId);
+
+  if (existingBubble) {
+    existingBubble.remove();
+    activeGuidanceBubbles.delete(bubbleId);
+  }
+
+  const bubble = document.createElement("div");
+  bubble.id = bubbleId;
+  bubble.dataset.objectId = bubbleId;
+  bubble.className = "guidance-bubble";
+  bubble.style.left = `${bubbleConfig.x}px`;
+  bubble.style.top = `${bubbleConfig.y}px`;
+  bubble.style.width = `${bubbleConfig.width}px`;
+  bubble.style.height = `${bubbleConfig.height}px`;
+  bubble.style.zIndex = bubbleConfig.zIndex ?? 50;
+  bubble.style.setProperty("--guidance-bubble-text-center-y", `${bubbleConfig.textCenterY ?? 71}px`);
+
+  if (bubbleConfig.enter === "floatUp") {
+    bubble.classList.add("float-up");
+  }
+
+  const imagePath = bubbleConfig.image || bubbleConfig.bgImage;
+
+  if (imagePath) {
+    const image = document.createElement("img");
+    image.className = "guidance-bubble-image";
+    image.alt = bubbleConfig.label || bubbleId;
+    image.draggable = false;
+    image.src = imagePath;
+    image.onload = () => {
+      bubble.classList.add("has-guidance-bubble-image");
+    };
+    image.onerror = () => {
+      bubble.classList.remove("has-guidance-bubble-image");
+      image.remove();
+    };
+    bubble.appendChild(image);
+  }
+
+  const text = document.createElement("div");
+  text.className = "guidance-bubble-text";
+  bubble.appendChild(text);
+  objectLayer.appendChild(bubble);
+  activeGuidanceBubbles.set(bubbleId, bubble);
+  startGuidanceTypewriter(text, bubbleConfig.text || "", bubbleConfig.typewriterSpeed ?? TYPEWRITER_SPEED);
+
+  return bubble;
+}
+
+function startGuidanceTypewriter(textElement, fullText, speed) {
+  let index = 0;
+  const characters = Array.from(fullText);
+  textElement.textContent = "";
+
+  const timer = window.setInterval(() => {
+    textElement.textContent += characters[index] || "";
+    index += 1;
+
+    if (index >= characters.length) {
+      window.clearInterval(timer);
+      guidanceTypewriterTimers = guidanceTypewriterTimers.filter((item) => item !== timer);
+    }
+  }, speed);
+
+  guidanceTypewriterTimers.push(timer);
+}
+
+function hideGuidanceBubbles(options = {}) {
+  guidanceTimers.forEach((timer) => window.clearTimeout(timer));
+  guidanceTimers = [];
+  guidanceTypewriterTimers.forEach((timer) => window.clearInterval(timer));
+  guidanceTypewriterTimers = [];
+
+  const bubbles = [...activeGuidanceBubbles.values()];
+
+  if (!bubbles.length) {
+    activeGuidanceBubbles.clear();
+    return;
+  }
+
+  bubbles.forEach((bubble) => {
+    if (options.animateExit) {
+      bubble.classList.add("exit-up");
+      window.setTimeout(() => bubble.remove(), 460);
+    } else {
+      bubble.remove();
+    }
+  });
+
+  activeGuidanceBubbles.clear();
 }
 
 function bindDragSource(element, type, id) {
@@ -1126,6 +1299,7 @@ function handleFoodDrop(targetElement) {
   if (selectedFoods.length >= 3) {
     isStateLocked = true;
     isFoodChoiceLocked = true;
+    hideGuidanceBubbles({ animateExit: true });
     recordAct3FoodChoice();
     window.setTimeout(() => {
       transitionToState(ACT3_STATES.DRINK_CHOICE);

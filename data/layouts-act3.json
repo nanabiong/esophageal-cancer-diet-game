@@ -35,14 +35,16 @@
       "objects": {
         "act3_s00_main_title": {
           "type": "titleFrame",
-          "x": 538,
-          "y": 265,
-          "width": 845,
-          "height": 391,
+          "x": 459,
+          "y": 230,
+          "width": 1003,
+          "height": 460,
           "opacity": 1,
           "scale": 1,
           "zIndex": 2,
           "enterFrom": "scaleFromTopLeft",
+          "bgImage": "assets/images/act3/background/main-title-bg.png",
+          "hideText": true,
           "content": "<p class=\"act3-kicker\">Act 3</p><h2>夜晚——聚会与火锅</h2><p>灰色舞台慢慢亮起，热气和聊天声靠近。</p>"
         },
         "act3_s00_narration_1": {
@@ -62,13 +64,15 @@
       "objects": {
         "act3_s00_main_title": {
           "type": "titleFrame",
-          "x": 1198,
-          "y": 69,
-          "width": 620,
-          "height": 287,
+          "x": 1148,
+          "y": 49,
+          "width": 697,
+          "height": 320,
           "opacity": 1,
           "scale": 1,
           "zIndex": 5,
+          "bgImage": "assets/images/act3/background/main-title-bg.png",
+          "hideText": true,
           "content": "<p class=\"act3-kicker\">Act 3</p><strong>夜晚——聚会与火锅</strong>"
         },
         "act3_s01_main_hotpotTable": {
@@ -123,6 +127,7 @@
           "zIndex": 4,
           "enterFrom": "scaleFromTopLeft",
           "allowOverflow": true,
+          "bgImage": "assets/images/act3/background/cheers-zone-bg.png",
           "childrenRef": "cheersZone"
         },
         "act3_s02_main_drinkTable": {
@@ -135,6 +140,7 @@
           "scale": 1,
           "zIndex": 5,
           "enterFrom": "enterFromTop",
+          "bgImage": "assets/images/act3/background/drink-table-bg.png",
           "childrenRef": "drinkTable"
         },
         "act3_s02_narration_4": {

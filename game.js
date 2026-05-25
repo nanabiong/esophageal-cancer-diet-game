@@ -11,6 +11,7 @@ const ACT3_STATES = {
 
 const DESIGN_WIDTH = 1920;
 const DESIGN_HEIGHT = 920;
+const SHOW_DEBUG_LABELS = false;
 
 let act3Choices = null;
 let act3Layouts = null;
@@ -96,6 +97,7 @@ function updateStageHeader(label, title) {
 
   if (labelElement) {
     labelElement.textContent = label;
+    labelElement.hidden = !SHOW_DEBUG_LABELS;
   }
 
   if (titleElement) {
@@ -241,11 +243,11 @@ function updateObjectContent(element, objectId, objectConfig) {
   element.dataset.label = objectConfig.label || objectConfig.name || objectId;
 
   if (objectConfig.type === "titleFrame") {
-    element.innerHTML = objectConfig.content || "";
+    element.innerHTML = objectConfig.hideText ? "" : (objectConfig.content || "");
   }
 
   if (objectConfig.type === "bubble") {
-    element.textContent = objectConfig.content || "";
+    element.textContent = objectConfig.hideText ? "" : (objectConfig.content || "");
   }
 
   if (objectConfig.type === "hotpotTable") {
@@ -293,12 +295,15 @@ function syncFrameBackgroundImage(element, objectConfig) {
   const imagePath = objectConfig.bgImage || objectConfig.backgroundImage;
   const existingImage = element.querySelector(":scope > .frame-bg-image");
 
+  element.classList.remove("has-bg-image");
   element.classList.remove("has-loaded-bg-image");
 
   if (!imagePath) {
     existingImage?.remove();
     return;
   }
+
+  element.classList.add("has-bg-image");
 
   const image = existingImage || document.createElement("img");
 
@@ -309,6 +314,7 @@ function syncFrameBackgroundImage(element, objectConfig) {
     element.classList.add("has-loaded-bg-image");
   };
   image.onerror = () => {
+    element.classList.remove("has-bg-image");
     element.classList.remove("has-loaded-bg-image");
     image.remove();
   };
@@ -466,6 +472,7 @@ function updateChildObjectContent(child, childId, childConfig) {
     syncUsedFoodState(child, childId);
     child.draggable = false;
     child.classList.toggle("is-food-drag-locked", currentState !== ACT3_STATES.FOOD_CHOICE && !isUsedFood);
+    child.classList.toggle("interactive-option", currentState === ACT3_STATES.FOOD_CHOICE && !isUsedFood);
     bindDragSource(child, "food", food.id);
   }
 
@@ -494,6 +501,7 @@ function updateChildObjectContent(child, childId, childConfig) {
       child.textContent = wasSelected ? child.textContent : drink.name;
     }
     child.draggable = !wasSelected;
+    child.classList.toggle("interactive-option", currentState === ACT3_STATES.DRINK_CHOICE && !wasSelected);
     bindDragSource(child, "drink", drink.id);
   }
 }

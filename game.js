@@ -236,6 +236,7 @@ function createObjectElement(objectId, objectConfig) {
 
 function updateObjectContent(element, objectId, objectConfig) {
   element.className = getObjectClassName(objectConfig.type);
+  element.classList.toggle("allow-overflow", Boolean(objectConfig.allowOverflow));
   element.dataset.objectType = objectConfig.type;
   element.dataset.label = objectConfig.label || objectConfig.name || objectId;
 
@@ -446,6 +447,7 @@ function updateChildObjectContent(child, childId, childConfig) {
       <strong>${target.name}</strong>
       <span class="act3-pot-counter">${getPotCount(target.id)} 个菜</span>
     `;
+    syncObjectImage(child, childConfig, target.name);
     bindDropTarget(child, "food");
   }
 
@@ -469,12 +471,14 @@ function updateChildObjectContent(child, childId, childConfig) {
 
   if (childConfig.type === "cup") {
     child.textContent = childConfig.content || "朋友的杯子";
+    syncObjectImage(child, childConfig, childConfig.content || "朋友的杯子");
   }
 
   if (childConfig.type === "drinkTarget") {
     child.dataset.targetId = "act3_s02_target_emptyCup";
     child.dataset.targetName = act3Choices.drinkTarget.name;
     child.textContent = child.classList.contains("filled") ? child.textContent : (childConfig.content || "空杯位置");
+    syncObjectImage(child, childConfig, childConfig.content || act3Choices.drinkTarget.name);
     bindDropTarget(child, "drink");
   }
 

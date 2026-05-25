@@ -9,8 +9,8 @@
   },
   "sharedChildren": {
     "hotpotTable": {
-      "act3_s01_target_spicyPot": { "type": "foodTarget", "x": 154, "y": 300, "width": 185, "height": 276, "opacity": 1, "scale": 1, "zIndex": 4 },
-      "act3_s01_target_clearPot": { "type": "foodTarget", "x": 340, "y": 300, "width": 185, "height": 276, "opacity": 1, "scale": 1, "zIndex": 4 },
+      "act3_s01_target_spicyPot": { "type": "foodTarget", "x": 154, "y": 300, "width": 185, "height": 276, "opacity": 1, "scale": 1, "zIndex": 4, "image": "assets/images/act3/hotpot/spicy-pot.png" },
+      "act3_s01_target_clearPot": { "type": "foodTarget", "x": 340, "y": 300, "width": 185, "height": 276, "opacity": 1, "scale": 1, "zIndex": 4, "image": "assets/images/act3/hotpot/clear-pot.png" },
       "act3_s01_food_vegetable": { "type": "food", "x": 242, "y": 80, "width": 199, "height": 182, "opacity": 1, "scale": 1, "zIndex": 8, "image": "assets/images/act3/food/vegetable.png" },
       "act3_s01_food_luncheonMeat": { "type": "food", "x": 495, "y": 194, "width": 59, "height": 91, "opacity": 1, "scale": 1, "zIndex": 8, "image": "assets/images/act3/food/luncheon-meat.png" },
       "act3_s01_food_sausage": { "type": "food", "x": 630, "y": 146, "width": 155, "height": 55, "opacity": 1, "scale": 1, "zIndex": 8, "image": "assets/images/act3/food/sausage.png" },
@@ -20,14 +20,14 @@
       "act3_s01_food_beefSlices": { "type": "food", "x": 16, "y": 329, "width": 138, "height": 258, "opacity": 1, "scale": 1, "zIndex": 8, "image": "assets/images/act3/food/beef-slices.png" }
     },
     "cheersZone": {
-      "act3_s02_otherCup": { "type": "cup", "x": 43, "y": 72, "width": 151, "height": 206, "opacity": 1, "scale": 1, "zIndex": 6, "content": "朋友的杯子" },
-      "act3_s02_target_emptyCup": { "type": "drinkTarget", "x": 368, "y": 72, "width": 151, "height": 206, "opacity": 1, "scale": 1, "zIndex": 6, "content": "空杯位置" }
+      "act3_s02_otherCup": { "type": "cup", "x": -79, "y": 76, "width": 323, "height": 285, "opacity": 1, "scale": 1, "zIndex": 8, "content": "朋友的杯子", "image": "assets/images/act3/cup/other-cup.png" },
+      "act3_s02_target_emptyCup": { "type": "drinkTarget", "x": 316, "y": 116, "width": 195, "height": 247, "opacity": 1, "scale": 1, "zIndex": 6, "content": "空杯位置", "image": "assets/images/act3/cup/empty-cup.png" }
     },
     "drinkTable": {
-      "act3_s02_drink_highAlcohol": { "type": "drink", "x": 25, "y": 53, "width": 120, "height": 92, "opacity": 1, "scale": 1, "zIndex": 7 },
-      "act3_s02_drink_lowAlcohol": { "type": "drink", "x": 25, "y": 180, "width": 120, "height": 92, "opacity": 1, "scale": 1, "zIndex": 7 },
-      "act3_s02_drink_softDrink": { "type": "drink", "x": 25, "y": 307, "width": 120, "height": 92, "opacity": 1, "scale": 1, "zIndex": 7 },
-      "act3_s02_drink_lemonWater": { "type": "drink", "x": 25, "y": 434, "width": 120, "height": 92, "opacity": 1, "scale": 1, "zIndex": 7 }
+      "act3_s02_drink_highAlcohol": { "type": "drink", "x": 82, "y": 493, "width": 104, "height": 122, "opacity": 1, "scale": 1, "zIndex": 7, "image": "assets/images/act3/drink/high-alcohol.png" },
+      "act3_s02_drink_lowAlcohol": { "type": "drink", "x": 87, "y": 286, "width": 93, "height": 142, "opacity": 1, "scale": 1, "zIndex": 7, "image": "assets/images/act3/drink/low-alcohol.png" },
+      "act3_s02_drink_softDrink": { "type": "drink", "x": 93, "y": 79, "width": 81, "height": 142, "opacity": 1, "scale": 1, "zIndex": 7, "image": "assets/images/act3/drink/soft-drink.png" },
+      "act3_s02_drink_lemonWater": { "type": "drink", "x": 87, "y": 655, "width": 89, "height": 148, "opacity": 1, "scale": 1, "zIndex": 7, "image": "assets/images/act3/drink/lemon-water.png" }
     }
   },
   "states": {
@@ -115,21 +115,22 @@
         "act3_s02_targetzone_cheers": {
           "type": "cheersZone",
           "x": 1015,
-          "y": 554,
+          "y": 444,
           "width": 549,
-          "height": 313,
+          "height": 424,
           "opacity": 1,
           "scale": 1,
           "zIndex": 4,
           "enterFrom": "scaleFromTopLeft",
+          "allowOverflow": true,
           "childrenRef": "cheersZone"
         },
         "act3_s02_main_drinkTable": {
           "type": "drinkTable",
-          "x": 1622,
+          "x": 1586,
           "y": 0,
-          "width": 196,
-          "height": 867,
+          "width": 260,
+          "height": 884,
           "opacity": 1,
           "scale": 1,
           "zIndex": 5,

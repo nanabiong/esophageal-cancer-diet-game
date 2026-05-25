@@ -12,6 +12,7 @@ const ACT3_STATES = {
 const DESIGN_WIDTH = 1920;
 const DESIGN_HEIGHT = 920;
 const SHOW_DEBUG_LABELS = false;
+const SELECTED_DRINK_SCALE = 1.3;
 
 let act3Choices = null;
 let act3Layouts = null;
@@ -22,6 +23,8 @@ let dragPayload = null;
 let activeFoodDrag = null;
 let selectedFoods = [];
 const usedFoodIds = new Set();
+let selectedDrinkId = null;
+let isDrinkChoiceLocked = false;
 let playerChoices = [];
 let bubbleTimers = [];
 let objectLayer = null;
@@ -740,6 +743,11 @@ function bindDragSource(element, type, id) {
       return;
     }
 
+    if (type === "drink" && isDrinkChoiceLocked) {
+      event.preventDefault();
+      return;
+    }
+
     if (type === "food" && currentState !== ACT3_STATES.FOOD_CHOICE) {
       event.preventDefault();
       return;
@@ -947,6 +955,10 @@ function canAcceptDrop(acceptedType) {
     return false;
   }
 
+  if (acceptedType === "drink" && isDrinkChoiceLocked) {
+    return false;
+  }
+
   return !isStateLocked && dragPayload && dragPayload.type === acceptedType;
 }
 
@@ -1016,7 +1028,7 @@ function handleDrinkDrop(targetElement) {
   const drink = act3Choices.drinks.find((item) => item.id === dragPayload.id);
   const drinkButton = getObjectElement(drink.id);
 
-  if (!drink || !drinkButton) {
+  if (!drink || !drinkButton || isDrinkChoiceLocked) {
     return;
   }
 
@@ -1033,14 +1045,90 @@ function handleDrinkDrop(targetElement) {
   };
 
   isStateLocked = true;
+  isDrinkChoiceLocked = true;
+  selectedDrinkId = drink.id;
   playerChoices.push(choice);
-  targetElement.classList.add("filled");
-  targetElement.textContent = `${drink.name} 碰杯`;
-  drinkButton.classList.add("is-selected");
-  drinkButton.draggable = false;
+  placeSelectedDrinkInCup(drinkButton, targetElement, drink);
+  lockDrinkDragSources();
+  playCheersAnimation(drinkButton);
   console.log("Act 3 饮品选择：", choice);
   console.log("Act 3 playerChoices：", playerChoices);
   console.log("第三幕完成，进入下一幕占位。");
+}
+
+function placeSelectedDrinkInCup(drinkButton, targetElement, drink) {
+  const cheersZone = targetElement.closest('[data-object-id="act3_s02_targetzone_cheers"]');
+
+  if (!cheersZone) {
+    return;
+  }
+
+  const cheersZoneRect = cheersZone.getBoundingClientRect();
+  const targetRect = targetElement.getBoundingClientRect();
+  const drinkRect = drinkButton.getBoundingClientRect();
+  const localScale = cheersZoneRect.width / getLayoutPixelWidth(cheersZone) || 1;
+  const targetCenterX = (targetRect.left - cheersZoneRect.left + targetRect.width / 2) / localScale;
+  const targetCenterY = (targetRect.top - cheersZoneRect.top + targetRect.height / 2) / localScale;
+  const selectedDrinkWidth = (drinkRect.width / localScale) * SELECTED_DRINK_SCALE;
+  const selectedDrinkHeight = (drinkRect.height / localScale) * SELECTED_DRINK_SCALE;
+  const finalX = targetCenterX - selectedDrinkWidth / 2;
+  const finalY = targetCenterY - selectedDrinkHeight / 2;
+
+  targetElement.classList.add("filled");
+  targetElement.classList.add("is-used");
+  drinkButton.classList.add("is-selected");
+  drinkButton.classList.add("is-selected-drink");
+  drinkButton.classList.remove("interactive-option");
+  drinkButton.classList.remove("is-dragging");
+  drinkButton.draggable = false;
+  drinkButton.dataset.selectedDrinkId = drink.id;
+
+  drinkButton.style.left = `${finalX}px`;
+  drinkButton.style.top = `${finalY}px`;
+  drinkButton.style.width = `${selectedDrinkWidth}px`;
+  drinkButton.style.height = `${selectedDrinkHeight}px`;
+  drinkButton.style.zIndex = String((Number(targetElement.style.zIndex) || 1) + 2);
+  drinkButton.style.transform = "none";
+  drinkButton.style.transformOrigin = "center center";
+  cheersZone.appendChild(drinkButton);
+}
+
+function getLayoutPixelWidth(element) {
+  return element.offsetWidth || element.getBoundingClientRect().width;
+}
+
+function lockDrinkDragSources() {
+  objectLayer.querySelectorAll('.act3-drink[data-type="drink"]').forEach((drinkElement) => {
+    drinkElement.draggable = false;
+    drinkElement.classList.add("is-drink-drag-locked");
+    drinkElement.classList.remove("interactive-option");
+    drinkElement.classList.remove("is-dragging");
+  });
+}
+
+function playCheersAnimation(selectedDrinkElement) {
+  const cheersZone = selectedDrinkElement.closest('[data-object-id="act3_s02_targetzone_cheers"]');
+  const otherCup = cheersZone?.querySelector('[data-object-id="act3_s02_otherCup"]');
+
+  if (!cheersZone || !otherCup) {
+    return;
+  }
+
+  const spark = document.createElement("span");
+  spark.className = "cheers-spark";
+  spark.textContent = "✦";
+  cheersZone.appendChild(spark);
+
+  otherCup.classList.add("cheers-left");
+  selectedDrinkElement.classList.add("cheers-right");
+  cheersZone.classList.add("is-cheering");
+
+  window.setTimeout(() => {
+    otherCup.classList.remove("cheers-left");
+    selectedDrinkElement.classList.remove("cheers-right");
+    cheersZone.classList.remove("is-cheering");
+    spark.remove();
+  }, 820);
 }
 
 function getPotCount(targetId) {

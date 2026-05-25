@@ -10,6 +10,9 @@
   --option-hover-duration: 180ms;
   --option-sparkle-color: #ffd84d;
   --option-sparkle-size: 10px;
+  --cheers-move-x: 28px;
+  --cheers-rotate: 8deg;
+  --cheers-bounce-duration: 760ms;
 }
 
 html,
@@ -810,6 +813,13 @@ button:disabled {
   background: #f6d89f;
 }
 
+.act3-cup.is-used,
+.act3-child-object.is-used[data-id="act3_s02_target_emptyCup"] {
+  opacity: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
+
 .act3-drink-table {
   justify-content: flex-start;
   gap: 14px;
@@ -824,6 +834,90 @@ button:disabled {
 .act3-drink {
   width: 100%;
   min-height: 104px;
+}
+
+.act3-drink.is-selected-drink {
+  pointer-events: none;
+  cursor: default;
+}
+
+.act3-drink.is-drink-drag-locked {
+  cursor: default;
+}
+
+.act3-cup.cheers-left .asset-image {
+  animation: cheers-left var(--cheers-bounce-duration) ease-in-out;
+  transform-origin: center center;
+}
+
+.act3-drink.cheers-right .asset-image {
+  animation: cheers-right var(--cheers-bounce-duration) ease-in-out;
+  transform-origin: center center;
+}
+
+.cheers-spark {
+  position: absolute;
+  left: 55%;
+  top: 42%;
+  z-index: 20;
+  color: var(--option-sparkle-color);
+  font-size: 28px;
+  line-height: 1;
+  pointer-events: none;
+  animation: cheers-spark 680ms ease-out both;
+}
+
+@keyframes cheers-left {
+  0% {
+    transform: translateX(0) rotate(0deg) scale(1);
+  }
+
+  45% {
+    transform: translateX(var(--cheers-move-x)) rotate(var(--cheers-rotate)) scale(1.04);
+  }
+
+  65% {
+    transform: translateX(calc(var(--cheers-move-x) - 8px)) rotate(calc(var(--cheers-rotate) * -0.4)) scale(1.02);
+  }
+
+  100% {
+    transform: translateX(0) rotate(0deg) scale(1);
+  }
+}
+
+@keyframes cheers-right {
+  0% {
+    transform: translateX(0) rotate(0deg) scale(1);
+  }
+
+  45% {
+    transform: translateX(calc(-1 * var(--cheers-move-x))) rotate(calc(-1 * var(--cheers-rotate))) scale(1.04);
+  }
+
+  65% {
+    transform: translateX(calc(-1 * var(--cheers-move-x) + 8px)) rotate(calc(var(--cheers-rotate) * 0.4)) scale(1.02);
+  }
+
+  100% {
+    transform: translateX(0) rotate(0deg) scale(1);
+  }
+}
+
+@keyframes cheers-spark {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.4) rotate(0deg);
+  }
+
+  42% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1.25) rotate(18deg);
+  }
+
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -72%) scale(0.8) rotate(36deg);
+  }
 }
 
 .act3-floating-bubble {

@@ -19,6 +19,16 @@
   --guide-bubble-exit-y: -60px;
   --guidance-bubble-font-size: 28px;
   --guidance-bubble-text-center-y: 71px;
+  --hint-pulse-scale: 1.08;
+  --hint-pulse-duration: 720ms;
+  --hint-pulse-count: 3;
+  --hint-glow-color: #ffd84d;
+  --hint-glow-size: 2px;
+  --hint-glow-strength: 0.85;
+  --cup-wiggle-y: -8px;
+  --cup-wiggle-rotate: 4deg;
+  --cup-wiggle-duration: 520ms;
+  --cup-wiggle-count: 3;
 }
 
 html,
@@ -840,6 +850,18 @@ button:disabled {
   display: none;
 }
 
+.interactive-option.hint-pulse:not(.dragging):not(.is-dragging):not(.is-used) .asset-image {
+  animation: selectableHintPulse var(--hint-pulse-duration) ease-in-out var(--hint-pulse-count);
+  transform-origin: center center;
+}
+
+.interactive-option.dragging.hint-pulse .asset-image,
+.interactive-option.is-dragging.hint-pulse .asset-image,
+.interactive-option.is-used.hint-pulse .asset-image,
+.interactive-option.is-selected.hint-pulse .asset-image {
+  animation: none;
+}
+
 @keyframes sparkle-pop {
   from {
     transform: translateX(-50%) translateY(0) scale(0.9);
@@ -849,6 +871,28 @@ button:disabled {
   to {
     transform: translateX(-50%) translateY(-4px) scale(1.1);
     opacity: 1;
+  }
+}
+
+@keyframes selectableHintPulse {
+  0% {
+    filter: none;
+    transform: scale(1);
+  }
+
+  45% {
+    filter:
+      drop-shadow(var(--hint-glow-size) 0 0 var(--hint-glow-color))
+      drop-shadow(calc(-1 * var(--hint-glow-size)) 0 0 var(--hint-glow-color))
+      drop-shadow(0 var(--hint-glow-size) 0 var(--hint-glow-color))
+      drop-shadow(0 calc(-1 * var(--hint-glow-size)) 0 var(--hint-glow-color))
+      drop-shadow(0 0 calc(var(--hint-glow-size) * 4 * var(--hint-glow-strength)) var(--hint-glow-color));
+    transform: scale(var(--hint-pulse-scale));
+  }
+
+  100% {
+    filter: none;
+    transform: scale(1);
   }
 }
 
@@ -994,6 +1038,11 @@ button:disabled {
   transform-origin: center center;
 }
 
+.act3-cup.cup-wiggle .asset-image {
+  animation: cupWiggle var(--cup-wiggle-duration) ease-in-out var(--cup-wiggle-count);
+  transform-origin: center center;
+}
+
 .act3-drink.cheers-right .asset-image {
   animation: cheers-right var(--cheers-bounce-duration) ease-in-out;
   transform-origin: center center;
@@ -1061,6 +1110,24 @@ button:disabled {
   100% {
     opacity: 0;
     transform: translate(-50%, -72%) scale(0.8) rotate(36deg);
+  }
+}
+
+@keyframes cupWiggle {
+  0% {
+    transform: translateY(0) rotate(0deg);
+  }
+
+  30% {
+    transform: translateY(var(--cup-wiggle-y)) rotate(var(--cup-wiggle-rotate));
+  }
+
+  60% {
+    transform: translateY(4px) rotate(calc(-1 * var(--cup-wiggle-rotate)));
+  }
+
+  100% {
+    transform: translateY(0) rotate(0deg);
   }
 }
 

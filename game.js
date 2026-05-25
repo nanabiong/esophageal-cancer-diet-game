@@ -913,6 +913,7 @@ function showFoodGuidance() {
     }
 
     showGuidanceBubble("act3_guide_food_2");
+    triggerFoodSelectableHint();
   }, delay);
 
   guidanceTimers.push(timer);
@@ -925,6 +926,8 @@ function showDrinkGuidance() {
 
   hasDrinkGuideShown = true;
   showGuidanceBubble("act3_guide_drink_1");
+  triggerDrinkSelectableHint();
+  triggerOtherCupWiggle();
 }
 
 function showGuidanceBubble(bubbleId) {
@@ -1025,6 +1028,63 @@ function hideGuidanceBubbles(options = {}) {
   });
 
   activeGuidanceBubbles.clear();
+}
+
+function triggerFoodSelectableHint() {
+  if (currentState !== ACT3_STATES.FOOD_CHOICE) {
+    return;
+  }
+
+  const foodElements = [...objectLayer.querySelectorAll('.act3-food[data-type="food"]')]
+    .filter((element) => (
+      !element.classList.contains("is-used") &&
+      !element.classList.contains("dragging") &&
+      !element.classList.contains("is-dragging")
+    ));
+
+  triggerHintPulse(foodElements);
+}
+
+function triggerDrinkSelectableHint() {
+  if (currentState !== ACT3_STATES.DRINK_CHOICE || isDrinkChoiceLocked) {
+    return;
+  }
+
+  const drinkElements = [...objectLayer.querySelectorAll('.act3-drink[data-type="drink"]')]
+    .filter((element) => (
+      !element.classList.contains("is-selected") &&
+      !element.classList.contains("is-selected-drink") &&
+      !element.classList.contains("dragging") &&
+      !element.classList.contains("is-dragging")
+    ));
+
+  triggerHintPulse(drinkElements);
+}
+
+function triggerHintPulse(elements) {
+  elements.forEach((element) => {
+    element.classList.remove("hint-pulse");
+    element.offsetHeight;
+    element.classList.add("hint-pulse");
+    element.addEventListener("animationend", () => {
+      element.classList.remove("hint-pulse");
+    }, { once: true });
+  });
+}
+
+function triggerOtherCupWiggle() {
+  const otherCup = objectLayer.querySelector('[data-object-id="act3_s02_otherCup"]');
+
+  if (!otherCup) {
+    return;
+  }
+
+  otherCup.classList.remove("cup-wiggle");
+  otherCup.offsetHeight;
+  otherCup.classList.add("cup-wiggle");
+  otherCup.addEventListener("animationend", () => {
+    otherCup.classList.remove("cup-wiggle");
+  }, { once: true });
 }
 
 function bindDragSource(element, type, id) {

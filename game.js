@@ -16,6 +16,32 @@ const SELECTED_DRINK_SCALE = 1.3;
 const TYPEWRITER_SPEED = 70;
 const INTRO_WHEEL_COOLDOWN = 850;
 const FOOD_GUIDE_SECOND_DELAY = 1000;
+const HOTPOT_FLOATING_BUBBLE_CONFIG = {
+  enabled: true,
+  parentId: "act3_s01_main_hotpotTable",
+  bounds: {
+    x: 120,
+    y: -160,
+    width: 760,
+    height: 140
+  },
+  images: [
+    "assets/images/act3/effects/floating-bubble-1.png",
+    "assets/images/act3/effects/floating-bubble-2.png",
+    "assets/images/act3/effects/floating-bubble-3.png",
+    "assets/images/act3/effects/floating-bubble-4.png"
+  ],
+  minSize: 42,
+  maxSize: 86,
+  minSpawnDelay: 900,
+  maxSpawnDelay: 1600,
+  minLifeTime: 1800,
+  maxLifeTime: 3200,
+  minFloatDistance: 12,
+  maxFloatDistance: 32,
+  maxCount: 5,
+  zIndex: 8
+};
 
 let act3Choices = null;
 let act3Layouts = null;
@@ -41,6 +67,8 @@ let guidanceTypewriterTimers = [];
 let activeGuidanceBubbles = new Map();
 let hasFoodGuideShown = false;
 let hasDrinkGuideShown = false;
+let hotpotFloatingBubbleTimer = null;
+let isHotpotFloatingBubblesActive = false;
 let objectLayer = null;
 let transitionDuration = 900;
 let isFoodChoiceLocked = false;
@@ -914,6 +942,7 @@ function showFoodGuidance() {
 
     showGuidanceBubble("act3_guide_food_2");
     triggerFoodSelectableHint();
+    startHotpotFloatingBubbles();
   }, delay);
 
   guidanceTimers.push(timer);
@@ -1085,6 +1114,144 @@ function triggerOtherCupWiggle() {
   otherCup.addEventListener("animationend", () => {
     otherCup.classList.remove("cup-wiggle");
   }, { once: true });
+}
+
+function getHotpotFloatingBubbleConfig() {
+  return {
+    ...HOTPOT_FLOATING_BUBBLE_CONFIG,
+    ...(act3Layouts.floatingBubbles || {}),
+    bounds: {
+      ...HOTPOT_FLOATING_BUBBLE_CONFIG.bounds,
+      ...(act3Layouts.floatingBubbles?.bounds || {})
+    },
+    images: act3Layouts.floatingBubbles?.images || HOTPOT_FLOATING_BUBBLE_CONFIG.images
+  };
+}
+
+function ensureHotpotFloatingBubbleLayer() {
+  const config = getHotpotFloatingBubbleConfig();
+  const hotpotTable = getObjectElement(config.parentId);
+
+  if (!hotpotTable) {
+    return null;
+  }
+
+  hotpotTable.classList.add("allow-overflow");
+
+  let layer = hotpotTable.querySelector(":scope > .hotpot-floating-bubble-layer");
+
+  if (!layer) {
+    layer = document.createElement("div");
+    layer.className = "hotpot-floating-bubble-layer";
+    hotpotTable.appendChild(layer);
+  }
+
+  layer.style.left = `${config.bounds.x}px`;
+  layer.style.top = `${config.bounds.y}px`;
+  layer.style.width = `${config.bounds.width}px`;
+  layer.style.height = `${config.bounds.height}px`;
+  layer.style.zIndex = config.zIndex ?? 8;
+
+  return layer;
+}
+
+function startHotpotFloatingBubbles() {
+  const config = getHotpotFloatingBubbleConfig();
+
+  if (!config.enabled || isHotpotFloatingBubblesActive) {
+    return;
+  }
+
+  isHotpotFloatingBubblesActive = true;
+  scheduleHotpotFloatingBubble();
+}
+
+function scheduleHotpotFloatingBubble() {
+  if (!isHotpotFloatingBubblesActive) {
+    return;
+  }
+
+  const config = getHotpotFloatingBubbleConfig();
+  const delay = randomBetween(config.minSpawnDelay, config.maxSpawnDelay);
+
+  hotpotFloatingBubbleTimer = window.setTimeout(() => {
+    spawnHotpotFloatingBubble();
+    scheduleHotpotFloatingBubble();
+  }, delay);
+}
+
+function spawnHotpotFloatingBubble() {
+  const config = getHotpotFloatingBubbleConfig();
+  const layer = ensureHotpotFloatingBubbleLayer();
+
+  if (!layer) {
+    return;
+  }
+
+  const currentCount = layer.querySelectorAll(".hotpot-floating-bubble").length;
+
+  if (currentCount >= config.maxCount) {
+    return;
+  }
+
+  const size = randomBetween(config.minSize, config.maxSize);
+  const lifeTime = randomBetween(config.minLifeTime, config.maxLifeTime);
+  const floatDistance = randomBetween(config.minFloatDistance, config.maxFloatDistance);
+  const bubble = document.createElement("div");
+  const imagePath = randomItem(config.images);
+
+  bubble.className = "hotpot-floating-bubble";
+  bubble.style.left = `${randomBetween(0, Math.max(0, config.bounds.width - size))}px`;
+  bubble.style.top = `${randomBetween(0, Math.max(0, config.bounds.height - size))}px`;
+  bubble.style.width = `${size}px`;
+  bubble.style.height = `${size}px`;
+  bubble.style.animationDuration = `${lifeTime}ms`;
+  bubble.style.setProperty("--bubble-float-distance", `${floatDistance}px`);
+
+  if (imagePath) {
+    const image = document.createElement("img");
+    image.alt = "";
+    image.draggable = false;
+    image.src = imagePath;
+    image.onerror = () => {
+      bubble.classList.add("is-placeholder");
+      image.remove();
+    };
+    bubble.appendChild(image);
+  } else {
+    bubble.classList.add("is-placeholder");
+  }
+
+  bubble.addEventListener("animationend", () => {
+    bubble.remove();
+  }, { once: true });
+
+  layer.appendChild(bubble);
+}
+
+function stopHotpotFloatingBubbles() {
+  isHotpotFloatingBubblesActive = false;
+
+  if (hotpotFloatingBubbleTimer) {
+    window.clearTimeout(hotpotFloatingBubbleTimer);
+    hotpotFloatingBubbleTimer = null;
+  }
+
+  objectLayer
+    ?.querySelectorAll(".hotpot-floating-bubble-layer")
+    .forEach((layer) => layer.remove());
+}
+
+function randomBetween(min, max) {
+  return min + Math.random() * (max - min);
+}
+
+function randomItem(items) {
+  if (!items?.length) {
+    return null;
+  }
+
+  return items[Math.floor(Math.random() * items.length)];
 }
 
 function bindDragSource(element, type, id) {

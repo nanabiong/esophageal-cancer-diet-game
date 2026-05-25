@@ -76,6 +76,32 @@
       "enter": "floatUp"
     }
   },
+  "floatingBubbles": {
+    "enabled": true,
+    "parentId": "act3_s01_main_hotpotTable",
+    "bounds": {
+      "x": 0,
+      "y": -52,
+      "width": 1033,
+      "height": 226
+    },
+    "images": [
+      "assets/images/act3/effects/floating-bubble-1.png",
+      "assets/images/act3/effects/floating-bubble-2.png",
+      "assets/images/act3/effects/floating-bubble-3.png",
+      "assets/images/act3/effects/floating-bubble-4.png"
+    ],
+    "minSize": 130,
+    "maxSize": 200,
+    "minSpawnDelay": 300,
+    "maxSpawnDelay": 1000,
+    "minLifeTime": 1800,
+    "maxLifeTime": 3200,
+    "minFloatDistance": 12,
+    "maxFloatDistance": 32,
+    "maxCount": 5,
+    "zIndex": 8
+  },
   "sharedChildren": {
     "hotpotTable": {
       "act3_s01_target_spicyPot": { "type": "foodTarget", "x": 154, "y": 300, "width": 185, "height": 276, "opacity": 1, "scale": 1, "zIndex": 4, "image": "assets/images/act3/hotpot/spicy-pot.png" },

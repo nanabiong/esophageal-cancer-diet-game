@@ -526,6 +526,35 @@ button:disabled {
   animation: guideBubbleExitUp var(--guide-bubble-exit-duration) ease-in forwards;
 }
 
+.hotpot-floating-bubble-layer {
+  position: absolute;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.hotpot-floating-bubble {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+  animation-name: hotpotFloatingBubbleLife;
+  animation-timing-function: ease-in-out;
+  animation-fill-mode: forwards;
+}
+
+.hotpot-floating-bubble img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  pointer-events: none;
+}
+
+.hotpot-floating-bubble.is-placeholder {
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.58);
+  box-shadow: 0 0 12px rgba(255, 216, 77, 0.32);
+}
+
 @keyframes guideBubbleEnter {
   from {
     opacity: 0;
@@ -559,6 +588,28 @@ button:disabled {
   to {
     opacity: 0;
     transform: translateY(var(--guide-bubble-exit-y, -60px));
+  }
+}
+
+@keyframes hotpotFloatingBubbleLife {
+  0% {
+    opacity: 0;
+    transform: translateY(8px) scale(0.85);
+  }
+
+  18% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+
+  72% {
+    opacity: 1;
+    transform: translateY(calc(-1 * var(--bubble-float-distance, 20px))) scale(1.02);
+  }
+
+  100% {
+    opacity: 0;
+    transform: translateY(calc(-1 * var(--bubble-float-distance, 20px))) scale(0.9);
   }
 }
 

@@ -7,6 +7,32 @@
     "duration": 900,
     "easing": "cubic-bezier(0.65, 0, 0.22, 1)"
   },
+  "introBubbles": {
+    "act3_intro_bubble_1": {
+      "type": "introBubble",
+      "x": 120,
+      "y": 120,
+      "width": 560,
+      "height": 160,
+      "zIndex": 12,
+      "image": "assets/images/act3/ui/intro-bubble-1.png",
+      "text": "忙碌一天,是时候休息一下了。",
+      "textCenterY": 71,
+      "typewriterSpeed": 70
+    },
+    "act3_intro_bubble_2": {
+      "type": "introBubble",
+      "x": 120,
+      "y": 120,
+      "width": 620,
+      "height": 160,
+      "zIndex": 12,
+      "image": "assets/images/act3/ui/intro-bubble-2.png",
+      "text": "朋友把你拉进一顿热闹的火锅局。",
+      "textCenterY": 71,
+      "typewriterSpeed": 70
+    }
+  },
   "sharedChildren": {
     "hotpotTable": {
       "act3_s01_target_spicyPot": { "type": "foodTarget", "x": 154, "y": 300, "width": 185, "height": 276, "opacity": 1, "scale": 1, "zIndex": 4, "image": "assets/images/act3/hotpot/spicy-pot.png" },

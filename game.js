@@ -13,12 +13,19 @@ const DESIGN_WIDTH = 1920;
 const DESIGN_HEIGHT = 920;
 const SHOW_DEBUG_LABELS = false;
 const SELECTED_DRINK_SCALE = 1.3;
+const TYPEWRITER_SPEED = 70;
+const INTRO_WHEEL_COOLDOWN = 850;
 
 let act3Choices = null;
 let act3Layouts = null;
 let currentState = null;
 let isTransitioning = false;
 let isStateLocked = false;
+let isIntroActive = false;
+let introStep = 0;
+let isWheelLocked = false;
+let activeIntroBubble = null;
+let introTypewriterTimer = null;
 let dragPayload = null;
 let activeFoodDrag = null;
 let selectedFoods = [];
@@ -37,7 +44,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     setupStageScale();
     updateStageHeader("第三幕低保真原型", "夜晚——聚会与火锅");
     initializeStage();
-    applyState(ACT3_STATES.TITLE, { animate: true });
+    startAct3Intro();
   } catch (error) {
     showLoadError(error);
   }
@@ -118,6 +125,7 @@ function initializeStage() {
   objectLayer.className = "act3-object-layer";
   frame.appendChild(objectLayer);
   frame.addEventListener("click", handleStageClick);
+  frame.addEventListener("wheel", handleIntroWheel, { passive: false });
   frameTrack.innerHTML = "";
   frameTrack.appendChild(frame);
   updateStageScale();
@@ -144,6 +152,7 @@ function showLoadError(error) {
 function handleStageClick(event) {
   if (
     currentState !== ACT3_STATES.TITLE ||
+    isIntroActive ||
     isStateLocked ||
     isTransitioning ||
     event.target.closest(".act3-scene-object")
@@ -152,6 +161,126 @@ function handleStageClick(event) {
   }
 
   transitionToState(ACT3_STATES.FOOD_CHOICE);
+}
+
+function startAct3Intro() {
+  isIntroActive = true;
+  introStep = 0;
+  currentState = "act3_intro_00_bubble_1";
+  showIntroBubble("act3_intro_bubble_1");
+}
+
+function handleIntroWheel(event) {
+  if (!isIntroActive || event.deltaY <= 0 || isWheelLocked) {
+    return;
+  }
+
+  event.preventDefault();
+  isWheelLocked = true;
+  advanceIntroStep();
+
+  window.setTimeout(() => {
+    isWheelLocked = false;
+  }, INTRO_WHEEL_COOLDOWN);
+}
+
+function advanceIntroStep() {
+  introStep += 1;
+
+  if (introStep === 1) {
+    applyState(ACT3_STATES.TITLE, { animate: true });
+    return;
+  }
+
+  if (introStep === 2) {
+    hideIntroBubble();
+    showIntroBubble("act3_intro_bubble_2");
+    return;
+  }
+
+  if (introStep >= 3) {
+    hideIntroBubble();
+    isIntroActive = false;
+    transitionToState(ACT3_STATES.FOOD_CHOICE);
+  }
+}
+
+function showIntroBubble(bubbleId) {
+  const bubbleConfig = act3Layouts.introBubbles?.[bubbleId];
+
+  if (!bubbleConfig) {
+    return;
+  }
+
+  hideIntroBubble();
+
+  const bubble = document.createElement("div");
+  bubble.id = bubbleId;
+  bubble.dataset.objectId = bubbleId;
+  bubble.className = "intro-bubble";
+  bubble.style.left = `${bubbleConfig.x}px`;
+  bubble.style.top = `${bubbleConfig.y}px`;
+  bubble.style.width = `${bubbleConfig.width}px`;
+  bubble.style.height = `${bubbleConfig.height}px`;
+  bubble.style.zIndex = bubbleConfig.zIndex ?? 12;
+  bubble.style.setProperty("--intro-bubble-text-center-y", `${bubbleConfig.textCenterY ?? 71}px`);
+
+  const imagePath = bubbleConfig.image || bubbleConfig.bgImage;
+
+  if (imagePath) {
+    const image = document.createElement("img");
+    image.className = "intro-bubble-image";
+    image.alt = bubbleConfig.label || bubbleId;
+    image.draggable = false;
+    image.src = imagePath;
+    image.onload = () => {
+      bubble.classList.add("has-intro-bubble-image");
+    };
+    image.onerror = () => {
+      bubble.classList.remove("has-intro-bubble-image");
+      image.remove();
+    };
+    bubble.appendChild(image);
+  }
+
+  const text = document.createElement("div");
+  text.className = "intro-bubble-text";
+  bubble.appendChild(text);
+  objectLayer.appendChild(bubble);
+  activeIntroBubble = bubble;
+  startTypewriter(text, bubbleConfig.text || "", bubbleConfig.typewriterSpeed ?? TYPEWRITER_SPEED);
+}
+
+function hideIntroBubble() {
+  stopTypewriter();
+
+  if (activeIntroBubble) {
+    activeIntroBubble.remove();
+    activeIntroBubble = null;
+  }
+}
+
+function startTypewriter(textElement, fullText, speed) {
+  stopTypewriter();
+  let index = 0;
+  const characters = Array.from(fullText);
+  textElement.textContent = "";
+
+  introTypewriterTimer = window.setInterval(() => {
+    textElement.textContent += characters[index] || "";
+    index += 1;
+
+    if (index >= characters.length) {
+      stopTypewriter();
+    }
+  }, speed);
+}
+
+function stopTypewriter() {
+  if (introTypewriterTimer) {
+    window.clearInterval(introTypewriterTimer);
+    introTypewriterTimer = null;
+  }
 }
 
 function applyState(stateId, options = {}) {

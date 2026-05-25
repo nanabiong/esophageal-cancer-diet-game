@@ -420,6 +420,58 @@ button:disabled {
   font-size: 18px;
 }
 
+.intro-bubble {
+  position: absolute;
+  pointer-events: none;
+  border-radius: 999px;
+  background: #e4e4e4;
+  animation: introBubbleIn 280ms ease-out both;
+}
+
+.intro-bubble-image {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: fill;
+  pointer-events: none;
+}
+
+.intro-bubble.has-intro-bubble-image {
+  background: transparent;
+}
+
+.intro-bubble-text {
+  position: absolute;
+  left: 50%;
+  top: var(--intro-bubble-text-center-y, 71px);
+  z-index: 2;
+  width: 100%;
+  color: #222;
+  font-family: YouYuan, "幼圆", "Microsoft YaHei", sans-serif;
+  font-size: 28px;
+  font-weight: 400;
+  line-height: 1.2;
+  text-align: center;
+  white-space: nowrap;
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+}
+
+@keyframes introBubbleIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.98);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
 .act3-narration {
   justify-content: center;
   font-size: 18px;

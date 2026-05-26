@@ -204,7 +204,7 @@ const RESULT_GALAXY_LOCATING_DEFAULT_CONFIG = {
   captionBottom: 82,
   captionFontSize: 34,
   captionReveal: {
-    text: "高压炙热星环",
+    text: "",
     width: 350,
     minHeight: 110,
     fontSize: 34,
@@ -221,6 +221,23 @@ const RESULT_GALAXY_LOCATING_DEFAULT_CONFIG = {
     particleColors: ["#87BDF9", "#F99605", "#FAC4DE", "#88CF90", "#FFD933"],
     particleStrokeColor: "#693618",
     particleStrokeWidth: 1.5
+  },
+  resultGalaxyEnter: {
+    duration: 1200,
+    nebula: {
+      targetX: 430,
+      targetY: 420,
+      scale: 1.35,
+      delay: 0
+    },
+    planet: {
+      targetX: 470,
+      targetY: 390,
+      scale: 1.12,
+      offsetX: 32,
+      offsetY: -18,
+      delay: 160
+    }
   },
   imagePaths: {
     radial: "assets/images/result/shapes/radial.png",
@@ -363,6 +380,8 @@ let galaxyLocatingCaptionDotsElement = null;
 let galaxyLocatingCaptionParticleLayer = null;
 let galaxyLocatingRevealTimer = null;
 let resultGalaxyRevealStarted = false;
+let hasResultGalaxyEnterStarted = false;
+let resultGalaxyEnterTimer = null;
 let hoverInfoTooltip = null;
 let hoverInfoShowTimer = null;
 let hoverInfoHideTimer = null;
@@ -465,6 +484,18 @@ function mergeResultGalaxyLocatingConfig(config) {
     captionReveal: {
       ...RESULT_GALAXY_LOCATING_DEFAULT_CONFIG.captionReveal,
       ...(config.captionReveal || {})
+    },
+    resultGalaxyEnter: {
+      ...RESULT_GALAXY_LOCATING_DEFAULT_CONFIG.resultGalaxyEnter,
+      ...(config.resultGalaxyEnter || {}),
+      nebula: {
+        ...RESULT_GALAXY_LOCATING_DEFAULT_CONFIG.resultGalaxyEnter.nebula,
+        ...(config.resultGalaxyEnter?.nebula || {})
+      },
+      planet: {
+        ...RESULT_GALAXY_LOCATING_DEFAULT_CONFIG.resultGalaxyEnter.planet,
+        ...(config.resultGalaxyEnter?.planet || {})
+      }
     }
   };
 }
@@ -842,6 +873,11 @@ function handleStageWheel(event) {
 
   if (currentPhase === PHASES.EXIT_SCROLL) {
     handleAct3ExitWheel(event);
+    return;
+  }
+
+  if (currentPhase === PHASES.RESULT_GALAXY_LOCATING) {
+    handleResultGalaxyLocatingWheel(event);
   }
 }
 
@@ -1519,10 +1555,8 @@ function ensureResultGalaxyLayer() {
   resultGalaxyLayer.id = RESULT_STATES.DIET_GALAXY;
   resultGalaxyLayer.className = "result-galaxy-layer";
   resultGalaxyLayer.innerHTML = `
-    <div class="result-galaxy-card">
-      <p class="result-galaxy-kicker">Result 1</p>
-      <h2>&#39278;&#39135;&#26143;&#31995;</h2>
-      <p>&#20320;&#30340;&#39278;&#39135;&#20542;&#21521;&#27491;&#22312;&#27719;&#32858;&hellip;&hellip;</p>
+    <div class="result-galaxy-placeholder">
+      <p>饮食星系结果页占位</p>
     </div>
   `;
   objectLayer.appendChild(resultGalaxyLayer);
@@ -1619,6 +1653,21 @@ function createGalaxyLocatingLayer() {
   layer.style.setProperty("--result-caption-reveal-bounce-duration", `${config.captionReveal.bounceDuration}ms`);
   layer.style.setProperty("--result-caption-particle-stroke-color", config.captionReveal.particleStrokeColor);
   layer.style.setProperty("--result-caption-particle-stroke-width", `${config.captionReveal.particleStrokeWidth}px`);
+  layer.style.setProperty("--result-galaxy-enter-duration", `${config.resultGalaxyEnter.duration}ms`);
+  layer.style.setProperty("--result-nebula-target-x", `${config.resultGalaxyEnter.nebula.targetX}px`);
+  layer.style.setProperty("--result-nebula-target-y", `${config.resultGalaxyEnter.nebula.targetY}px`);
+  layer.style.setProperty("--result-nebula-enter-scale", config.resultGalaxyEnter.nebula.scale);
+  layer.style.setProperty("--result-nebula-enter-delay", `${config.resultGalaxyEnter.nebula.delay}ms`);
+  layer.style.setProperty("--result-planet-enter-delay", `${config.resultGalaxyEnter.planet.delay}ms`);
+  layer.style.setProperty("--result-planet-enter-scale", config.resultGalaxyEnter.planet.scale);
+  layer.style.setProperty(
+    "--result-planet-enter-offset-x",
+    `${config.resultGalaxyEnter.planet.targetX - config.resultGalaxyEnter.nebula.targetX + config.resultGalaxyEnter.planet.offsetX}px`
+  );
+  layer.style.setProperty(
+    "--result-planet-enter-offset-y",
+    `${config.resultGalaxyEnter.planet.targetY - config.resultGalaxyEnter.nebula.targetY + config.resultGalaxyEnter.planet.offsetY}px`
+  );
 
   field.className = "result-locating-field";
   caption.className = "result-locating-caption";
@@ -1642,6 +1691,7 @@ function createGalaxyLocatingLayer() {
   galaxyLocatingCaptionDotsElement = captionDots;
   galaxyLocatingCaptionParticleLayer = captionParticleLayer;
   resultGalaxyRevealStarted = false;
+  hasResultGalaxyEnterStarted = false;
   generateGalaxyParticles();
   createGalaxyCenterPlanet();
   bindGalaxyLocatingParallax();
@@ -1685,10 +1735,56 @@ function triggerGalaxyLocatingReveal() {
   revealGalaxyLocatingCaption();
 }
 
-function revealGalaxyLocatingCaption() {
-  const config = RESULT_GALAXY_LOCATING_CONFIG.captionReveal;
+function handleResultGalaxyLocatingWheel(event) {
+  if (
+    currentPhase !== PHASES.RESULT_GALAXY_LOCATING ||
+    hasResultGalaxyEnterStarted ||
+    event.deltaY <= 0
+  ) {
+    return;
+  }
 
-  if (!galaxyLocatingCaptionElement || !galaxyLocatingCaptionMainElement) {
+  event.preventDefault();
+  startResultGalaxyEnterTransition();
+}
+
+function startResultGalaxyEnterTransition() {
+  if (!galaxyLocatingLayer || hasResultGalaxyEnterStarted) {
+    return;
+  }
+
+  const config = RESULT_GALAXY_LOCATING_CONFIG.resultGalaxyEnter;
+  const completeDelay = config.duration + Math.max(config.nebula.delay, config.planet.delay);
+
+  hasResultGalaxyEnterStarted = true;
+  galaxyLocatingLayer.classList.add("is-entering-result");
+  ensureResultGalaxyLayer();
+
+  if (resultGalaxyEnterTimer) {
+    window.clearTimeout(resultGalaxyEnterTimer);
+  }
+
+  resultGalaxyEnterTimer = window.setTimeout(() => {
+    completeResultGalaxyEnterTransition();
+  }, completeDelay);
+}
+
+function completeResultGalaxyEnterTransition() {
+  currentPhase = PHASES.RESULT_GALAXY;
+  currentState = RESULT_STATES.DIET_GALAXY;
+  isAct3ScrollExitEnabled = false;
+  isAct3ExitAnimating = false;
+  act3ExitProgress = ACT3_EXIT_SCROLL_CONFIG.maxProgress;
+  updateResultGalaxyProgress(1);
+  console.log("Entered result_state_01_diet_galaxy", {
+    playerChoices,
+    act3ExitProgress,
+    preservedGalaxyLocatingLayer: Boolean(galaxyLocatingLayer)
+  });
+}
+
+function revealGalaxyLocatingCaption() {
+  if (!galaxyLocatingCaptionElement) {
     return;
   }
 
@@ -1697,20 +1793,11 @@ function revealGalaxyLocatingCaption() {
     galaxyLocatingCaptionDotsTimer = null;
   }
 
-  galaxyLocatingCaptionMainElement.textContent = config.text;
-  galaxyLocatingLayer?.style.setProperty("--result-locating-caption-width", `${config.width}px`);
-  galaxyLocatingLayer?.style.setProperty("--result-locating-caption-min-height", `${config.minHeight}px`);
-  galaxyLocatingLayer?.style.setProperty("--result-locating-caption-font-size", `${config.fontSize}px`);
-
   if (galaxyLocatingCaptionDotsElement) {
     galaxyLocatingCaptionDotsElement.textContent = "";
   }
 
-  galaxyLocatingCaptionElement.classList.remove("caption-reveal-bounce");
-  galaxyLocatingCaptionElement.classList.add("is-revealed");
-  void galaxyLocatingCaptionElement.offsetWidth;
-  galaxyLocatingCaptionElement.classList.add("caption-reveal-bounce");
-  generateGalaxyCaptionRevealParticles();
+  galaxyLocatingCaptionElement.classList.add("is-hidden-after-reveal");
 }
 
 function generateGalaxyCaptionRevealParticles() {
@@ -1775,10 +1862,12 @@ function createGalaxyCenterPlanet() {
   }
 
   const planet = document.createElement("div");
+  const planetBody = document.createElement("div");
   const image = document.createElement("img");
 
   planet.id = "result-galaxy-center-planet";
   planet.className = "result-galaxy-center-planet";
+  planetBody.className = "result-galaxy-center-planet-body";
   planet.style.width = `${config.size}px`;
   planet.style.height = `${config.size}px`;
   planet.style.left = `calc(50% + ${config.x}px)`;
@@ -1805,13 +1894,14 @@ function createGalaxyCenterPlanet() {
     image.onerror = () => {
       image.remove();
     };
-    planet.appendChild(image);
+    planetBody.appendChild(image);
 
     if (image.decode) {
       image.decode().catch(() => {});
     }
   }
 
+  planet.appendChild(planetBody);
   galaxyLocatingField.appendChild(planet);
 }
 
@@ -2116,6 +2206,10 @@ function cleanupGalaxyLocatingLayer() {
     window.clearTimeout(galaxyLocatingRevealTimer);
   }
 
+  if (resultGalaxyEnterTimer) {
+    window.clearTimeout(resultGalaxyEnterTimer);
+  }
+
   galaxyLocatingLayer?.remove();
   galaxyLocatingLayer = null;
   galaxyLocatingField = null;
@@ -2129,6 +2223,8 @@ function cleanupGalaxyLocatingLayer() {
   galaxyLocatingCaptionParticleLayer = null;
   galaxyLocatingRevealTimer = null;
   resultGalaxyRevealStarted = false;
+  resultGalaxyEnterTimer = null;
+  hasResultGalaxyEnterStarted = false;
   galaxyLocatingPointerTargetX = 0;
   galaxyLocatingPointerTargetY = 0;
   galaxyLocatingPointerCurrentX = 0;

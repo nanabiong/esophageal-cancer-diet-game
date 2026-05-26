@@ -62,7 +62,7 @@
     "captionBottom": 82,
     "captionFontSize": 34,
     "captionReveal": {
-      "text": "高压炙热星环",
+      "text": "",
       "width": 350,
       "minHeight": 110,
       "fontSize": 34,
@@ -85,6 +85,23 @@
       ],
       "particleStrokeColor": "#693618",
       "particleStrokeWidth": 1.5
+    },
+    "resultGalaxyEnter": {
+      "duration": 1200,
+      "nebula": {
+        "targetX": 430,
+        "targetY": 420,
+        "scale": 1.35,
+        "delay": 0
+      },
+      "planet": {
+        "targetX": 470,
+        "targetY": 390,
+        "scale": 1.12,
+        "offsetX": 32,
+        "offsetY": -18,
+        "delay": 160
+      }
     },
     "imagePaths": {
       "radial": "assets/images/result/shapes/radial.png",

@@ -10,6 +10,7 @@ const ACT3_STATES = {
 };
 
 const PHASES = {
+  ACT0: "act0_alarm_intro",
   INTRO: "act3_intro",
   FOOD: "act3_food",
   DRINK: "act3_drink",
@@ -22,7 +23,7 @@ const RESULT_STATES = {
   DIET_GALAXY: "result_state_01_diet_galaxy"
 };
 const PREVIEW_ENTRY_CONFIG = {
-  enabled: true,
+  enabled: false,
   startAt: RESULT_STATES.GALAXY_LOCATING
 };
 
@@ -101,12 +102,45 @@ const ACT3_EXIT_SCROLL_CONFIG = {
   resultDelay: 420,
   completeDelay: 1650
 };
+const ACT0_ALARM_CONFIG = {
+  maxHits: 3,
+  backgroundLevels: [
+    "#000000",
+    "#2A241F",
+    "#5E5144",
+    "#F6EEDC"
+  ],
+  handAngles: [0, 35, 80, 130],
+  minuteHandOrigin: "50% 90%",
+  layerId: "act0-alarm-layer",
+  clockId: "act0-clock",
+  clockX: 960,
+  clockY: 390,
+  clockSize: 320,
+  backgroundTransitionDuration: 760,
+  hitDuration: 260,
+  nextRingDelay: 720,
+  completeDelay: 940,
+  ringShakeDistance: 12,
+  ringRotateDeg: 5,
+  ringScale: 1.03,
+  ringAnimationDuration: 140,
+  ringLinesOpacity: 0.92,
+  hourHandAngle: -48,
+  imagePaths: {
+    body: "assets/images/act0/clock/clock-body.png",
+    hourHand: "assets/images/act0/clock/hour-hand.png",
+    minuteHand: "assets/images/act0/clock/minute-hand.png",
+    ringLines: "assets/images/act0/clock/ring-lines.png",
+    hitFeedback: "assets/images/act0/clock/hand-hit.png"
+  }
+};
 const RESULT_GALAXY_LOCATING_CONFIG = {
   stateId: RESULT_STATES.GALAXY_LOCATING,
-  particleCount: 48,
+  particleCount: 120,
   colors: ["#87BDF9", "#FAC4DE", "#88CF90", "#FFD933", "#F05618"],
-  minSize: 14,
-  maxSize: 96,
+  minSize: 10,
+  maxSize: 60,
   fieldWidth: 1280,
   fieldHeight: 640,
   mouseFollowStrength: 42,
@@ -120,6 +154,8 @@ const RESULT_GALAXY_LOCATING_CONFIG = {
   orbitSpeedMax: 0.00075,
   freeMotionDuration: 500,
   ringAssembleDuration: 16000,
+  freeMotionSpreadX: 1920,
+  freeMotionSpreadY: 920,
   orbitTiltDeg: -24,
   orbitDriftMin: 8,
   orbitDriftMax: 32,
@@ -212,7 +248,7 @@ const ACT3_HOVER_INFO = {
 let act3Choices = null;
 let act3Layouts = null;
 let currentState = null;
-let currentPhase = PHASES.INTRO;
+let currentPhase = PHASES.ACT0;
 let isTransitioning = false;
 let isStateLocked = false;
 let isIntroActive = false;
@@ -242,6 +278,14 @@ let isAct3ExitAnimating = false;
 let hasAct3ExitStarted = false;
 let act3ExitProgress = 0;
 let resultGalaxyLayer = null;
+let act0AlarmLayer = null;
+let act0Clock = null;
+let act0MinuteHand = null;
+let act0HitFeedback = null;
+let act0AlarmStep = 0;
+let isAct0AlarmRinging = false;
+let act0StepTimer = null;
+let act0HitTimer = null;
 let galaxyLocatingLayer = null;
 let galaxyLocatingField = null;
 let galaxyLocatingParticles = [];
@@ -398,7 +442,7 @@ function startAct3Intro() {
 
 function startConfiguredEntry() {
   if (!PREVIEW_ENTRY_CONFIG.enabled) {
-    startAct3Intro();
+    enterAct0();
     return;
   }
 
@@ -416,6 +460,7 @@ function startPreviewEntry() {
   hideGuidanceBubbles();
   hideHoverInfoTooltip();
   stopHotpotFloatingBubbles();
+  cleanupAct0Layer();
   cleanupGalaxyLocatingLayer();
   resultGalaxyLayer?.remove();
   resultGalaxyLayer = null;
@@ -433,6 +478,224 @@ function startPreviewEntry() {
   }
 
   enterGalaxyLocatingState();
+}
+
+function enterAct0() {
+  resetAct0Timers();
+  cleanupAct0Layer();
+  currentPhase = PHASES.ACT0;
+  currentState = "act0_alarm_01_ringing";
+  act0AlarmStep = 0;
+  isAct0AlarmRinging = false;
+  isIntroActive = false;
+  isWheelLocked = false;
+  isIntroAnimating = false;
+  isTransitioning = false;
+  isStateLocked = true;
+  hideIntroBubble();
+  hideGuidanceBubbles();
+  hideHoverInfoTooltip();
+  createAct0Layer();
+  updateAct0BackgroundLevel(0);
+  updateAct0MinuteHand(0);
+  startAct0Ringing();
+}
+
+function createAct0Layer() {
+  const config = ACT0_ALARM_CONFIG;
+  const layer = document.createElement("section");
+  const clock = document.createElement("div");
+  const body = document.createElement("div");
+  const hourHand = document.createElement("div");
+  const minuteHand = document.createElement("div");
+  const ringLines = document.createElement("div");
+  const hitFeedback = document.createElement("div");
+
+  layer.id = config.layerId;
+  layer.className = "act0-alarm-layer";
+  layer.style.setProperty("--act0-bg-transition-duration", `${config.backgroundTransitionDuration}ms`);
+
+  clock.id = config.clockId;
+  clock.className = "act0-clock";
+  clock.style.left = `${config.clockX}px`;
+  clock.style.top = `${config.clockY}px`;
+  clock.style.width = `${config.clockSize}px`;
+  clock.style.height = `${config.clockSize}px`;
+  clock.style.setProperty("--act0-ring-shake-distance", `${config.ringShakeDistance}px`);
+  clock.style.setProperty("--act0-ring-rotate-deg", `${config.ringRotateDeg}deg`);
+  clock.style.setProperty("--act0-ring-scale", `${config.ringScale}`);
+  clock.style.setProperty("--act0-ring-duration", `${config.ringAnimationDuration}ms`);
+  clock.style.setProperty("--act0-ring-lines-opacity", `${config.ringLinesOpacity}`);
+
+  body.className = "clock-body";
+  hourHand.className = "clock-hour-hand";
+  minuteHand.className = "clock-minute-hand";
+  ringLines.className = "alarm-ring-lines";
+  hitFeedback.className = "hit-feedback";
+
+  minuteHand.style.transformOrigin = config.minuteHandOrigin;
+  hourHand.style.transform = `translateX(-50%) rotate(${config.hourHandAngle}deg)`;
+
+  appendAct0OptionalImage(body, "clock-body-image", config.imagePaths.body);
+  appendAct0OptionalImage(hourHand, "clock-hour-hand-image", config.imagePaths.hourHand);
+  appendAct0OptionalImage(minuteHand, "clock-minute-hand-image", config.imagePaths.minuteHand);
+  appendAct0OptionalImage(ringLines, "alarm-ring-lines-image", config.imagePaths.ringLines);
+  appendAct0OptionalImage(hitFeedback, "hit-feedback-image", config.imagePaths.hitFeedback);
+
+  clock.appendChild(body);
+  clock.appendChild(hourHand);
+  clock.appendChild(minuteHand);
+  clock.appendChild(ringLines);
+  clock.appendChild(hitFeedback);
+  clock.addEventListener("click", handleAct0ClockClick);
+  layer.appendChild(clock);
+  objectLayer.appendChild(layer);
+
+  act0AlarmLayer = layer;
+  act0Clock = clock;
+  act0MinuteHand = minuteHand;
+  act0HitFeedback = hitFeedback;
+}
+
+function appendAct0OptionalImage(container, imageClassName, imagePath) {
+  if (!imagePath) {
+    return;
+  }
+
+  const image = document.createElement("img");
+
+  image.className = `act0-clock-image ${imageClassName}`;
+  image.alt = "";
+  image.draggable = false;
+  image.src = imagePath;
+  image.onload = () => {
+    container.classList.add("has-image");
+  };
+  image.onerror = () => {
+    image.remove();
+  };
+  container.appendChild(image);
+}
+
+function handleAct0ClockClick() {
+  if (currentPhase !== PHASES.ACT0 || !isAct0AlarmRinging || !act0Clock) {
+    return;
+  }
+
+  const nextStep = Math.min(act0AlarmStep + 1, ACT0_ALARM_CONFIG.maxHits);
+  const isFinalHit = nextStep >= ACT0_ALARM_CONFIG.maxHits;
+
+  isAct0AlarmRinging = false;
+  resetAct0Timers();
+  stopAlarmSound();
+  playHitSound();
+  act0Clock.classList.remove("is-ringing");
+  act0Clock.classList.add("is-hit");
+  act0HitFeedback?.classList.add("is-visible");
+  act0AlarmStep = nextStep;
+  updateAct0BackgroundLevel(nextStep);
+  updateAct0MinuteHand(nextStep);
+  currentState = isFinalHit
+    ? "act0_alarm_03_done"
+    : `act0_alarm_0${nextStep}_snoozed`;
+
+  act0HitTimer = window.setTimeout(() => {
+    act0Clock?.classList.remove("is-hit");
+    act0HitFeedback?.classList.remove("is-visible");
+  }, ACT0_ALARM_CONFIG.hitDuration);
+
+  act0StepTimer = window.setTimeout(() => {
+    if (isFinalHit) {
+      completeAct0();
+      return;
+    }
+
+    startAct0Ringing();
+  }, isFinalHit ? ACT0_ALARM_CONFIG.completeDelay : ACT0_ALARM_CONFIG.nextRingDelay);
+}
+
+function startAct0Ringing() {
+  if (!act0Clock || !act0AlarmLayer || act0AlarmStep >= ACT0_ALARM_CONFIG.maxHits) {
+    return;
+  }
+
+  const ringIndex = act0AlarmStep + 1;
+
+  isAct0AlarmRinging = true;
+  currentState = `act0_alarm_0${ringIndex}_ringing`;
+  act0Clock.classList.remove("is-hit");
+  act0HitFeedback?.classList.remove("is-visible");
+  act0Clock.classList.add("is-ringing");
+  playAlarmSound();
+}
+
+function updateAct0BackgroundLevel(levelIndex) {
+  const color = ACT0_ALARM_CONFIG.backgroundLevels[
+    Math.max(0, Math.min(levelIndex, ACT0_ALARM_CONFIG.backgroundLevels.length - 1))
+  ];
+
+  if (act0AlarmLayer) {
+    act0AlarmLayer.style.backgroundColor = color;
+  }
+}
+
+function updateAct0MinuteHand(stepIndex) {
+  if (!act0MinuteHand) {
+    return;
+  }
+
+  const angle = ACT0_ALARM_CONFIG.handAngles[
+    Math.max(0, Math.min(stepIndex, ACT0_ALARM_CONFIG.handAngles.length - 1))
+  ];
+
+  act0MinuteHand.style.transform = `translateX(-50%) rotate(${angle}deg)`;
+}
+
+function completeAct0() {
+  stopAlarmSound();
+  isAct0AlarmRinging = false;
+  isStateLocked = false;
+  act0Clock?.classList.remove("is-ringing");
+  act0Clock?.classList.add("is-completing");
+  act0AlarmLayer?.classList.add("is-completing");
+
+  window.setTimeout(() => {
+    cleanupAct0Layer();
+    startAct3Intro();
+  }, ACT0_ALARM_CONFIG.completeDelay);
+}
+
+function resetAct0Timers() {
+  if (act0StepTimer) {
+    window.clearTimeout(act0StepTimer);
+    act0StepTimer = null;
+  }
+
+  if (act0HitTimer) {
+    window.clearTimeout(act0HitTimer);
+    act0HitTimer = null;
+  }
+}
+
+function cleanupAct0Layer() {
+  resetAct0Timers();
+  stopAlarmSound();
+  act0AlarmLayer?.remove();
+  act0AlarmLayer = null;
+  act0Clock = null;
+  act0MinuteHand = null;
+  act0HitFeedback = null;
+  act0AlarmStep = 0;
+  isAct0AlarmRinging = false;
+}
+
+function playAlarmSound() {
+}
+
+function stopAlarmSound() {
+}
+
+function playHitSound() {
 }
 
 function handleStageWheel(event) {
@@ -1258,12 +1521,11 @@ function generateGalaxyParticles() {
     const depth = 0.35 + normalizedSize * 0.85;
     const angle = randomBetween(0, Math.PI * 2);
     const distance = Math.sqrt(Math.random());
-    const ellipseRadiusX = (config.fieldWidth * 0.5 - size * 0.5) * distance;
-    const ellipseRadiusY = (config.fieldHeight * 0.36 - size * 0.5) * distance;
+    const ellipseRadiusX = Math.max(0, config.freeMotionSpreadX - size * 0.5) * distance;
+    const ellipseRadiusY = Math.max(0, config.freeMotionSpreadY - size * 0.5) * distance;
     const offsetX = Math.cos(angle) * ellipseRadiusX + randomBetween(-80, 80);
     const offsetY = Math.sin(angle) * ellipseRadiusY + randomBetween(-58, 58);
     const rotation = randomBetween(config.rotationMin, config.rotationMax);
-    const opacity = 0.32 + normalizedSize * 0.48;
     const scale = 0.72 + normalizedSize * 0.58;
     const shapeType = randomItem(shapeTypes) || "circle";
     const ringSlotPhase = (index / Math.max(1, config.particleCount)) * Math.PI * 2;
@@ -1304,7 +1566,7 @@ function generateGalaxyParticles() {
     particle.style.top = "50%";
     particle.style.width = `${size}px`;
     particle.style.height = `${size}px`;
-    particle.style.opacity = opacity.toFixed(3);
+    particle.style.opacity = "1";
     particle.style.zIndex = `${Math.round(depth * 10)}`;
     particle.style.setProperty("--particle-offset-x", `${offsetX.toFixed(2)}px`);
     particle.style.setProperty("--particle-offset-y", `${offsetY.toFixed(2)}px`);

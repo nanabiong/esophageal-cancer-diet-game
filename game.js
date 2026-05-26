@@ -21,6 +21,10 @@ const RESULT_STATES = {
   GALAXY_LOCATING: "result_state_00_galaxy_locating",
   DIET_GALAXY: "result_state_01_diet_galaxy"
 };
+const PREVIEW_ENTRY_CONFIG = {
+  enabled: true,
+  startAt: RESULT_STATES.GALAXY_LOCATING
+};
 
 const DESIGN_WIDTH = 1920;
 const DESIGN_HEIGHT = 920;
@@ -100,11 +104,11 @@ const ACT3_EXIT_SCROLL_CONFIG = {
 const RESULT_GALAXY_LOCATING_CONFIG = {
   stateId: RESULT_STATES.GALAXY_LOCATING,
   particleCount: 48,
-  colors: ["#8DB8F2", "#F65A1E", "#8FD39B", "#F6D94A", "#F4B6D2"],
+  colors: ["#87BDF9", "#FAC4DE", "#88CF90", "#FFD933", "#F05618"],
   minSize: 14,
   maxSize: 96,
-  fieldWidth: 1280,
-  fieldHeight: 640,
+  fieldWidth: 1920,
+  fieldHeight: 920,
   mouseFollowStrength: 42,
   depthMotionMultiplier: 1.5,
   floatStrength: 18,
@@ -114,6 +118,22 @@ const RESULT_GALAXY_LOCATING_CONFIG = {
   orbitRadiusMax: 130,
   orbitSpeedMin: 0.00025,
   orbitSpeedMax: 0.00075,
+  freeMotionDuration: 500,
+  ringAssembleDuration: 16000,
+  freeMotionSpreadX: 860,
+  freeMotionSpreadY: 420,
+  orbitTiltDeg: -24,
+  orbitDriftMin: 8,
+  orbitDriftMax: 32,
+  orbitNoiseMin: 6,
+  orbitNoiseMax: 22,
+  sharedRingRadiusX: 360,
+  sharedRingRadiusY: 168,
+  sharedRingSpeed: 0.00022,
+  sharedRingDirection: 1,
+  sharedRingPhaseJitter: 0.22,
+  sharedRingRadialJitter: 26,
+  sharedRingTangentialJitter: 18,
   floatAmplitudeMin: 12,
   floatAmplitudeMax: 46,
   selfRotateSpeedMin: -0.018,
@@ -250,7 +270,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     setupStageScale();
     updateStageHeader("第三幕低保真原型", "夜晚——聚会与火锅");
     initializeStage();
-    startAct3Intro();
+    startConfiguredEntry();
   } catch (error) {
     showLoadError(error);
   }
@@ -376,6 +396,45 @@ function startAct3Intro() {
   introStep = 0;
   currentState = "act3_intro_00_bubble_1";
   showIntroBubble("act3_intro_bubble_1");
+}
+
+function startConfiguredEntry() {
+  if (!PREVIEW_ENTRY_CONFIG.enabled) {
+    startAct3Intro();
+    return;
+  }
+
+  startPreviewEntry();
+}
+
+function startPreviewEntry() {
+  isIntroActive = false;
+  introStep = 0;
+  isWheelLocked = false;
+  isIntroAnimating = false;
+  isTransitioning = false;
+  isStateLocked = false;
+  hideIntroBubble();
+  hideGuidanceBubbles();
+  hideHoverInfoTooltip();
+  stopHotpotFloatingBubbles();
+  cleanupGalaxyLocatingLayer();
+  resultGalaxyLayer?.remove();
+  resultGalaxyLayer = null;
+  objectLayer?.classList.remove("act3-exit-sequence");
+  hasAct3ExitStarted = false;
+  isAct3ExitAnimating = false;
+  isAct3ScrollExitEnabled = false;
+  isAct3Complete = false;
+  act3ExitProgress = 0;
+  currentState = null;
+
+  if (PREVIEW_ENTRY_CONFIG.startAt === RESULT_STATES.DIET_GALAXY) {
+    enterResultGalaxyState();
+    return;
+  }
+
+  enterGalaxyLocatingState();
 }
 
 function handleStageWheel(event) {
@@ -1191,29 +1250,42 @@ function generateGalaxyParticles() {
 
   const config = RESULT_GALAXY_LOCATING_CONFIG;
   const shapeTypes = ["radial", "circle", "triangle", "rect"];
+  const safeMinSize = Math.max(6, Number(config.minSize) || 0);
+  const safeMaxSize = Math.max(safeMinSize, Number(config.maxSize) || 0);
 
   galaxyLocatingField.innerHTML = "";
   galaxyLocatingParticles = [];
 
   for (let index = 0; index < config.particleCount; index += 1) {
-    const size = randomBetween(config.minSize, config.maxSize);
-    const normalizedSize = normalizeValue(size, config.minSize, config.maxSize);
+    const size = randomBetween(safeMinSize, safeMaxSize);
+    const normalizedSize = normalizeValue(size, safeMinSize, safeMaxSize);
     const depth = 0.35 + normalizedSize * 0.85;
     const angle = randomBetween(0, Math.PI * 2);
     const distance = Math.sqrt(Math.random());
-    const ellipseRadiusX = (config.fieldWidth * 0.5 - size * 0.5) * distance;
-    const ellipseRadiusY = (config.fieldHeight * 0.36 - size * 0.5) * distance;
+    const ellipseRadiusX = Math.max(0, config.freeMotionSpreadX - size * 0.5) * distance;
+    const ellipseRadiusY = Math.max(0, config.freeMotionSpreadY - size * 0.5) * distance;
     const offsetX = Math.cos(angle) * ellipseRadiusX + randomBetween(-80, 80);
     const offsetY = Math.sin(angle) * ellipseRadiusY + randomBetween(-58, 58);
     const rotation = randomBetween(config.rotationMin, config.rotationMax);
     const opacity = 0.32 + normalizedSize * 0.48;
     const scale = 0.72 + normalizedSize * 0.58;
     const shapeType = randomItem(shapeTypes) || "circle";
+    const ringSlotPhase = (index / Math.max(1, config.particleCount)) * Math.PI * 2;
+    const ringPhaseOffset = randomBetween(-config.sharedRingPhaseJitter, config.sharedRingPhaseJitter);
+    const ringRadialOffset = randomBetween(-config.sharedRingRadialJitter, config.sharedRingRadialJitter);
+    const ringTangentialOffset = randomBetween(-config.sharedRingTangentialJitter, config.sharedRingTangentialJitter);
     const orbitRadiusX = randomBetween(config.orbitRadiusMin, config.orbitRadiusMax);
     const orbitRadiusY = randomBetween(config.orbitRadiusMin * 0.7, config.orbitRadiusMax * 0.92);
     const orbitSpeed = randomBetween(config.orbitSpeedMin, config.orbitSpeedMax);
     const orbitDirection = Math.random() >= 0.5 ? 1 : -1;
     const orbitPhase = randomBetween(0, Math.PI * 2);
+    const orbitDriftX = randomBetween(config.orbitDriftMin, config.orbitDriftMax);
+    const orbitDriftY = randomBetween(config.orbitDriftMin * 0.7, config.orbitDriftMax * 0.92);
+    const orbitNoiseX = randomBetween(config.orbitNoiseMin, config.orbitNoiseMax);
+    const orbitNoiseY = randomBetween(config.orbitNoiseMin * 0.7, config.orbitNoiseMax * 0.9);
+    const orbitNoisePhase = randomBetween(0, Math.PI * 2);
+    const orbitNoiseSpeed = randomBetween(0.00018, 0.00042);
+    const trackBias = randomBetween(-0.18, 0.18);
     const floatAmplitude = randomBetween(config.floatAmplitudeMin, config.floatAmplitudeMax);
     const floatPhase = randomBetween(0, Math.PI * 2);
     const floatSpeedX = randomBetween(0.00022, 0.00052);
@@ -1261,11 +1333,22 @@ function generateGalaxyParticles() {
       baseY: offsetY,
       scale,
       baseRotation: rotation,
+      ringSlotPhase,
+      ringPhaseOffset,
+      ringRadialOffset,
+      ringTangentialOffset,
       orbitRadiusX,
       orbitRadiusY,
       orbitSpeed,
       orbitDirection,
       orbitPhase,
+      orbitDriftX,
+      orbitDriftY,
+      orbitNoiseX,
+      orbitNoiseY,
+      orbitNoisePhase,
+      orbitNoiseSpeed,
+      trackBias,
       floatAmplitude,
       floatPhase,
       floatSpeedX,
@@ -1326,32 +1409,73 @@ function updateGalaxyMouseParallax() {
   }
 
   const now = performance.now();
+  const tiltRadians = (RESULT_GALAXY_LOCATING_CONFIG.orbitTiltDeg * Math.PI) / 180;
+  const cosTilt = Math.cos(tiltRadians);
+  const sinTilt = Math.sin(tiltRadians);
 
   if (!galaxyLocatingMotionStartTime) {
     galaxyLocatingMotionStartTime = now;
   }
 
   const elapsed = now - galaxyLocatingMotionStartTime;
+  const freeMotionDuration = RESULT_GALAXY_LOCATING_CONFIG.freeMotionDuration;
+  const ringAssembleDuration = RESULT_GALAXY_LOCATING_CONFIG.ringAssembleDuration;
+  const ringBlendRaw = (elapsed - freeMotionDuration) / Math.max(1, ringAssembleDuration);
+  const ringBlend = easeInOutCubic(clamp01(ringBlendRaw));
 
   galaxyLocatingPointerCurrentX += (galaxyLocatingPointerTargetX - galaxyLocatingPointerCurrentX) * 0.08;
   galaxyLocatingPointerCurrentY += (galaxyLocatingPointerTargetY - galaxyLocatingPointerCurrentY) * 0.08;
 
   galaxyLocatingParticles.forEach((particle) => {
     const depthWeight = 0.72 + particle.depth * RESULT_GALAXY_LOCATING_CONFIG.depthMotionMultiplier;
-    const orbitProgress = elapsed * particle.orbitSpeed * particle.orbitDirection + particle.orbitPhase;
+    const freeOrbitProgress = elapsed * particle.orbitSpeed * particle.orbitDirection + particle.orbitPhase;
+    const secondaryProgress =
+      elapsed * particle.orbitSpeed * particle.orbitDirection * 0.58 +
+      particle.orbitPhase * 0.7 +
+      particle.trackBias;
     const floatX = Math.sin(elapsed * particle.floatSpeedX + particle.floatPhase) * particle.floatAmplitude * 0.42;
     const floatY = Math.cos(elapsed * particle.floatSpeedY + particle.floatPhase) * particle.floatAmplitude;
-    const orbitX = Math.cos(orbitProgress) * particle.orbitRadiusX * depthWeight;
-    const orbitY = Math.sin(orbitProgress) * particle.orbitRadiusY * depthWeight * 0.92;
+    const freeOrbitLocalX =
+      Math.cos(freeOrbitProgress) * particle.orbitRadiusX * depthWeight +
+      Math.sin(secondaryProgress) * particle.orbitDriftX;
+    const freeOrbitLocalY =
+      Math.sin(freeOrbitProgress) * particle.orbitRadiusY * depthWeight * 0.92 +
+      Math.cos(secondaryProgress * 1.08) * particle.orbitDriftY;
+    const orbitNoiseX =
+      Math.sin(elapsed * particle.orbitNoiseSpeed + particle.orbitNoisePhase) * particle.orbitNoiseX;
+    const orbitNoiseY =
+      Math.cos(elapsed * particle.orbitNoiseSpeed * 1.16 + particle.orbitNoisePhase) * particle.orbitNoiseY;
+    const freeOrbitX = freeOrbitLocalX * cosTilt - freeOrbitLocalY * sinTilt + orbitNoiseX;
+    const freeOrbitY = freeOrbitLocalX * sinTilt + freeOrbitLocalY * cosTilt + orbitNoiseY;
+    const ringProgress =
+      elapsed * RESULT_GALAXY_LOCATING_CONFIG.sharedRingSpeed * RESULT_GALAXY_LOCATING_CONFIG.sharedRingDirection +
+      particle.ringSlotPhase +
+      particle.ringPhaseOffset;
+    const ringRadiusX =
+      RESULT_GALAXY_LOCATING_CONFIG.sharedRingRadiusX + particle.ringRadialOffset * depthWeight;
+    const ringRadiusY =
+      RESULT_GALAXY_LOCATING_CONFIG.sharedRingRadiusY + particle.ringRadialOffset * 0.52 * depthWeight;
+    const ringLocalX =
+      Math.cos(ringProgress) * ringRadiusX +
+      Math.cos(ringProgress + Math.PI / 2) * particle.ringTangentialOffset;
+    const ringLocalY =
+      Math.sin(ringProgress) * ringRadiusY +
+      Math.sin(ringProgress + Math.PI / 2) * particle.ringTangentialOffset * 0.7;
+    const ringNoiseX = orbitNoiseX * (1 - ringBlend) + orbitNoiseX * 0.35;
+    const ringNoiseY = orbitNoiseY * (1 - ringBlend) + orbitNoiseY * 0.35;
+    const ringOrbitX = ringLocalX * cosTilt - ringLocalY * sinTilt + ringNoiseX;
+    const ringOrbitY = ringLocalX * sinTilt + ringLocalY * cosTilt + ringNoiseY;
     const offsetX = galaxyLocatingPointerCurrentX * RESULT_GALAXY_LOCATING_CONFIG.mouseFollowStrength * particle.depth;
     const offsetY = galaxyLocatingPointerCurrentY * RESULT_GALAXY_LOCATING_CONFIG.mouseFollowStrength * particle.depth;
-    const x = particle.baseX + orbitX + floatX + offsetX;
-    const y = particle.baseY + orbitY + floatY + offsetY;
+    const motionX = lerp(particle.baseX + freeOrbitX, ringOrbitX, ringBlend);
+    const motionY = lerp(particle.baseY + freeOrbitY, ringOrbitY, ringBlend);
+    const x = motionX + floatX + offsetX;
+    const y = motionY + floatY + offsetY;
     const pulseScale = particle.scale * (1 + Math.sin(elapsed * particle.pulseSpeed + particle.pulsePhase) * 0.045);
     const selfRotation =
       particle.baseRotation +
       elapsed * particle.selfRotateSpeed +
-      Math.sin(orbitProgress * 0.8 + particle.selfRotatePhase) * 5.5;
+      Math.sin(ringProgress * 0.8 + particle.selfRotatePhase) * 5.5;
 
     particle.element.style.transform = `
       translate(calc(-50% + ${x.toFixed(2)}px), calc(-50% + ${y.toFixed(2)}px))
@@ -2123,6 +2247,22 @@ function normalizeValue(value, min, max) {
   }
 
   return (value - min) / (max - min);
+}
+
+function clamp01(value) {
+  return Math.min(1, Math.max(0, value));
+}
+
+function lerp(start, end, amount) {
+  return start + (end - start) * amount;
+}
+
+function easeInOutCubic(value) {
+  if (value < 0.5) {
+    return 4 * value * value * value;
+  }
+
+  return 1 - Math.pow(-2 * value + 2, 3) / 2;
 }
 
 function randomItem(items) {

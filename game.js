@@ -24,11 +24,13 @@ const PHASES = {
   DRINK: "act3_drink",
   EXIT_SCROLL: "act3_exit_scroll",
   RESULT_GALAXY_LOCATING: "result_galaxy_locating",
-  RESULT_GALAXY: "result_galaxy"
+  RESULT_GALAXY: "result_galaxy",
+  RESULT_RISK_INTRO: "result_risk_intro"
 };
 const RESULT_STATES = {
   GALAXY_LOCATING: "result_state_00_galaxy_locating",
-  DIET_GALAXY: "result_state_01_diet_galaxy"
+  DIET_GALAXY: "result_state_01_diet_galaxy",
+  RISK_INTRO: "result_state_02_risk_intro"
 };
 const PREVIEW_ENTRY_CONFIG = {
   enabled: false,
@@ -234,8 +236,6 @@ const RESULT_GALAXY_LOCATING_DEFAULT_CONFIG = {
       targetX: 470,
       targetY: 390,
       scale: 1.12,
-      offsetX: 32,
-      offsetY: -18,
       delay: 160
     }
   },
@@ -263,11 +263,137 @@ const RESULT_GALAXY_LOCATING_DEFAULT_CONFIG = {
       x: 1040,
       y: 650,
       width: 620,
-      height: 14,
-      gap: 42,
-      pointerWidth: 54,
+      height: 10,
+      gap: 28,
+      pointerWidth: 42,
       pointerHeight: 42,
-      values: [78, 55, 82, 32]
+      endpointSize: 14,
+      labelGap: 16,
+      labelFontSize: 16,
+      items: [
+        {
+          value: 78,
+          leftLabel: "\u6e29\u548c\u578b",
+          rightLabel: "\u523a\u6fc0\u578b",
+          pointerShape: "square"
+        },
+        {
+          value: 55,
+          leftLabel: "\u65b0\u9c9c\u6d3e",
+          rightLabel: "\u8fb9\u7f18\u6d3e",
+          pointerShape: "triangle"
+        },
+        {
+          value: 82,
+          leftLabel: "\u67d4\u8f6f\u578b",
+          rightLabel: "\u786c\u6838\u578b",
+          pointerShape: "circle"
+        },
+        {
+          value: 32,
+          leftLabel: "\u4eea\u5f0f\u578b",
+          rightLabel: "\u51b2\u523a\u578b",
+          pointerShape: "radial"
+        }
+      ]
+    },
+    riskIntro: {
+      stateId: RESULT_STATES.RISK_INTRO,
+      backgroundColor: "#F6EEDC",
+      scrollLockDuration: 620,
+      dissolveDuration: 720,
+      textFadeDuration: 520,
+      stageFadeDuration: 520,
+      particleCount: 72,
+      particleSize: 8,
+      shapeSize: 180,
+      floatStrength: 10,
+      colorPool: ["#8DB8F2", "#F65A1E", "#8FD39B", "#F6D94A", "#F4B6D2"],
+      prompt: {
+        text: "\u4e0d\u8fc7,\u4f60\u6709\u6ca1\u6709\u60f3\u8fc7\uff0c\u4f60\u7684\u996e\u98df\u65b9\u5f0f\u6216\u8bb8\u4f1a\u7ed9\u8eab\u4f53\u9020\u6210\u8d1f\u62c5\uff1f",
+        x: 960,
+        y: 176,
+        width: 900,
+        fontSize: 20,
+        lineHeight: 1.8,
+        color: "#693618"
+      },
+      shapes: [
+        {
+          id: "risk_shape_01",
+          type: "square",
+          x: 360,
+          y: 390,
+          size: 180,
+          text: "\u504f\u597d\u5f3a\u70c8\u5473\u89c9\u4fe1\u53f7\uff0c\u5bb9\u6613\u9009\u62e9\u9ad8\u6e29\u3001\u8f9b\u8fa3\u3001\u91cd\u53e3\u548c\u9152\u7cbe\u7c7b\u996e\u98df\u3002\u996e\u98df\u4f53\u9a8c\u5f80\u5f80\u4f9d\u8d56\u201c\u523a\u6fc0\u611f\u201d\u6765\u786e\u8ba4\u6ee1\u8db3\uff0c\u957f\u671f\u4e0b\u6765\u4f1a\u8ba9\u53e3\u8154\u3001\u54bd\u5589\u4e0e\u98df\u7ba1\u53cd\u590d\u66b4\u9732\u5728\u66f4\u5f3a\u70c8\u7684\u5916\u90e8\u523a\u6fc0\u4e2d\u3002",
+          textX: 170,
+          textY: 600,
+          textWidth: 380
+        },
+        {
+          id: "risk_shape_02",
+          type: "triangle",
+          x: 740,
+          y: 390,
+          size: 180,
+          text: "\u8fdb\u98df\u8282\u594f\u504f\u5feb\uff0c\u9910\u6b21\u5b89\u6392\u4e0d\u7a33\u5b9a\uff0c\u5bb9\u6613\u5728\u9965\u997f\u3001\u8d76\u65f6\u95f4\u6216\u60c5\u7eea\u9a71\u52a8\u4e0b\u5feb\u901f\u5b8c\u6210\u4e00\u9910\u3002\u8eab\u4f53\u8fd8\u6ca1\u6765\u5f97\u53ca\u611f\u77e5\u6e29\u5ea6\u3001\u9971\u8179\u548c\u4e0d\u9002\uff0c\u98df\u7269\u5c31\u5df2\u7ecf\u88ab\u5927\u91cf\u6444\u5165\u3002",
+          textX: 550,
+          textY: 600,
+          textWidth: 380
+        },
+        {
+          id: "risk_shape_03",
+          type: "circle",
+          x: 1120,
+          y: 390,
+          size: 180,
+          text: "\u504f\u597d\u6709\u5480\u56bc\u963b\u529b\u3001\u9165\u8106\u611f\u6216\u8f83\u786c\u8d28\u5730\u7684\u98df\u7269\uff0c\u6cb9\u70b8\u7c7b\u98df\u7269\u4e5f\u66f4\u5bb9\u6613\u88ab\u9009\u62e9\u3002\u996e\u98df\u8fc7\u7a0b\u4e2d\u66f4\u91cd\u89c6\u201c\u53e3\u611f\u51b2\u51fb\u201d\u548c\u201c\u54ac\u4e0b\u53bb\u7684\u5b58\u5728\u611f\u201d\uff0c\u53ef\u80fd\u589e\u52a0\u8fdb\u98df\u65f6\u7684\u6469\u64e6\u611f\u4e0e\u8d1f\u62c5\u611f\u3002",
+          textX: 930,
+          textY: 600,
+          textWidth: 380
+        },
+        {
+          id: "risk_shape_04",
+          type: "radial",
+          x: 1500,
+          y: 390,
+          size: 180,
+          text: "\u5bf9\u8fb9\u754c\u6a21\u7cca\u7684\u98df\u7269\u72b6\u6001\u63a5\u53d7\u5ea6\u8f83\u9ad8\uff0c\u6bd4\u5982\u814c\u5236\u65f6\u95f4\u8f83\u957f\u3001\u4fdd\u5b58\u72b6\u6001\u4e0d\u660e\u786e\u3001\u98ce\u5473\u5f3a\u70c8\u6216\u5e26\u6709\u53d1\u9175\u611f\u7684\u98df\u7269\u3002\u5224\u65ad\u6807\u51c6\u66f4\u504f\u5411\u201c\u5473\u9053\u662f\u5426\u591f\u7279\u522b\u201d\uff0c\u800c\u4e0d\u662f\u201c\u98df\u7269\u72b6\u6001\u662f\u5426\u8db3\u591f\u6e05\u6670\u201d\u3002",
+          textX: 1310,
+          textY: 600,
+          textWidth: 380
+        }
+      ],
+      centerExplanation: {
+        text: "\u5f53\u4f60\u957f\u671f\u4fdd\u6301\u8fd9\u6837\u7684\u996e\u98df\u65b9\u5f0f\u65f6:\u98df\u7ba1\u4f1a\u4e0d\u65ad\u7ecf\u5386:\n\u9ad8\u6e29\u707c\u4f24.\n\u8f9b\u8fa3\u523a\u6fc0\n\u9ecf\u819c\u6469\u64e6\n\u708e\u75c7\u4fee\u590d\n\u5927\u591a\u6570\u65f6\u5019\uff0c\u8eab\u4f53\u53ef\u4ee5\u81ea\u6211\u6062\u590d\u3002\n\u4f46\u5982\u679c\u8fd9\u79cd\u523a\u6fc0\u6301\u7eed\u6570\u5e74\uff0c\n\u7ec6\u80de\u5f02\u5e38\u53d1\u751f\u7684\u6982\u7387\uff0c\u5c31\u4f1a\u6162\u6162\u5347\u9ad8\u3002",
+        x: 960,
+        y: 396,
+        width: 760,
+        fontSize: 26,
+        lineHeight: 1.9,
+        color: "#693618"
+      },
+      transitionParticles: {
+        particleCount: 140,
+        minSize: 10,
+        maxSize: 34,
+        enterDuration: 920,
+        holdDuration: 340,
+        exitDuration: 880
+      },
+      riskIndex: {
+        title: "\u996e\u98df\u98ce\u9669\u6307\u6570",
+        value: "78/100",
+        note: "\u800c\u98df\u7ba1\u764c\uff0c\n\u6b63\u662f\u4e00\u79cd\u4e0e\u957f\u671f\u996e\u98df\u523a\u6fc0\u3002\n\u9ad8\u5ea6\u76f8\u5173\u7684\u75be\u75c5\u4e4b\u4e00\u3002",
+        x: 960,
+        y: 338,
+        width: 760,
+        titleFontSize: 28,
+        valueFontSize: 72,
+        noteFontSize: 28,
+        noteLineHeight: 1.8,
+        color: "#693618"
+      }
     }
   },
   imagePaths: {
@@ -385,6 +511,7 @@ let isAct3ExitAnimating = false;
 let hasAct3ExitStarted = false;
 let act3ExitProgress = 0;
 let resultGalaxyLayer = null;
+let resultRiskLayer = null;
 let act0AlarmLayer = null;
 let act0Clock = null;
 let act0MinuteHand = null;
@@ -413,6 +540,10 @@ let galaxyLocatingRevealTimer = null;
 let resultGalaxyRevealStarted = false;
 let hasResultGalaxyEnterStarted = false;
 let resultGalaxyEnterTimer = null;
+let hasResultRiskIntroStarted = false;
+let resultRiskIntroStep = 0;
+let resultRiskIntroWheelLocked = false;
+let resultRiskIntroWheelLockTimer = null;
 let hoverInfoTooltip = null;
 let hoverInfoShowTimer = null;
 let hoverInfoHideTimer = null;
@@ -542,6 +673,28 @@ function mergeResultGalaxyLocatingConfig(config) {
       traitBars: {
         ...RESULT_GALAXY_LOCATING_DEFAULT_CONFIG.resultDietGalaxy.traitBars,
         ...(config.resultDietGalaxy?.traitBars || {})
+      },
+      riskIntro: {
+        ...RESULT_GALAXY_LOCATING_DEFAULT_CONFIG.resultDietGalaxy.riskIntro,
+        ...(config.resultDietGalaxy?.riskIntro || {}),
+        prompt: {
+          ...RESULT_GALAXY_LOCATING_DEFAULT_CONFIG.resultDietGalaxy.riskIntro.prompt,
+          ...(config.resultDietGalaxy?.riskIntro?.prompt || {})
+        },
+        centerExplanation: {
+          ...RESULT_GALAXY_LOCATING_DEFAULT_CONFIG.resultDietGalaxy.riskIntro.centerExplanation,
+          ...(config.resultDietGalaxy?.riskIntro?.centerExplanation || {})
+        },
+        transitionParticles: {
+          ...RESULT_GALAXY_LOCATING_DEFAULT_CONFIG.resultDietGalaxy.riskIntro.transitionParticles,
+          ...(config.resultDietGalaxy?.riskIntro?.transitionParticles || {})
+        },
+        riskIndex: {
+          ...RESULT_GALAXY_LOCATING_DEFAULT_CONFIG.resultDietGalaxy.riskIntro.riskIndex,
+          ...(config.resultDietGalaxy?.riskIntro?.riskIndex || {})
+        },
+        shapes: config.resultDietGalaxy?.riskIntro?.shapes ||
+          RESULT_GALAXY_LOCATING_DEFAULT_CONFIG.resultDietGalaxy.riskIntro.shapes
       }
     }
   };
@@ -673,6 +826,7 @@ function startPreviewEntry() {
   cleanupGalaxyLocatingLayer();
   resultGalaxyLayer?.remove();
   resultGalaxyLayer = null;
+  resultRiskLayer = null;
   objectLayer?.classList.remove("act3-exit-sequence");
   hasAct3ExitStarted = false;
   isAct3ExitAnimating = false;
@@ -680,6 +834,13 @@ function startPreviewEntry() {
   isAct3Complete = false;
   act3ExitProgress = 0;
   currentState = null;
+  hasResultRiskIntroStarted = false;
+  resultRiskIntroStep = 0;
+  resultRiskIntroWheelLocked = false;
+  if (resultRiskIntroWheelLockTimer) {
+    window.clearTimeout(resultRiskIntroWheelLockTimer);
+    resultRiskIntroWheelLockTimer = null;
+  }
 
   if (PREVIEW_ENTRY_CONFIG.startAt === RESULT_STATES.DIET_GALAXY) {
     enterResultGalaxyState();
@@ -925,6 +1086,16 @@ function handleStageWheel(event) {
 
   if (currentPhase === PHASES.RESULT_GALAXY_LOCATING) {
     handleResultGalaxyLocatingWheel(event);
+    return;
+  }
+
+  if (currentPhase === PHASES.RESULT_GALAXY) {
+    handleResultGalaxyWheel(event);
+    return;
+  }
+
+  if (currentPhase === PHASES.RESULT_RISK_INTRO) {
+    handleResultRiskIntroWheel(event);
   }
 }
 
@@ -1606,16 +1777,270 @@ function ensureResultGalaxyLayer() {
   return resultGalaxyLayer;
 }
 
+function ensureResultRiskLayer() {
+  if (resultRiskLayer) {
+    return resultRiskLayer;
+  }
+
+  resultRiskLayer = document.createElement("section");
+  resultRiskLayer.id = RESULT_STATES.RISK_INTRO;
+  resultRiskLayer.className = "result-risk-layer";
+  resultRiskLayer.style.setProperty(
+    "--result-risk-background",
+    RESULT_GALAXY_LOCATING_CONFIG.resultDietGalaxy.riskIntro.backgroundColor
+  );
+  objectLayer.appendChild(resultRiskLayer);
+  return resultRiskLayer;
+}
+
+function renderResultRiskIntroLayout(layer) {
+  const config = RESULT_GALAXY_LOCATING_CONFIG.resultDietGalaxy.riskIntro;
+  const shapes = config.shapes || [];
+  const prompt = config.prompt || {};
+  const centerExplanation = config.centerExplanation || {};
+  const riskIndex = config.riskIndex || {};
+  const shapeMarkup = shapes
+    .map((shape, index) => `
+      <div
+        class="result-risk-shape-slot result-risk-shape-slot-${shape.type}"
+        data-risk-shape-index="${index}"
+        style="left:${shape.x}px; top:${shape.y}px; --result-risk-shape-size:${shape.size || config.shapeSize}px;"
+      >
+        <div class="result-risk-shape-cloud">
+          ${createRiskIntroShapeParticles(shape, config)}
+        </div>
+      </div>
+      <div
+        class="result-risk-text-block"
+        data-risk-text-index="${index}"
+        style="left:${shape.textX}px; top:${shape.textY}px; width:${shape.textWidth}px;"
+      >
+        ${shape.text}
+      </div>
+    `)
+    .join("");
+
+  layer.style.setProperty("--result-risk-background", config.backgroundColor);
+  layer.style.setProperty("--result-risk-text-fade-duration", `${config.textFadeDuration}ms`);
+  layer.style.setProperty("--result-risk-dissolve-duration", `${config.dissolveDuration}ms`);
+  layer.style.setProperty("--result-risk-particle-size", `${config.particleSize}px`);
+  layer.style.setProperty("--result-risk-float-strength", `${config.floatStrength}px`);
+  layer.style.setProperty("--result-risk-prompt-x", `${prompt.x}px`);
+  layer.style.setProperty("--result-risk-prompt-y", `${prompt.y}px`);
+  layer.style.setProperty("--result-risk-prompt-width", `${prompt.width}px`);
+  layer.style.setProperty("--result-risk-prompt-font-size", `${prompt.fontSize}px`);
+  layer.style.setProperty("--result-risk-prompt-line-height", `${prompt.lineHeight}`);
+  layer.style.setProperty("--result-risk-prompt-color", prompt.color || "#693618");
+  layer.style.setProperty("--result-risk-stage-fade-duration", `${config.stageFadeDuration}ms`);
+  layer.style.setProperty("--result-risk-center-x", `${centerExplanation.x}px`);
+  layer.style.setProperty("--result-risk-center-y", `${centerExplanation.y}px`);
+  layer.style.setProperty("--result-risk-center-width", `${centerExplanation.width}px`);
+  layer.style.setProperty("--result-risk-center-font-size", `${centerExplanation.fontSize}px`);
+  layer.style.setProperty("--result-risk-center-line-height", `${centerExplanation.lineHeight}`);
+  layer.style.setProperty("--result-risk-center-color", centerExplanation.color || "#693618");
+  layer.style.setProperty("--result-risk-score-x", `${riskIndex.x}px`);
+  layer.style.setProperty("--result-risk-score-y", `${riskIndex.y}px`);
+  layer.style.setProperty("--result-risk-score-width", `${riskIndex.width}px`);
+  layer.style.setProperty("--result-risk-score-color", riskIndex.color || "#693618");
+  layer.style.setProperty("--result-risk-score-title-size", `${riskIndex.titleFontSize}px`);
+  layer.style.setProperty("--result-risk-score-value-size", `${riskIndex.valueFontSize}px`);
+  layer.style.setProperty("--result-risk-score-note-size", `${riskIndex.noteFontSize}px`);
+  layer.style.setProperty("--result-risk-score-note-line-height", `${riskIndex.noteLineHeight}`);
+  layer.innerHTML = `
+    <div class="result-risk-prompt">${prompt.text || ""}</div>
+    <div class="result-risk-shape-stage">
+      ${shapeMarkup}
+    </div>
+    <div class="result-risk-center-copy">${(centerExplanation.text || "").replace(/\n/g, "<br>")}</div>
+    <div class="result-risk-transition-layer"></div>
+    <div class="result-risk-score-block">
+      <p class="result-risk-score-title">${riskIndex.title || ""}</p>
+      <p class="result-risk-score-value">${riskIndex.value || ""}</p>
+      <p class="result-risk-score-note">${(riskIndex.note || "").replace(/\n/g, "<br>")}</p>
+    </div>
+  `;
+}
+
+function createRiskIntroShapeParticles(shape, config) {
+  const particleCount = shape.particleCount || config.particleCount || 72;
+  const shapeSize = shape.size || config.shapeSize || 180;
+  let markup = "";
+
+  for (let index = 0; index < particleCount; index += 1) {
+    const point = getRiskIntroShapePoint(shape.type, shapeSize, index, particleCount);
+    const color = randomItem(config.colorPool) || "#8DB8F2";
+    const driftX = randomBetween(-config.floatStrength, config.floatStrength);
+    const driftY = randomBetween(-config.floatStrength, config.floatStrength);
+    const pulseDelay = randomBetween(-2200, 0);
+    const pulseDuration = randomBetween(2200, 4200);
+    const dissolveX = randomBetween(-shapeSize * 0.34, shapeSize * 0.34);
+    const dissolveY = randomBetween(-shapeSize * 0.34, shapeSize * 0.34);
+    const scale = randomBetween(0.78, 1.18);
+
+    markup += `
+      <span
+        class="result-risk-dot"
+        style="
+          left:calc(50% + ${point.x.toFixed(2)}px);
+          top:calc(50% + ${point.y.toFixed(2)}px);
+          --risk-dot-color:${color};
+          --risk-dot-drift-x:${driftX.toFixed(2)}px;
+          --risk-dot-drift-y:${driftY.toFixed(2)}px;
+          --risk-dot-scale:${scale.toFixed(3)};
+          --risk-dot-pulse-delay:${Math.round(pulseDelay)}ms;
+          --risk-dot-pulse-duration:${Math.round(pulseDuration)}ms;
+          --risk-dot-dissolve-x:${dissolveX.toFixed(2)}px;
+          --risk-dot-dissolve-y:${dissolveY.toFixed(2)}px;
+        "
+      ></span>
+    `;
+  }
+
+  return markup;
+}
+
+function getRiskIntroShapePoint(type, shapeSize, index, particleCount) {
+  const half = shapeSize / 2;
+
+  if (type === "circle") {
+    const angle = randomBetween(0, Math.PI * 2);
+    const radius = Math.sqrt(Math.random()) * half * 0.86;
+    return { x: Math.cos(angle) * radius, y: Math.sin(angle) * radius };
+  }
+
+  if (type === "triangle") {
+    const top = { x: 0, y: -half * 0.9 };
+    const left = { x: -half * 0.82, y: half * 0.74 };
+    const right = { x: half * 0.82, y: half * 0.74 };
+    let a = Math.random();
+    let b = Math.random();
+
+    if (a + b > 1) {
+      a = 1 - a;
+      b = 1 - b;
+    }
+
+    return {
+      x: top.x + a * (left.x - top.x) + b * (right.x - top.x),
+      y: top.y + a * (left.y - top.y) + b * (right.y - top.y)
+    };
+  }
+
+  if (type === "radial") {
+    const spokeCount = 18;
+    const spokeIndex = index % spokeCount;
+    const angle = (Math.PI * 2 * spokeIndex) / spokeCount + randomBetween(-0.05, 0.05);
+    const radius = randomBetween(half * 0.36, half * 0.88);
+    return { x: Math.cos(angle) * radius, y: Math.sin(angle) * radius };
+  }
+
+  return {
+    x: randomBetween(-half * 0.82, half * 0.82),
+    y: randomBetween(-half * 0.82, half * 0.82)
+  };
+}
+
+function startResultRiskTransition(layer, config) {
+  const transitionLayer = layer?.querySelector(".result-risk-transition-layer");
+  const particleConfig = config.transitionParticles || {};
+  const colors = config.colorPool || RESULT_GALAXY_LOCATING_CONFIG.colors || ["#8DB8F2"];
+  const particleCount = particleConfig.particleCount || 140;
+  const totalDuration =
+    (particleConfig.enterDuration || 920) +
+    (particleConfig.holdDuration || 340) +
+    (particleConfig.exitDuration || 880);
+
+  if (!transitionLayer) {
+    return totalDuration;
+  }
+
+  transitionLayer.innerHTML = "";
+  transitionLayer.classList.add("is-active");
+
+  for (let index = 0; index < particleCount; index += 1) {
+    const particle = document.createElement("span");
+    const from = getRiskTransitionEdgePoint();
+    const via = {
+      x: randomBetween(80, DESIGN_WIDTH - 80),
+      y: randomBetween(80, DESIGN_HEIGHT - 80)
+    };
+    const to = {
+      x: via.x + randomBetween(-80, 80),
+      y: DESIGN_HEIGHT + randomBetween(80, 220)
+    };
+    const size = randomBetween(particleConfig.minSize || 10, particleConfig.maxSize || 34);
+    const delay = randomBetween(0, 180);
+
+    particle.className = "result-risk-transition-particle";
+    particle.style.left = `${from.x}px`;
+    particle.style.top = `${from.y}px`;
+    particle.style.width = `${size}px`;
+    particle.style.height = `${size}px`;
+    particle.style.background = randomItem(colors) || "#8DB8F2";
+    particle.style.setProperty("--risk-transition-via-x", `${via.x - from.x}px`);
+    particle.style.setProperty("--risk-transition-via-y", `${via.y - from.y}px`);
+    particle.style.setProperty("--risk-transition-end-x", `${to.x - from.x}px`);
+    particle.style.setProperty("--risk-transition-end-y", `${to.y - from.y}px`);
+    particle.style.setProperty("--risk-transition-enter-duration", `${particleConfig.enterDuration || 920}ms`);
+    particle.style.setProperty("--risk-transition-hold-duration", `${particleConfig.holdDuration || 340}ms`);
+    particle.style.setProperty("--risk-transition-exit-duration", `${particleConfig.exitDuration || 880}ms`);
+    particle.style.setProperty("--risk-transition-delay", `${Math.round(delay)}ms`);
+    particle.addEventListener("animationend", () => {
+      particle.remove();
+      if (!transitionLayer.querySelector(".result-risk-transition-particle")) {
+        transitionLayer.classList.remove("is-active");
+      }
+    }, { once: true });
+    transitionLayer.appendChild(particle);
+  }
+
+  return totalDuration + 220;
+}
+
+function getRiskTransitionEdgePoint() {
+  const edge = Math.floor(Math.random() * 4);
+
+  if (edge === 0) {
+    return { x: randomBetween(-120, -20), y: randomBetween(40, DESIGN_HEIGHT - 40) };
+  }
+
+  if (edge === 1) {
+    return { x: randomBetween(DESIGN_WIDTH + 20, DESIGN_WIDTH + 120), y: randomBetween(40, DESIGN_HEIGHT - 40) };
+  }
+
+  if (edge === 2) {
+    return { x: randomBetween(40, DESIGN_WIDTH - 40), y: randomBetween(-120, -20) };
+  }
+
+  return { x: randomBetween(40, DESIGN_WIDTH - 40), y: randomBetween(DESIGN_HEIGHT + 20, DESIGN_HEIGHT + 120) };
+}
+
 function renderResultDietGalaxyLayout(layer) {
   const config = RESULT_GALAXY_LOCATING_CONFIG.resultDietGalaxy;
   const paragraphs = config.panel.paragraphs
     .map((paragraph) => `<p>${paragraph.replace(/\n/g, "<br>")}</p>`)
     .join("");
-  const traitBars = config.traitBars.values
-    .map((value) => `
-      <div class="result-trait-bar" style="--trait-position: ${value}%">
-        <div class="result-trait-track"></div>
-        <div class="result-trait-pointer"></div>
+  const traitBarItems =
+    config.traitBars.items ||
+    (config.traitBars.values || []).map((value) => ({
+      value,
+      leftLabel: "",
+      rightLabel: "",
+      pointerShape: "square"
+    }));
+  const traitBars = traitBarItems
+    .map((item) => `
+      <div class="result-trait-bar" style="--trait-position: ${item.value}%">
+        <div class="result-trait-track-wrap">
+          <div class="result-trait-track"></div>
+          <div class="result-trait-endpoint result-trait-endpoint-left"></div>
+          <div class="result-trait-endpoint result-trait-endpoint-right"></div>
+          <div class="result-trait-pointer result-trait-pointer-${item.pointerShape || "square"}"></div>
+        </div>
+        <div class="result-trait-label-row">
+          <span class="result-trait-label result-trait-label-left">${item.leftLabel || ""}</span>
+          <span class="result-trait-label result-trait-label-right">${item.rightLabel || ""}</span>
+        </div>
       </div>
     `)
     .join("");
@@ -1633,6 +2058,9 @@ function renderResultDietGalaxyLayout(layer) {
   layer.style.setProperty("--result-bar-gap", `${config.traitBars.gap}px`);
   layer.style.setProperty("--result-pointer-width", `${config.traitBars.pointerWidth}px`);
   layer.style.setProperty("--result-pointer-height", `${config.traitBars.pointerHeight}px`);
+  layer.style.setProperty("--result-trait-endpoint-size", `${config.traitBars.endpointSize || 14}px`);
+  layer.style.setProperty("--result-trait-label-gap", `${config.traitBars.labelGap || 16}px`);
+  layer.style.setProperty("--result-trait-label-font-size", `${config.traitBars.labelFontSize || 16}px`);
   layer.innerHTML = `
     <div class="result-galaxy-label">
       <p class="result-galaxy-label-eyebrow">${config.galaxyLabel.eyebrow}</p>
@@ -1707,6 +2135,15 @@ function enterResultGalaxyState() {
   isAct3ExitAnimating = false;
   currentPhase = PHASES.RESULT_GALAXY;
   currentState = RESULT_STATES.DIET_GALAXY;
+  hasResultRiskIntroStarted = false;
+  resultRiskIntroStep = 0;
+  resultRiskIntroWheelLocked = false;
+  if (resultRiskIntroWheelLockTimer) {
+    window.clearTimeout(resultRiskIntroWheelLockTimer);
+    resultRiskIntroWheelLockTimer = null;
+  }
+  resultRiskLayer?.classList.remove("is-visible");
+  resultGalaxyLayer?.classList.remove("is-hidden");
   updateResultGalaxyProgress(1);
   console.log("Entered result_state_01_diet_galaxy", {
     playerChoices,
@@ -1750,14 +2187,8 @@ function createGalaxyLocatingLayer() {
   layer.style.setProperty("--result-nebula-enter-delay", `${config.resultGalaxyEnter.nebula.delay}ms`);
   layer.style.setProperty("--result-planet-enter-delay", `${config.resultGalaxyEnter.planet.delay}ms`);
   layer.style.setProperty("--result-planet-enter-scale", config.resultGalaxyEnter.planet.scale);
-  layer.style.setProperty(
-    "--result-planet-enter-offset-x",
-    `${config.resultGalaxyEnter.planet.targetX - config.resultGalaxyEnter.nebula.targetX + config.resultGalaxyEnter.planet.offsetX}px`
-  );
-  layer.style.setProperty(
-    "--result-planet-enter-offset-y",
-    `${config.resultGalaxyEnter.planet.targetY - config.resultGalaxyEnter.nebula.targetY + config.resultGalaxyEnter.planet.offsetY}px`
-  );
+  layer.style.setProperty("--result-planet-target-x", `${config.resultGalaxyEnter.planet.targetX}px`);
+  layer.style.setProperty("--result-planet-target-y", `${config.resultGalaxyEnter.planet.targetY}px`);
 
   field.className = "result-locating-field";
   caption.className = "result-locating-caption";
@@ -1838,6 +2269,32 @@ function handleResultGalaxyLocatingWheel(event) {
   startResultGalaxyEnterTransition();
 }
 
+function handleResultGalaxyWheel(event) {
+  if (
+    currentPhase !== PHASES.RESULT_GALAXY ||
+    hasResultRiskIntroStarted ||
+    event.deltaY <= 0
+  ) {
+    return;
+  }
+
+  event.preventDefault();
+  enterResultRiskIntroState();
+}
+
+function handleResultRiskIntroWheel(event) {
+  if (
+    currentPhase !== PHASES.RESULT_RISK_INTRO ||
+    resultRiskIntroWheelLocked ||
+    event.deltaY <= 0
+  ) {
+    return;
+  }
+
+  event.preventDefault();
+  advanceResultRiskIntroStage();
+}
+
 function startResultGalaxyEnterTransition() {
   if (!galaxyLocatingLayer || hasResultGalaxyEnterStarted) {
     return;
@@ -1865,12 +2322,103 @@ function completeResultGalaxyEnterTransition() {
   isAct3ScrollExitEnabled = false;
   isAct3ExitAnimating = false;
   act3ExitProgress = ACT3_EXIT_SCROLL_CONFIG.maxProgress;
+  hasResultRiskIntroStarted = false;
+  resultRiskIntroStep = 0;
+  resultRiskIntroWheelLocked = false;
+  if (resultRiskIntroWheelLockTimer) {
+    window.clearTimeout(resultRiskIntroWheelLockTimer);
+    resultRiskIntroWheelLockTimer = null;
+  }
+  resultRiskLayer?.classList.remove("is-visible");
+  resultGalaxyLayer?.classList.remove("is-hidden");
   updateResultGalaxyProgress(1);
   console.log("Entered result_state_01_diet_galaxy", {
     playerChoices,
     act3ExitProgress,
     preservedGalaxyLocatingLayer: Boolean(galaxyLocatingLayer)
   });
+}
+
+function enterResultRiskIntroState() {
+  if (currentPhase === PHASES.RESULT_RISK_INTRO) {
+    return;
+  }
+
+  hasResultRiskIntroStarted = true;
+  resultRiskIntroStep = 0;
+  resultRiskIntroWheelLocked = false;
+  if (resultRiskIntroWheelLockTimer) {
+    window.clearTimeout(resultRiskIntroWheelLockTimer);
+    resultRiskIntroWheelLockTimer = null;
+  }
+  currentPhase = PHASES.RESULT_RISK_INTRO;
+  currentState = RESULT_STATES.RISK_INTRO;
+  renderResultRiskIntroLayout(ensureResultRiskLayer());
+  ensureResultRiskLayer().classList.add("is-visible");
+  resultGalaxyLayer?.classList.add("is-hidden");
+  console.log("Entered result_state_02_risk_intro", {
+    playerChoices,
+    preservedResultGalaxyLayer: Boolean(resultGalaxyLayer)
+  });
+}
+
+function advanceResultRiskIntroStage() {
+  const config = RESULT_GALAXY_LOCATING_CONFIG.resultDietGalaxy.riskIntro;
+  const layer = ensureResultRiskLayer();
+  const shapeCount = config.shapes?.length || 0;
+  const maxStep = shapeCount + 3;
+
+  if (!layer || resultRiskIntroStep >= maxStep) {
+    return;
+  }
+
+  resultRiskIntroWheelLocked = true;
+
+  if (resultRiskIntroWheelLockTimer) {
+    window.clearTimeout(resultRiskIntroWheelLockTimer);
+  }
+
+  if (resultRiskIntroStep === 0) {
+    layer.querySelector(".result-risk-prompt")?.classList.add("is-visible");
+  } else if (resultRiskIntroStep <= shapeCount) {
+    const shapeIndex = resultRiskIntroStep - 1;
+    const shapeElement = layer.querySelector(`[data-risk-shape-index="${shapeIndex}"]`);
+    const textElement = layer.querySelector(`[data-risk-text-index="${shapeIndex}"]`);
+
+    shapeElement?.classList.add("is-dissolving");
+    textElement?.classList.add("is-visible");
+
+    window.setTimeout(() => {
+      shapeElement?.classList.add("is-hidden");
+    }, config.dissolveDuration);
+  } else if (resultRiskIntroStep === shapeCount + 1) {
+    layer.querySelector(".result-risk-prompt")?.classList.add("is-fading-out");
+    layer.querySelectorAll(".result-risk-text-block.is-visible").forEach((element) => {
+      element.classList.add("is-fading-out");
+    });
+    layer.querySelector(".result-risk-center-copy")?.classList.add("is-visible");
+  } else {
+    layer.querySelector(".result-risk-center-copy")?.classList.add("is-fading-out");
+    const transitionDuration = startResultRiskTransition(layer, config);
+    window.setTimeout(() => {
+      layer.querySelector(".result-risk-score-block")?.classList.add("is-visible");
+    }, transitionDuration);
+  }
+
+  resultRiskIntroStep += 1;
+  const lockDuration =
+    resultRiskIntroStep > shapeCount + 1
+      ? Math.max(
+          config.scrollLockDuration,
+          (config.transitionParticles?.enterDuration || 920) +
+          (config.transitionParticles?.holdDuration || 340) +
+          (config.transitionParticles?.exitDuration || 880)
+        )
+      : config.scrollLockDuration;
+  resultRiskIntroWheelLockTimer = window.setTimeout(() => {
+    resultRiskIntroWheelLocked = false;
+    resultRiskIntroWheelLockTimer = null;
+  }, lockDuration);
 }
 
 function revealGalaxyLocatingCaption() {
@@ -1963,6 +2511,8 @@ function createGalaxyCenterPlanet() {
   planet.style.left = `calc(50% + ${config.x}px)`;
   planet.style.top = `calc(50% + ${config.y}px)`;
   planet.style.zIndex = `${config.zIndex}`;
+  planet.style.setProperty("--result-center-planet-base-x", `${config.x}px`);
+  planet.style.setProperty("--result-center-planet-base-y", `${config.y}px`);
   planet.style.setProperty("--result-center-planet-color", config.fallbackColor);
   planet.style.setProperty("--result-center-planet-stroke-color", config.strokeColor);
   planet.style.setProperty("--result-center-planet-stroke-width", `${config.strokeWidth}px`);

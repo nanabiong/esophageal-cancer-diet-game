@@ -1143,12 +1143,9 @@ button:disabled {
   position: absolute;
   inset: 0;
   z-index: 80;
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
+  display: block;
   opacity: 0;
   pointer-events: none;
-  padding-right: 220px;
   transform: translateX(80px);
 }
 
@@ -1182,6 +1179,107 @@ button:disabled {
 
 .result-galaxy-placeholder p {
   margin: 0;
+}
+
+.result-galaxy-label {
+  position: absolute;
+  left: var(--result-label-x, 430px);
+  top: var(--result-label-y, 690px);
+  width: var(--result-label-width, 520px);
+  color: #693618;
+  font-family: YouYuan, "幼圆", "Microsoft YaHei", sans-serif;
+  text-align: center;
+  transform: translate(-50%, -50%);
+}
+
+.result-galaxy-label p {
+  margin: 0;
+}
+
+.result-galaxy-label-eyebrow {
+  font-size: 20px;
+  line-height: 1.4;
+}
+
+.result-galaxy-label-title {
+  margin-top: 10px;
+  font-size: 42px;
+  line-height: 1.15;
+}
+
+.result-diet-galaxy-panel {
+  position: absolute;
+  left: var(--result-panel-x, 1040px);
+  top: var(--result-panel-y, 130px);
+  width: var(--result-panel-width, 660px);
+  color: #693618;
+}
+
+.result-persona-heading h2 {
+  margin: 0;
+  color: #693618;
+  font-family: Comfortaa, sans-serif;
+  font-size: 46px;
+  font-weight: 500;
+  line-height: 1.1;
+}
+
+.result-persona-heading p {
+  margin: 8px 0 0;
+  color: #693618;
+  font-family: Comfortaa, sans-serif;
+  font-size: 16px;
+  line-height: 1.4;
+}
+
+.result-persona-copy {
+  margin-top: 34px;
+  max-width: var(--result-panel-width, 660px);
+  color: #693618;
+  font-family: YouYuan, "幼圆", "Microsoft YaHei", sans-serif;
+  font-size: 18px;
+  line-height: 1.8;
+}
+
+.result-persona-copy p {
+  margin: 0 0 22px;
+}
+
+.result-trait-bars {
+  position: absolute;
+  left: var(--result-bars-x, 1040px);
+  top: var(--result-bars-y, 650px);
+  width: var(--result-bars-width, 620px);
+  display: grid;
+  gap: var(--result-bar-gap, 42px);
+}
+
+.result-trait-bar {
+  position: relative;
+  width: 100%;
+  height: var(--result-pointer-height, 42px);
+}
+
+.result-trait-track {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: var(--result-bar-height, 14px);
+  border-radius: 999px;
+  background: #d9d4ca;
+  transform: translateY(-50%);
+}
+
+.result-trait-pointer {
+  position: absolute;
+  left: var(--trait-position, 50%);
+  top: 50%;
+  width: var(--result-pointer-width, 54px);
+  height: var(--result-pointer-height, 42px);
+  border-radius: 6px;
+  background: #8d8880;
+  transform: translate(-50%, -50%);
 }
 
 .result-galaxy-kicker {

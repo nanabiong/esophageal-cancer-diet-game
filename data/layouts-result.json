@@ -1,4 +1,4 @@
-{
+﻿{
   "galaxyLocating": {
     "stateId": "result_state_00_galaxy_locating",
     "particleCount": 120,
@@ -91,16 +91,47 @@
       "nebula": {
         "targetX": 430,
         "targetY": 420,
-        "scale": 1.35,
+        "scale": 1.1,
         "delay": 0
       },
       "planet": {
         "targetX": 470,
         "targetY": 390,
-        "scale": 1.12,
-        "offsetX": 32,
+        "scale": 1.0,
+        "offsetX": 10,
         "offsetY": -18,
         "delay": 160
+      }
+    },
+    "resultDietGalaxy": {
+      "galaxyLabel": {
+        "x": 430,
+        "y": 690,
+        "width": 520,
+        "eyebrow": "\u4f60\u7684\u996e\u98df\u661f\u7cfb\u662f...",
+        "title": "\u9ad8\u538b\u7099\u70ed\u661f\u73af!"
+      },
+      "panel": {
+        "x": 1040,
+        "y": 130,
+        "width": 660,
+        "title": "VKA-D",
+        "subtitle": "Voltage / Kernel / Adventure - Dash",
+        "paragraphs": [
+          "\u9ad8\u538b\u7099\u70ed\u661f\u73af\u7ec8\u5e74\u70ed\u6d6a\u7ffb\u6d8c\uff0c\u7a7a\u6c14\u4e2d\u6f02\u6d6e\u7740\u8fa3\u6912\u3001\u6cb9\u8102\u3001\u9999\u6599\u4e0e\u521a\u51fa\u9505\u98df\u7269\u7684\u6c14\u5473,\u8fd9\u91cc\u7684\u5c45\u6c11\u4e60\u60ef\u5728\u9ad8\u6e29\u4e0e\u5f3a\u523a\u6fc0\u4e2d\u786e\u8ba4\u4e00\u9910\u7684\u5b58\u5728\u611f\u2014\u2014\u8d8a\u6eda\u70eb\uff0c\u8d8a\u9c9c\u660e\uff1b\u8d8a\u6d53\u70c8\uff0c\u8d8a\u50cf\u771f\u6b63\u5f00\u59cb\u8fdb\u98df\u3002",
+          "\u4f60\u5bf9\u201c\u666e\u901a\u5473\u9053\u201d\u7f3a\u4e4f\u8010\u5fc3\uff0c\u603b\u5728\u5bfb\u627e\u66f4\u54cd\u4eae\u7684\u53e3\u611f\u3001\u66f4\u76f4\u63a5\u7684\u51b2\u51fb\uff0c\u4ee5\u53ca\u83dc\u5355\u4e0a\u90a3\u4e9b\u201c\u8fd8\u6ca1\u8bd5\u8fc7\u201d\u7684\u65b0\u5947\u7ec4\u5408\u3002\u5403\u996d\u662f\u4e00\u573a\u77ed\u6682\u3001\u5bc6\u96c6\u3001\u5e26\u6709\u51b2\u523a\u611f\u7684\u5473\u89c9\u5192\u9669\u3002\u5982\u679c\u4e00\u987f\u996d\u6ca1\u6709\u8ba9\u8eab\u4f53\u7a0d\u5fae\u505c\u987f\u4e00\u4e0b\uff0c\u5b83\u5c31\u5f88\u96be\u88ab\u8bb0\u4f4f\u3002",
+          "\u661f\u73af\u7cfb\u7edf\u8bb0\u5f55\u663e\u793a\uff1a\n\u8be5\u661f\u7cfb\u5c45\u6c11\u7ecf\u5e38\u51fa\u73b0\u5feb\u901f\u8fdb\u98df\u3001\u8ffd\u6c42\u7206\u8fa3\u91cd\u53e3\u3001\u5c1d\u8bd5\u6781\u7aef\u642d\u914d\uff0c\u4ee5\u53ca\u201c\u518d\u6765\u4e00\u53e3\u8bd5\u8bd5\u201d\u7684\u73b0\u8c61\u3002"
+        ]
+      },
+      "traitBars": {
+        "x": 1040,
+        "y": 650,
+        "width": 620,
+        "height": 14,
+        "gap": 42,
+        "pointerWidth": 54,
+        "pointerHeight": 42,
+        "values": [78, 55, 82, 32]
       }
     },
     "imagePaths": {

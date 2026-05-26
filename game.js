@@ -3,6 +3,14 @@ const act3Files = {
   layouts: "data/layouts-act3.json"
 };
 
+const act0Files = {
+  layouts: "data/layouts-act0.json"
+};
+
+const resultFiles = {
+  layouts: "data/layouts-result.json"
+};
+
 const ACT3_STATES = {
   TITLE: "act3_state_00_title",
   FOOD_CHOICE: "act3_state_01_food_choice",
@@ -24,6 +32,7 @@ const RESULT_STATES = {
 };
 const PREVIEW_ENTRY_CONFIG = {
   enabled: false,
+  skipAct3AfterAct0: true,
   startAt: RESULT_STATES.GALAXY_LOCATING
 };
 
@@ -102,7 +111,7 @@ const ACT3_EXIT_SCROLL_CONFIG = {
   resultDelay: 420,
   completeDelay: 1650
 };
-const ACT0_ALARM_CONFIG = {
+const ACT0_ALARM_DEFAULT_CONFIG = {
   maxHits: 3,
   backgroundLevels: [
     "#000000",
@@ -135,7 +144,13 @@ const ACT0_ALARM_CONFIG = {
     hitFeedback: "assets/images/act0/clock/hand-hit.png"
   }
 };
-const RESULT_GALAXY_LOCATING_CONFIG = {
+let ACT0_ALARM_CONFIG = {
+  ...ACT0_ALARM_DEFAULT_CONFIG,
+  imagePaths: {
+    ...ACT0_ALARM_DEFAULT_CONFIG.imagePaths
+  }
+};
+const RESULT_GALAXY_LOCATING_DEFAULT_CONFIG = {
   stateId: RESULT_STATES.GALAXY_LOCATING,
   particleCount: 120,
   colors: ["#87BDF9", "#F99605", "#4199FB", "#FAC4DE", "#FF74B7", "#88CF90", "#FFD933", "#F05618"],
@@ -168,6 +183,11 @@ const RESULT_GALAXY_LOCATING_CONFIG = {
   sharedRingPhaseJitter: 0.22,
   sharedRingRadialJitter: 26,
   sharedRingTangentialJitter: 18,
+  revealBeforeRingComplete: 1200,
+  revealDelay: 300,
+  revealDuration: 720,
+  collapseScale: 0.9,
+  releaseScale: 1.04,
   floatAmplitudeMin: 12,
   floatAmplitudeMax: 46,
   selfRotateSpeedMin: -0.018,
@@ -183,11 +203,50 @@ const RESULT_GALAXY_LOCATING_CONFIG = {
   captionMinHeight: 110,
   captionBottom: 82,
   captionFontSize: 34,
+  captionReveal: {
+    text: "高压炙热星环",
+    width: 350,
+    minHeight: 110,
+    fontSize: 34,
+    bounceDuration: 680,
+    particleCount: 18,
+    particleMinSize: 10,
+    particleMaxSize: 34,
+    particleSpreadX: 520,
+    particleSpreadY: 160,
+    particleFloatDurationMin: 2600,
+    particleFloatDurationMax: 5200,
+    particleFadeDurationMin: 1800,
+    particleFadeDurationMax: 3600,
+    particleColors: ["#87BDF9", "#F99605", "#FAC4DE", "#88CF90", "#FFD933"],
+    particleStrokeColor: "#693618",
+    particleStrokeWidth: 1.5
+  },
   imagePaths: {
     radial: "assets/images/result/shapes/radial.png",
     circle: "assets/images/result/shapes/circle.png",
     triangle: "assets/images/result/shapes/triangle.png",
     rect: "assets/images/result/shapes/rect.png"
+  },
+  centerPlanet: {
+    enabled: true,
+    x: 0,
+    y: 0,
+    size: 180,
+    image: "assets/images/result/planet/high-pressure-hot-ring.png",
+    fallbackColor: "#F4B6D2",
+    strokeColor: "#693618",
+    strokeWidth: 2,
+    floatAmplitude: 16,
+    floatDuration: 2600,
+    mouseFollowStrength: 20,
+    zIndex: 8
+  }
+};
+let RESULT_GALAXY_LOCATING_CONFIG = {
+  ...RESULT_GALAXY_LOCATING_DEFAULT_CONFIG,
+  imagePaths: {
+    ...RESULT_GALAXY_LOCATING_DEFAULT_CONFIG.imagePaths
   }
 };
 const ACT3_HOVER_INFO = {
@@ -298,7 +357,12 @@ let galaxyLocatingPointerMoveHandler = null;
 let galaxyLocatingPointerLeaveHandler = null;
 let galaxyLocatingMotionStartTime = 0;
 let galaxyLocatingCaptionDotsTimer = null;
+let galaxyLocatingCaptionElement = null;
+let galaxyLocatingCaptionMainElement = null;
 let galaxyLocatingCaptionDotsElement = null;
+let galaxyLocatingCaptionParticleLayer = null;
+let galaxyLocatingRevealTimer = null;
+let resultGalaxyRevealStarted = false;
 let hoverInfoTooltip = null;
 let hoverInfoShowTimer = null;
 let hoverInfoHideTimer = null;
@@ -334,8 +398,75 @@ async function loadAct3Data() {
 
   act3Choices = await choicesResponse.json();
   act3Layouts = await layoutsResponse.json();
+  await loadAct0Data();
+  await loadResultData();
   transitionDuration = act3Layouts.defaults?.duration || transitionDuration;
   console.log("Act 3 数据读取完成：", { act3Choices, act3Layouts });
+}
+
+async function loadAct0Data() {
+  try {
+    const response = await fetch(act0Files.layouts);
+
+    if (!response.ok) {
+      throw new Error(`${act0Files.layouts} 读取失败`);
+    }
+
+    ACT0_ALARM_CONFIG = mergeAct0AlarmConfig(await response.json());
+    console.log("Act 0 配置读取完成：", ACT0_ALARM_CONFIG);
+  } catch (error) {
+    ACT0_ALARM_CONFIG = mergeAct0AlarmConfig({});
+    console.warn("Act 0 配置读取失败，使用默认配置：", error);
+  }
+}
+
+function mergeAct0AlarmConfig(config) {
+  return {
+    ...ACT0_ALARM_DEFAULT_CONFIG,
+    ...config,
+    imagePaths: {
+      ...ACT0_ALARM_DEFAULT_CONFIG.imagePaths,
+      ...(config.imagePaths || {})
+    }
+  };
+}
+
+async function loadResultData() {
+  try {
+    const response = await fetch(resultFiles.layouts);
+
+    if (!response.ok) {
+      throw new Error(`${resultFiles.layouts} 读取失败`);
+    }
+
+    const layouts = await response.json();
+    RESULT_GALAXY_LOCATING_CONFIG = mergeResultGalaxyLocatingConfig(
+      layouts.galaxyLocating || layouts
+    );
+    console.log("Result 配置读取完成：", RESULT_GALAXY_LOCATING_CONFIG);
+  } catch (error) {
+    RESULT_GALAXY_LOCATING_CONFIG = mergeResultGalaxyLocatingConfig({});
+    console.warn("Result 配置读取失败，使用默认配置：", error);
+  }
+}
+
+function mergeResultGalaxyLocatingConfig(config) {
+  return {
+    ...RESULT_GALAXY_LOCATING_DEFAULT_CONFIG,
+    ...config,
+    imagePaths: {
+      ...RESULT_GALAXY_LOCATING_DEFAULT_CONFIG.imagePaths,
+      ...(config.imagePaths || {})
+    },
+    centerPlanet: {
+      ...RESULT_GALAXY_LOCATING_DEFAULT_CONFIG.centerPlanet,
+      ...(config.centerPlanet || {})
+    },
+    captionReveal: {
+      ...RESULT_GALAXY_LOCATING_DEFAULT_CONFIG.captionReveal,
+      ...(config.captionReveal || {})
+    }
+  };
 }
 
 function setupStageScale() {
@@ -661,6 +792,11 @@ function completeAct0() {
 
   window.setTimeout(() => {
     cleanupAct0Layer();
+    if (PREVIEW_ENTRY_CONFIG.skipAct3AfterAct0) {
+      startPreviewEntry();
+      return;
+    }
+
     startAct3Intro();
   }, ACT0_ALARM_CONFIG.completeDelay);
 }
@@ -1464,6 +1600,7 @@ function createGalaxyLocatingLayer() {
   const captionText = document.createElement("div");
   const captionMain = document.createElement("span");
   const captionDots = document.createElement("span");
+  const captionParticleLayer = document.createElement("div");
 
   layer.id = config.stateId;
   layer.className = "result-galaxy-locating-layer";
@@ -1476,15 +1613,23 @@ function createGalaxyLocatingLayer() {
   layer.style.setProperty("--result-locating-caption-min-height", `${config.captionMinHeight}px`);
   layer.style.setProperty("--result-locating-caption-bottom", `${config.captionBottom}px`);
   layer.style.setProperty("--result-locating-caption-font-size", `${config.captionFontSize}px`);
+  layer.style.setProperty("--result-galaxy-reveal-duration", `${config.revealDuration}ms`);
+  layer.style.setProperty("--result-galaxy-collapse-scale", config.collapseScale);
+  layer.style.setProperty("--result-galaxy-release-scale", config.releaseScale);
+  layer.style.setProperty("--result-caption-reveal-bounce-duration", `${config.captionReveal.bounceDuration}ms`);
+  layer.style.setProperty("--result-caption-particle-stroke-color", config.captionReveal.particleStrokeColor);
+  layer.style.setProperty("--result-caption-particle-stroke-width", `${config.captionReveal.particleStrokeWidth}px`);
 
   field.className = "result-locating-field";
   caption.className = "result-locating-caption";
   captionText.className = "result-locating-caption-text";
   captionMain.className = "result-locating-caption-main";
   captionDots.className = "result-locating-caption-dots";
+  captionParticleLayer.className = "result-caption-particle-layer";
   captionMain.textContent = config.captionText;
   captionText.appendChild(captionMain);
   captionText.appendChild(captionDots);
+  caption.appendChild(captionParticleLayer);
   caption.appendChild(captionText);
   layer.appendChild(field);
   layer.appendChild(caption);
@@ -1492,16 +1637,182 @@ function createGalaxyLocatingLayer() {
 
   galaxyLocatingLayer = layer;
   galaxyLocatingField = field;
+  galaxyLocatingCaptionElement = caption;
+  galaxyLocatingCaptionMainElement = captionMain;
   galaxyLocatingCaptionDotsElement = captionDots;
+  galaxyLocatingCaptionParticleLayer = captionParticleLayer;
+  resultGalaxyRevealStarted = false;
   generateGalaxyParticles();
+  createGalaxyCenterPlanet();
   bindGalaxyLocatingParallax();
   startGalaxyLocatingCaptionDots();
+  scheduleGalaxyLocatingReveal();
 
   window.requestAnimationFrame(() => {
     galaxyLocatingLayer?.classList.add("is-visible");
   });
 
   return layer;
+}
+
+function scheduleGalaxyLocatingReveal() {
+  const config = RESULT_GALAXY_LOCATING_CONFIG;
+  const ringRevealTime = Math.max(
+    0,
+    config.ringAssembleDuration - config.revealBeforeRingComplete
+  );
+  const revealDelay =
+    config.freeMotionDuration + ringRevealTime + config.revealDelay;
+
+  if (galaxyLocatingRevealTimer) {
+    window.clearTimeout(galaxyLocatingRevealTimer);
+  }
+
+  galaxyLocatingRevealTimer = window.setTimeout(() => {
+    triggerGalaxyLocatingReveal();
+  }, revealDelay);
+}
+
+function triggerGalaxyLocatingReveal() {
+  if (!galaxyLocatingField || resultGalaxyRevealStarted) {
+    return;
+  }
+
+  resultGalaxyRevealStarted = true;
+  currentState = "result_state_00_galaxy_locating_reveal";
+  galaxyLocatingField.classList.add("is-revealing");
+  document.getElementById("result-galaxy-center-planet")?.classList.add("is-visible");
+  revealGalaxyLocatingCaption();
+}
+
+function revealGalaxyLocatingCaption() {
+  const config = RESULT_GALAXY_LOCATING_CONFIG.captionReveal;
+
+  if (!galaxyLocatingCaptionElement || !galaxyLocatingCaptionMainElement) {
+    return;
+  }
+
+  if (galaxyLocatingCaptionDotsTimer) {
+    window.clearInterval(galaxyLocatingCaptionDotsTimer);
+    galaxyLocatingCaptionDotsTimer = null;
+  }
+
+  galaxyLocatingCaptionMainElement.textContent = config.text;
+  galaxyLocatingLayer?.style.setProperty("--result-locating-caption-width", `${config.width}px`);
+  galaxyLocatingLayer?.style.setProperty("--result-locating-caption-min-height", `${config.minHeight}px`);
+  galaxyLocatingLayer?.style.setProperty("--result-locating-caption-font-size", `${config.fontSize}px`);
+
+  if (galaxyLocatingCaptionDotsElement) {
+    galaxyLocatingCaptionDotsElement.textContent = "";
+  }
+
+  galaxyLocatingCaptionElement.classList.remove("caption-reveal-bounce");
+  galaxyLocatingCaptionElement.classList.add("is-revealed");
+  void galaxyLocatingCaptionElement.offsetWidth;
+  galaxyLocatingCaptionElement.classList.add("caption-reveal-bounce");
+  generateGalaxyCaptionRevealParticles();
+}
+
+function generateGalaxyCaptionRevealParticles() {
+  const config = RESULT_GALAXY_LOCATING_CONFIG.captionReveal;
+  const shapeTypes = ["radial", "circle", "triangle", "rect"];
+
+  if (!galaxyLocatingCaptionParticleLayer) {
+    return;
+  }
+
+  galaxyLocatingCaptionParticleLayer.innerHTML = "";
+
+  for (let index = 0; index < config.particleCount; index += 1) {
+    const size = randomBetween(config.particleMinSize, config.particleMaxSize);
+    const angle = randomBetween(0, Math.PI * 2);
+    const distance = randomBetween(0.72, 1.08);
+    const startX = Math.cos(angle) * config.particleSpreadX * 0.38 * distance;
+    const startY = Math.sin(angle) * config.particleSpreadY * 0.42 * distance;
+    const moveX = Math.cos(angle) * randomBetween(10, 34);
+    const moveY = Math.sin(angle) * randomBetween(8, 26) - randomBetween(4, 18);
+    const shapeType = randomItem(shapeTypes) || "circle";
+    const particle = document.createElement("div");
+    const shape = document.createElement("div");
+    const image = document.createElement("div");
+
+    particle.className = "result-caption-particle";
+    shape.className = `result-locating-shape is-${shapeType}`;
+    image.className = "result-locating-shape-image";
+
+    particle.style.width = `${size}px`;
+    particle.style.height = `${size}px`;
+    particle.style.left = `calc(50% + ${startX.toFixed(2)}px)`;
+    particle.style.top = `calc(50% + ${startY.toFixed(2)}px)`;
+    particle.style.setProperty("--caption-particle-x", `${moveX.toFixed(2)}px`);
+    particle.style.setProperty("--caption-particle-y", `${moveY.toFixed(2)}px`);
+    particle.style.setProperty("--caption-particle-rotation", `${randomBetween(-28, 28).toFixed(2)}deg`);
+    particle.style.setProperty(
+      "--caption-particle-float-duration",
+      `${Math.round(randomBetween(config.particleFloatDurationMin, config.particleFloatDurationMax))}ms`
+    );
+    particle.style.setProperty(
+      "--caption-particle-fade-duration",
+      `${Math.round(randomBetween(config.particleFadeDurationMin, config.particleFadeDurationMax))}ms`
+    );
+    particle.style.setProperty("--caption-particle-delay", `${Math.round(randomBetween(-1800, 0))}ms`);
+
+    shape.style.color = randomItem(config.particleColors) || "#87BDF9";
+    shape.style.setProperty("--particle-shape-image", `url("${RESULT_GALAXY_LOCATING_CONFIG.imagePaths[shapeType] || ""}")`);
+    image.style.backgroundImage = "var(--particle-shape-image)";
+
+    shape.appendChild(image);
+    particle.appendChild(shape);
+    galaxyLocatingCaptionParticleLayer.appendChild(particle);
+  }
+}
+
+function createGalaxyCenterPlanet() {
+  const config = RESULT_GALAXY_LOCATING_CONFIG.centerPlanet;
+
+  if (!galaxyLocatingField || !config?.enabled) {
+    return;
+  }
+
+  const planet = document.createElement("div");
+  const image = document.createElement("img");
+
+  planet.id = "result-galaxy-center-planet";
+  planet.className = "result-galaxy-center-planet";
+  planet.style.width = `${config.size}px`;
+  planet.style.height = `${config.size}px`;
+  planet.style.left = `calc(50% + ${config.x}px)`;
+  planet.style.top = `calc(50% + ${config.y}px)`;
+  planet.style.zIndex = `${config.zIndex}`;
+  planet.style.setProperty("--result-center-planet-color", config.fallbackColor);
+  planet.style.setProperty("--result-center-planet-stroke-color", config.strokeColor);
+  planet.style.setProperty("--result-center-planet-stroke-width", `${config.strokeWidth}px`);
+  planet.style.setProperty("--result-center-planet-float-amplitude", `${config.floatAmplitude}px`);
+  planet.style.setProperty("--result-center-planet-float-duration", `${config.floatDuration}ms`);
+  planet.style.setProperty("--result-center-planet-parallax-x", "0px");
+  planet.style.setProperty("--result-center-planet-parallax-y", "0px");
+
+  if (config.image) {
+    image.className = "result-galaxy-center-planet-image";
+    image.alt = "";
+    image.draggable = false;
+    image.decoding = "async";
+    image.loading = "eager";
+    image.src = config.image;
+    image.onload = () => {
+      planet.classList.add("has-image");
+    };
+    image.onerror = () => {
+      image.remove();
+    };
+    planet.appendChild(image);
+
+    if (image.decode) {
+      image.decode().catch(() => {});
+    }
+  }
+
+  galaxyLocatingField.appendChild(planet);
 }
 
 function generateGalaxyParticles() {
@@ -1683,6 +1994,7 @@ function updateGalaxyMouseParallax() {
 
   galaxyLocatingPointerCurrentX += (galaxyLocatingPointerTargetX - galaxyLocatingPointerCurrentX) * 0.08;
   galaxyLocatingPointerCurrentY += (galaxyLocatingPointerTargetY - galaxyLocatingPointerCurrentY) * 0.08;
+  updateGalaxyCenterPlanetParallax();
 
   galaxyLocatingParticles.forEach((particle) => {
     const depthWeight = 0.72 + particle.depth * RESULT_GALAXY_LOCATING_CONFIG.depthMotionMultiplier;
@@ -1745,6 +2057,21 @@ function updateGalaxyMouseParallax() {
   galaxyLocatingAnimationFrame = window.requestAnimationFrame(updateGalaxyMouseParallax);
 }
 
+function updateGalaxyCenterPlanetParallax() {
+  const planet = document.getElementById("result-galaxy-center-planet");
+  const config = RESULT_GALAXY_LOCATING_CONFIG.centerPlanet;
+
+  if (!planet || !config?.enabled) {
+    return;
+  }
+
+  const offsetX = galaxyLocatingPointerCurrentX * config.mouseFollowStrength;
+  const offsetY = galaxyLocatingPointerCurrentY * config.mouseFollowStrength;
+
+  planet.style.setProperty("--result-center-planet-parallax-x", `${offsetX.toFixed(2)}px`);
+  planet.style.setProperty("--result-center-planet-parallax-y", `${offsetY.toFixed(2)}px`);
+}
+
 function startGalaxyLocatingCaptionDots() {
   const dotsElement = galaxyLocatingCaptionDotsElement;
 
@@ -1785,14 +2112,23 @@ function cleanupGalaxyLocatingLayer() {
     window.clearInterval(galaxyLocatingCaptionDotsTimer);
   }
 
+  if (galaxyLocatingRevealTimer) {
+    window.clearTimeout(galaxyLocatingRevealTimer);
+  }
+
   galaxyLocatingLayer?.remove();
   galaxyLocatingLayer = null;
   galaxyLocatingField = null;
   galaxyLocatingParticles = [];
   galaxyLocatingAnimationFrame = 0;
   galaxyLocatingMotionStartTime = 0;
+  galaxyLocatingCaptionElement = null;
+  galaxyLocatingCaptionMainElement = null;
   galaxyLocatingCaptionDotsTimer = null;
   galaxyLocatingCaptionDotsElement = null;
+  galaxyLocatingCaptionParticleLayer = null;
+  galaxyLocatingRevealTimer = null;
+  resultGalaxyRevealStarted = false;
   galaxyLocatingPointerTargetX = 0;
   galaxyLocatingPointerTargetY = 0;
   galaxyLocatingPointerCurrentX = 0;

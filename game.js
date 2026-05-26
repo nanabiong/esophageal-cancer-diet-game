@@ -34,7 +34,7 @@ const RESULT_STATES = {
 };
 const PREVIEW_ENTRY_CONFIG = {
   enabled: false,
-  skipAct3AfterAct0: true,
+  skipAct3AfterAct0: false,
   startAt: RESULT_STATES.GALAXY_LOCATING
 };
 
@@ -201,6 +201,7 @@ const RESULT_GALAXY_LOCATING_DEFAULT_CONFIG = {
   backgroundColor: "#F6EEDC",
   captionText: "正在定位你的饮食星系",
   ellipsisInterval: 420,
+  captionX: 960,
   captionWidth: 620,
   captionMinHeight: 110,
   captionBottom: 82,
@@ -2174,6 +2175,7 @@ function createGalaxyLocatingLayer() {
   layer.style.setProperty("--result-locating-caption-min-height", `${config.captionMinHeight}px`);
   layer.style.setProperty("--result-locating-caption-bottom", `${config.captionBottom}px`);
   layer.style.setProperty("--result-locating-caption-font-size", `${config.captionFontSize}px`);
+  layer.style.setProperty("--result-locating-caption-x", `${config.captionX}px`);
   layer.style.setProperty("--result-galaxy-reveal-duration", `${config.revealDuration}ms`);
   layer.style.setProperty("--result-galaxy-collapse-scale", config.collapseScale);
   layer.style.setProperty("--result-galaxy-release-scale", config.releaseScale);

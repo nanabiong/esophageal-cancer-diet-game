@@ -1061,7 +1061,7 @@ button:disabled {
 
 .result-locating-caption {
   position: absolute;
-  left: 50%;
+  left: var(--result-locating-caption-x, 960px);
   bottom: var(--result-locating-caption-bottom, 82px);
   width: var(--result-locating-caption-width, 620px);
   min-height: var(--result-locating-caption-min-height, 110px);
@@ -1098,8 +1098,9 @@ button:disabled {
 }
 
 .result-locating-caption-text {
-  display: inline-flex;
-  align-items: baseline;
+  display: flex;
+  width: 100%;
+  align-items: center;
   justify-content: center;
   color: #5e4531;
   font-family: YouYuan, "幼圆", "Microsoft YaHei", sans-serif;

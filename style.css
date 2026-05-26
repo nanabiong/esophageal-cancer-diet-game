@@ -646,6 +646,178 @@ button:disabled {
   animation: cheersSparkleBurst var(--sparkle-duration, 720ms) ease-out forwards;
 }
 
+.result-galaxy-locating-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 78;
+  overflow: hidden;
+  opacity: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 50% 42%, rgba(255, 255, 255, 0.65) 0%, rgba(255, 255, 255, 0) 34%),
+    linear-gradient(180deg, rgba(255, 250, 242, 0.55) 0%, rgba(246, 238, 220, 0.92) 100%),
+    var(--result-locating-bg, #f6eedc);
+}
+
+.result-galaxy-locating-layer.is-visible {
+  animation: resultLocatingLayerEnter 900ms ease-out forwards;
+}
+
+.result-locating-field {
+  position: absolute;
+  left: 50%;
+  top: 46%;
+  width: var(--result-locating-field-width, 1280px);
+  height: var(--result-locating-field-height, 640px);
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  filter: drop-shadow(0 26px 40px rgba(105, 82, 50, 0.1));
+}
+
+.result-locating-particle {
+  position: absolute;
+  pointer-events: none;
+  transform: translate(-50%, -50%) scale(var(--particle-scale, 1));
+  transform-origin: center;
+  will-change: transform;
+}
+
+.result-locating-particle-drift {
+  position: absolute;
+  inset: 0;
+  will-change: transform;
+}
+
+.result-locating-shape {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  animation: resultLocatingParticleAppear 820ms cubic-bezier(0.22, 1, 0.36, 1) var(--particle-enter-delay, 0ms) forwards;
+}
+
+.result-locating-shape::before,
+.result-locating-shape::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+}
+
+.result-locating-shape::before {
+  background: var(--result-locating-particle-stroke-color, #693618);
+}
+
+.result-locating-shape::after {
+  inset: var(--result-locating-particle-stroke-width, 1.5px);
+  background: currentColor;
+}
+
+.result-locating-shape-image {
+  position: absolute;
+  inset: calc(var(--result-locating-particle-stroke-width, 1.5px) + 0.5px);
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: contain;
+  opacity: 0.92;
+  mix-blend-mode: multiply;
+}
+
+.result-locating-shape.is-circle::before,
+.result-locating-shape.is-circle::after {
+  border-radius: 999px;
+}
+
+.result-locating-shape.is-circle::after {
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.26),
+    0 0 18px rgba(255, 255, 255, 0.18);
+}
+
+.result-locating-shape.is-triangle::before {
+  clip-path: polygon(50% 4%, 96% 92%, 4% 92%);
+}
+
+.result-locating-shape.is-triangle::after {
+  clip-path: polygon(50% 10%, 90% 86%, 10% 86%);
+  box-shadow: 0 10px 20px rgba(88, 63, 40, 0.08);
+}
+
+.result-locating-shape.is-rect::before,
+.result-locating-shape.is-rect::after {
+  border-radius: 7px;
+}
+
+.result-locating-shape.is-rect::after {
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.24),
+    0 10px 22px rgba(88, 63, 40, 0.09);
+}
+
+.result-locating-shape.is-radial::before {
+  border-radius: 999px;
+  background:
+    radial-gradient(circle, var(--result-locating-particle-stroke-color, #693618) 0 16%, transparent 16% 100%),
+    repeating-conic-gradient(
+      from 0deg,
+      var(--result-locating-particle-stroke-color, #693618) 0deg 8deg,
+      transparent 8deg 22deg
+    );
+}
+
+.result-locating-shape.is-radial::after {
+  border-radius: 999px;
+  background:
+    radial-gradient(circle, rgba(255, 255, 255, 0.3) 0 18%, transparent 18% 100%),
+    repeating-conic-gradient(
+      from 0deg,
+      currentColor 0deg 6deg,
+      transparent 6deg 22deg
+    );
+  box-shadow: 0 0 22px rgba(255, 255, 255, 0.12);
+}
+
+.result-locating-caption {
+  position: absolute;
+  left: 50%;
+  bottom: var(--result-locating-caption-bottom, 82px);
+  width: var(--result-locating-caption-width, 620px);
+  min-height: var(--result-locating-caption-min-height, 110px);
+  display: grid;
+  place-items: center;
+  padding: 18px 36px;
+  border: 3px solid rgba(92, 64, 41, 0.96);
+  border-radius: 34px;
+  background: rgba(255, 248, 236, 0.94);
+  box-shadow:
+    0 14px 34px rgba(104, 80, 56, 0.16),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.56);
+  opacity: 0;
+  pointer-events: none;
+  transform: translate(-50%, 20px);
+}
+
+.result-galaxy-locating-layer.is-visible .result-locating-caption {
+  animation: resultLocatingCaptionEnter 860ms ease-out 180ms forwards;
+}
+
+.result-locating-caption-text {
+  display: inline-flex;
+  align-items: baseline;
+  justify-content: center;
+  color: #5e4531;
+  font-family: YouYuan, "幼圆", "Microsoft YaHei", sans-serif;
+  font-size: var(--result-locating-caption-font-size, 34px);
+  line-height: 1.45;
+  letter-spacing: 0;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.result-locating-caption-dots {
+  display: inline-block;
+  min-width: 1.6em;
+  text-align: left;
+}
+
 .result-galaxy-layer {
   position: absolute;
   inset: 0;
@@ -758,6 +930,66 @@ button:disabled {
   to {
     opacity: 0;
     transform: translate(-45px, var(--act3-exit-distance-slow)) scale(1);
+  }
+}
+
+@keyframes resultLocatingLayerEnter {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes resultLocatingParticleAppear {
+  from {
+    opacity: 0;
+    transform: scale(0.7);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes resultLocatingParticleFloat {
+  0% {
+    transform:
+      translate(
+        calc(var(--particle-float-x, 0px) * -1),
+        calc(var(--particle-float-y, 0px) * -1)
+      )
+      rotate(calc(var(--particle-float-rotation, 0deg) * -1));
+  }
+
+  50% {
+    transform:
+      translate(
+        calc(var(--particle-float-x, 0px) * 0.35),
+        calc(var(--particle-float-y, 0px) * 0.35)
+      )
+      rotate(calc(var(--particle-float-rotation, 0deg) * 0.35));
+  }
+
+  100% {
+    transform:
+      translate(var(--particle-float-x, 0px), var(--particle-float-y, 0px))
+      rotate(var(--particle-float-rotation, 0deg));
+  }
+}
+
+@keyframes resultLocatingCaptionEnter {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 26px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0);
   }
 }
 

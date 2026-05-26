@@ -14,7 +14,12 @@ const PHASES = {
   FOOD: "act3_food",
   DRINK: "act3_drink",
   EXIT_SCROLL: "act3_exit_scroll",
+  RESULT_GALAXY_LOCATING: "result_galaxy_locating",
   RESULT_GALAXY: "result_galaxy"
+};
+const RESULT_STATES = {
+  GALAXY_LOCATING: "result_state_00_galaxy_locating",
+  DIET_GALAXY: "result_state_01_diet_galaxy"
 };
 
 const DESIGN_WIDTH = 1920;
@@ -91,6 +96,45 @@ const ACT3_EXIT_SCROLL_CONFIG = {
   maxProgress: 1,
   resultDelay: 420,
   completeDelay: 1650
+};
+const RESULT_GALAXY_LOCATING_CONFIG = {
+  stateId: RESULT_STATES.GALAXY_LOCATING,
+  particleCount: 48,
+  colors: ["#8DB8F2", "#F65A1E", "#8FD39B", "#F6D94A", "#F4B6D2"],
+  minSize: 14,
+  maxSize: 96,
+  fieldWidth: 1280,
+  fieldHeight: 640,
+  mouseFollowStrength: 42,
+  depthMotionMultiplier: 1.5,
+  floatStrength: 18,
+  floatDurationMin: 4200,
+  floatDurationMax: 7800,
+  orbitRadiusMin: 28,
+  orbitRadiusMax: 130,
+  orbitSpeedMin: 0.00025,
+  orbitSpeedMax: 0.00075,
+  floatAmplitudeMin: 12,
+  floatAmplitudeMax: 46,
+  selfRotateSpeedMin: -0.018,
+  selfRotateSpeedMax: 0.018,
+  rotationMin: -18,
+  rotationMax: 18,
+  particleStrokeColor: "#693618",
+  particleStrokeWidth: 1.5,
+  backgroundColor: "#F6EEDC",
+  captionText: "正在定位你的饮食星系",
+  ellipsisInterval: 420,
+  captionWidth: 620,
+  captionMinHeight: 110,
+  captionBottom: 82,
+  captionFontSize: 34,
+  imagePaths: {
+    radial: "assets/images/result/shapes/radial.png",
+    circle: "assets/images/result/shapes/circle.png",
+    triangle: "assets/images/result/shapes/triangle.png",
+    rect: "assets/images/result/shapes/rect.png"
+  }
 };
 const ACT3_HOVER_INFO = {
   act3_s01_food_vegetable: {
@@ -180,6 +224,19 @@ let isAct3ExitAnimating = false;
 let hasAct3ExitStarted = false;
 let act3ExitProgress = 0;
 let resultGalaxyLayer = null;
+let galaxyLocatingLayer = null;
+let galaxyLocatingField = null;
+let galaxyLocatingParticles = [];
+let galaxyLocatingAnimationFrame = 0;
+let galaxyLocatingPointerTargetX = 0;
+let galaxyLocatingPointerTargetY = 0;
+let galaxyLocatingPointerCurrentX = 0;
+let galaxyLocatingPointerCurrentY = 0;
+let galaxyLocatingPointerMoveHandler = null;
+let galaxyLocatingPointerLeaveHandler = null;
+let galaxyLocatingMotionStartTime = 0;
+let galaxyLocatingCaptionDotsTimer = null;
+let galaxyLocatingCaptionDotsElement = null;
 let hoverInfoTooltip = null;
 let hoverInfoShowTimer = null;
 let hoverInfoHideTimer = null;
@@ -972,8 +1029,6 @@ function enableAct3ScrollExit() {
   hideHoverInfoTooltip();
   hideGuidanceBubbles();
   stopHotpotFloatingBubbles();
-  ensureResultGalaxyLayer();
-  updateResultGalaxyProgress(0);
   console.log("Act 3 scroll exit enabled", {
     playerChoices,
     readyToExit: true
@@ -1005,7 +1060,7 @@ function ensureResultGalaxyLayer() {
   }
 
   resultGalaxyLayer = document.createElement("section");
-  resultGalaxyLayer.id = "result_state_01_diet_galaxy";
+  resultGalaxyLayer.id = RESULT_STATES.DIET_GALAXY;
   resultGalaxyLayer.className = "result-galaxy-layer";
   resultGalaxyLayer.innerHTML = `
     <div class="result-galaxy-card">
@@ -1037,16 +1092,28 @@ function startAct3ExitSequence() {
   hideHoverInfoTooltip();
   hideGuidanceBubbles();
   stopHotpotFloatingBubbles();
-  ensureResultGalaxyLayer();
   objectLayer.classList.add("act3-exit-sequence");
 
   window.setTimeout(() => {
-    resultGalaxyLayer?.classList.add("result-enter");
-  }, ACT3_EXIT_SCROLL_CONFIG.resultDelay);
-
-  window.setTimeout(() => {
-    enterResultGalaxyState();
+    enterGalaxyLocatingState();
   }, ACT3_EXIT_SCROLL_CONFIG.completeDelay);
+}
+
+function enterGalaxyLocatingState() {
+  if (currentPhase === PHASES.RESULT_GALAXY_LOCATING) {
+    return;
+  }
+
+  act3ExitProgress = ACT3_EXIT_SCROLL_CONFIG.maxProgress;
+  isAct3ScrollExitEnabled = false;
+  isAct3ExitAnimating = false;
+  currentPhase = PHASES.RESULT_GALAXY_LOCATING;
+  currentState = RESULT_STATES.GALAXY_LOCATING;
+  createGalaxyLocatingLayer();
+  console.log("Entered result_state_00_galaxy_locating", {
+    playerChoices,
+    act3ExitProgress
+  });
 }
 
 function enterResultGalaxyState() {
@@ -1054,16 +1121,302 @@ function enterResultGalaxyState() {
     return;
   }
 
+  cleanupGalaxyLocatingLayer();
   act3ExitProgress = ACT3_EXIT_SCROLL_CONFIG.maxProgress;
   isAct3ScrollExitEnabled = false;
   isAct3ExitAnimating = false;
   currentPhase = PHASES.RESULT_GALAXY;
-  currentState = "result_state_01_diet_galaxy";
+  currentState = RESULT_STATES.DIET_GALAXY;
   updateResultGalaxyProgress(1);
   console.log("Entered result_state_01_diet_galaxy", {
     playerChoices,
     act3ExitProgress
   });
+}
+
+function createGalaxyLocatingLayer() {
+  cleanupGalaxyLocatingLayer();
+
+  const config = RESULT_GALAXY_LOCATING_CONFIG;
+  const layer = document.createElement("section");
+  const field = document.createElement("div");
+  const caption = document.createElement("div");
+  const captionText = document.createElement("div");
+  const captionMain = document.createElement("span");
+  const captionDots = document.createElement("span");
+
+  layer.id = config.stateId;
+  layer.className = "result-galaxy-locating-layer";
+  layer.style.setProperty("--result-locating-bg", config.backgroundColor);
+  layer.style.setProperty("--result-locating-field-width", `${config.fieldWidth}px`);
+  layer.style.setProperty("--result-locating-field-height", `${config.fieldHeight}px`);
+  layer.style.setProperty("--result-locating-particle-stroke-color", config.particleStrokeColor);
+  layer.style.setProperty("--result-locating-particle-stroke-width", `${config.particleStrokeWidth}px`);
+  layer.style.setProperty("--result-locating-caption-width", `${config.captionWidth}px`);
+  layer.style.setProperty("--result-locating-caption-min-height", `${config.captionMinHeight}px`);
+  layer.style.setProperty("--result-locating-caption-bottom", `${config.captionBottom}px`);
+  layer.style.setProperty("--result-locating-caption-font-size", `${config.captionFontSize}px`);
+
+  field.className = "result-locating-field";
+  caption.className = "result-locating-caption";
+  captionText.className = "result-locating-caption-text";
+  captionMain.className = "result-locating-caption-main";
+  captionDots.className = "result-locating-caption-dots";
+  captionMain.textContent = config.captionText;
+  captionText.appendChild(captionMain);
+  captionText.appendChild(captionDots);
+  caption.appendChild(captionText);
+  layer.appendChild(field);
+  layer.appendChild(caption);
+  objectLayer.appendChild(layer);
+
+  galaxyLocatingLayer = layer;
+  galaxyLocatingField = field;
+  galaxyLocatingCaptionDotsElement = captionDots;
+  generateGalaxyParticles();
+  bindGalaxyLocatingParallax();
+  startGalaxyLocatingCaptionDots();
+
+  window.requestAnimationFrame(() => {
+    galaxyLocatingLayer?.classList.add("is-visible");
+  });
+
+  return layer;
+}
+
+function generateGalaxyParticles() {
+  if (!galaxyLocatingField) {
+    return;
+  }
+
+  const config = RESULT_GALAXY_LOCATING_CONFIG;
+  const shapeTypes = ["radial", "circle", "triangle", "rect"];
+
+  galaxyLocatingField.innerHTML = "";
+  galaxyLocatingParticles = [];
+
+  for (let index = 0; index < config.particleCount; index += 1) {
+    const size = randomBetween(config.minSize, config.maxSize);
+    const normalizedSize = normalizeValue(size, config.minSize, config.maxSize);
+    const depth = 0.35 + normalizedSize * 0.85;
+    const angle = randomBetween(0, Math.PI * 2);
+    const distance = Math.sqrt(Math.random());
+    const ellipseRadiusX = (config.fieldWidth * 0.5 - size * 0.5) * distance;
+    const ellipseRadiusY = (config.fieldHeight * 0.36 - size * 0.5) * distance;
+    const offsetX = Math.cos(angle) * ellipseRadiusX + randomBetween(-80, 80);
+    const offsetY = Math.sin(angle) * ellipseRadiusY + randomBetween(-58, 58);
+    const rotation = randomBetween(config.rotationMin, config.rotationMax);
+    const opacity = 0.32 + normalizedSize * 0.48;
+    const scale = 0.72 + normalizedSize * 0.58;
+    const shapeType = randomItem(shapeTypes) || "circle";
+    const orbitRadiusX = randomBetween(config.orbitRadiusMin, config.orbitRadiusMax);
+    const orbitRadiusY = randomBetween(config.orbitRadiusMin * 0.7, config.orbitRadiusMax * 0.92);
+    const orbitSpeed = randomBetween(config.orbitSpeedMin, config.orbitSpeedMax);
+    const orbitDirection = Math.random() >= 0.5 ? 1 : -1;
+    const orbitPhase = randomBetween(0, Math.PI * 2);
+    const floatAmplitude = randomBetween(config.floatAmplitudeMin, config.floatAmplitudeMax);
+    const floatPhase = randomBetween(0, Math.PI * 2);
+    const floatSpeedX = randomBetween(0.00022, 0.00052);
+    const floatSpeedY = randomBetween(0.00028, 0.00062);
+    const selfRotateSpeed = randomBetween(config.selfRotateSpeedMin, config.selfRotateSpeedMax);
+    const selfRotatePhase = randomBetween(0, Math.PI * 2);
+    const pulseSpeed = randomBetween(0.00028, 0.0005);
+    const pulsePhase = randomBetween(0, Math.PI * 2);
+    const particle = document.createElement("div");
+    const drift = document.createElement("div");
+    const shape = document.createElement("div");
+    const image = document.createElement("div");
+
+    particle.className = "result-locating-particle";
+    drift.className = "result-locating-particle-drift";
+    shape.className = `result-locating-shape is-${shapeType}`;
+    image.className = "result-locating-shape-image";
+
+    particle.style.left = "50%";
+    particle.style.top = "50%";
+    particle.style.width = `${size}px`;
+    particle.style.height = `${size}px`;
+    particle.style.opacity = opacity.toFixed(3);
+    particle.style.zIndex = `${Math.round(depth * 10)}`;
+    particle.style.setProperty("--particle-offset-x", `${offsetX.toFixed(2)}px`);
+    particle.style.setProperty("--particle-offset-y", `${offsetY.toFixed(2)}px`);
+    particle.style.setProperty("--particle-parallax-x", "0px");
+    particle.style.setProperty("--particle-parallax-y", "0px");
+    particle.style.setProperty("--particle-scale", scale.toFixed(3));
+    drift.style.setProperty("--particle-enter-delay", `${Math.round(index * 22)}ms`);
+
+    shape.style.color = randomItem(config.colors) || "#8DB8F2";
+    shape.style.setProperty("--particle-shape-image", `url("${config.imagePaths[shapeType] || ""}")`);
+    image.style.backgroundImage = `var(--particle-shape-image)`;
+
+    shape.appendChild(image);
+    drift.appendChild(shape);
+    particle.appendChild(drift);
+    galaxyLocatingField.appendChild(particle);
+    galaxyLocatingParticles.push({
+      element: particle,
+      drift,
+      depth,
+      baseX: offsetX,
+      baseY: offsetY,
+      scale,
+      baseRotation: rotation,
+      orbitRadiusX,
+      orbitRadiusY,
+      orbitSpeed,
+      orbitDirection,
+      orbitPhase,
+      floatAmplitude,
+      floatPhase,
+      floatSpeedX,
+      floatSpeedY,
+      selfRotateSpeed,
+      selfRotatePhase,
+      pulseSpeed,
+      pulsePhase
+    });
+  }
+}
+
+function bindGalaxyLocatingParallax() {
+  const frame = document.querySelector(".act3-frame");
+
+  if (!frame) {
+    return;
+  }
+
+  galaxyLocatingPointerTargetX = 0;
+  galaxyLocatingPointerTargetY = 0;
+  galaxyLocatingPointerCurrentX = 0;
+  galaxyLocatingPointerCurrentY = 0;
+
+  galaxyLocatingPointerMoveHandler = (event) => {
+    const rect = frame.getBoundingClientRect();
+
+    if (
+      event.clientX < rect.left ||
+      event.clientX > rect.right ||
+      event.clientY < rect.top ||
+      event.clientY > rect.bottom
+    ) {
+      return;
+    }
+
+    const normalizedX = ((event.clientX - rect.left) / rect.width - 0.5) * 2;
+    const normalizedY = ((event.clientY - rect.top) / rect.height - 0.5) * 2;
+
+    galaxyLocatingPointerTargetX = normalizedX;
+    galaxyLocatingPointerTargetY = normalizedY;
+  };
+
+  galaxyLocatingPointerLeaveHandler = () => {
+    galaxyLocatingPointerTargetX = 0;
+    galaxyLocatingPointerTargetY = 0;
+  };
+
+  frame.addEventListener("pointermove", galaxyLocatingPointerMoveHandler);
+  frame.addEventListener("pointerleave", galaxyLocatingPointerLeaveHandler);
+  updateGalaxyMouseParallax();
+}
+
+function updateGalaxyMouseParallax() {
+  if (!galaxyLocatingParticles.length) {
+    galaxyLocatingAnimationFrame = 0;
+    return;
+  }
+
+  const now = performance.now();
+
+  if (!galaxyLocatingMotionStartTime) {
+    galaxyLocatingMotionStartTime = now;
+  }
+
+  const elapsed = now - galaxyLocatingMotionStartTime;
+
+  galaxyLocatingPointerCurrentX += (galaxyLocatingPointerTargetX - galaxyLocatingPointerCurrentX) * 0.08;
+  galaxyLocatingPointerCurrentY += (galaxyLocatingPointerTargetY - galaxyLocatingPointerCurrentY) * 0.08;
+
+  galaxyLocatingParticles.forEach((particle) => {
+    const depthWeight = 0.72 + particle.depth * RESULT_GALAXY_LOCATING_CONFIG.depthMotionMultiplier;
+    const orbitProgress = elapsed * particle.orbitSpeed * particle.orbitDirection + particle.orbitPhase;
+    const floatX = Math.sin(elapsed * particle.floatSpeedX + particle.floatPhase) * particle.floatAmplitude * 0.42;
+    const floatY = Math.cos(elapsed * particle.floatSpeedY + particle.floatPhase) * particle.floatAmplitude;
+    const orbitX = Math.cos(orbitProgress) * particle.orbitRadiusX * depthWeight;
+    const orbitY = Math.sin(orbitProgress) * particle.orbitRadiusY * depthWeight * 0.92;
+    const offsetX = galaxyLocatingPointerCurrentX * RESULT_GALAXY_LOCATING_CONFIG.mouseFollowStrength * particle.depth;
+    const offsetY = galaxyLocatingPointerCurrentY * RESULT_GALAXY_LOCATING_CONFIG.mouseFollowStrength * particle.depth;
+    const x = particle.baseX + orbitX + floatX + offsetX;
+    const y = particle.baseY + orbitY + floatY + offsetY;
+    const pulseScale = particle.scale * (1 + Math.sin(elapsed * particle.pulseSpeed + particle.pulsePhase) * 0.045);
+    const selfRotation =
+      particle.baseRotation +
+      elapsed * particle.selfRotateSpeed +
+      Math.sin(orbitProgress * 0.8 + particle.selfRotatePhase) * 5.5;
+
+    particle.element.style.transform = `
+      translate(calc(-50% + ${x.toFixed(2)}px), calc(-50% + ${y.toFixed(2)}px))
+      scale(${pulseScale.toFixed(3)})
+    `;
+    particle.drift.style.transform = `rotate(${selfRotation.toFixed(2)}deg)`;
+  });
+
+  galaxyLocatingAnimationFrame = window.requestAnimationFrame(updateGalaxyMouseParallax);
+}
+
+function startGalaxyLocatingCaptionDots() {
+  const dotsElement = galaxyLocatingCaptionDotsElement;
+
+  if (!dotsElement) {
+    return;
+  }
+
+  let dotCount = 0;
+
+  dotsElement.textContent = "";
+
+  if (galaxyLocatingCaptionDotsTimer) {
+    window.clearInterval(galaxyLocatingCaptionDotsTimer);
+  }
+
+  galaxyLocatingCaptionDotsTimer = window.setInterval(() => {
+    dotCount = (dotCount + 1) % 4;
+    dotsElement.textContent = ".".repeat(dotCount);
+  }, RESULT_GALAXY_LOCATING_CONFIG.ellipsisInterval);
+}
+
+function cleanupGalaxyLocatingLayer() {
+  const frame = document.querySelector(".act3-frame");
+
+  if (frame && galaxyLocatingPointerMoveHandler) {
+    frame.removeEventListener("pointermove", galaxyLocatingPointerMoveHandler);
+  }
+
+  if (frame && galaxyLocatingPointerLeaveHandler) {
+    frame.removeEventListener("pointerleave", galaxyLocatingPointerLeaveHandler);
+  }
+
+  if (galaxyLocatingAnimationFrame) {
+    window.cancelAnimationFrame(galaxyLocatingAnimationFrame);
+  }
+
+  if (galaxyLocatingCaptionDotsTimer) {
+    window.clearInterval(galaxyLocatingCaptionDotsTimer);
+  }
+
+  galaxyLocatingLayer?.remove();
+  galaxyLocatingLayer = null;
+  galaxyLocatingField = null;
+  galaxyLocatingParticles = [];
+  galaxyLocatingAnimationFrame = 0;
+  galaxyLocatingMotionStartTime = 0;
+  galaxyLocatingCaptionDotsTimer = null;
+  galaxyLocatingCaptionDotsElement = null;
+  galaxyLocatingPointerTargetX = 0;
+  galaxyLocatingPointerTargetY = 0;
+  galaxyLocatingPointerCurrentX = 0;
+  galaxyLocatingPointerCurrentY = 0;
+  galaxyLocatingPointerMoveHandler = null;
+  galaxyLocatingPointerLeaveHandler = null;
 }
 
 function setupStateInteractions(stateId) {
@@ -1414,6 +1767,7 @@ function bindHoverInfo(element, objectId) {
 function shouldSuppressHoverInfo(element) {
   return (
     currentPhase === PHASES.EXIT_SCROLL ||
+    currentPhase === PHASES.RESULT_GALAXY_LOCATING ||
     currentPhase === PHASES.RESULT_GALAXY ||
     element.classList.contains("is-used") ||
     element.classList.contains("dragging") ||
@@ -1761,6 +2115,14 @@ function ensureCheersSparkleLayer(cheerZone) {
 
 function randomBetween(min, max) {
   return min + Math.random() * (max - min);
+}
+
+function normalizeValue(value, min, max) {
+  if (max <= min) {
+    return 0;
+  }
+
+  return (value - min) / (max - min);
 }
 
 function randomItem(items) {

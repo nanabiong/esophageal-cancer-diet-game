@@ -35,6 +35,17 @@
   --hover-info-title-size: 22px;
   --hover-info-body-size: 17px;
   --hover-info-max-width: 360px;
+  --act3-exit-title-delay: 0ms;
+  --act3-exit-title-duration: 700ms;
+  --act3-exit-drink-delay: 120ms;
+  --act3-exit-drink-duration: 850ms;
+  --act3-exit-cheers-delay: 260ms;
+  --act3-exit-cheers-duration: 900ms;
+  --act3-exit-hotpot-delay: 420ms;
+  --act3-exit-hotpot-duration: 1100ms;
+  --act3-exit-distance-fast: -980px;
+  --act3-exit-distance-mid: -860px;
+  --act3-exit-distance-slow: -760px;
 }
 
 html,
@@ -633,6 +644,133 @@ button:disabled {
   pointer-events: none;
   transform: translate(-50%, -50%) scale(0.4) rotate(0deg);
   animation: cheersSparkleBurst var(--sparkle-duration, 720ms) ease-out forwards;
+}
+
+.result-galaxy-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 80;
+  display: grid;
+  place-items: center;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(480px);
+}
+
+.result-galaxy-layer.result-enter {
+  animation: resultGalaxyEnter 900ms ease-out forwards;
+}
+
+.result-galaxy-card {
+  width: 620px;
+  min-height: 300px;
+  display: grid;
+  place-items: center;
+  padding: 48px;
+  border: 3px solid #202020;
+  background: rgba(255, 250, 240, 0.95);
+  box-shadow: 8px 8px 0 rgba(0, 0, 0, 0.16);
+  color: #24211d;
+  text-align: center;
+}
+
+.result-galaxy-card h2 {
+  margin: 0;
+  font-family: YouYuan, "幼圆", "Microsoft YaHei", sans-serif;
+  font-size: 64px;
+  line-height: 1.1;
+}
+
+.result-galaxy-card p {
+  margin: 0;
+  font-size: 22px;
+}
+
+.result-galaxy-kicker {
+  padding: 6px 16px;
+  border: 2px solid #202020;
+  background: #fff2bd;
+  font-weight: 700;
+}
+
+.act3-exit-sequence #act3_s00_main_title {
+  animation: act3ExitTitle var(--act3-exit-title-duration) ease-in forwards;
+  animation-delay: var(--act3-exit-title-delay);
+}
+
+.act3-exit-sequence #act3_s02_main_drinkTable {
+  animation: act3ExitDrink var(--act3-exit-drink-duration) ease-in forwards;
+  animation-delay: var(--act3-exit-drink-delay);
+}
+
+.act3-exit-sequence #act3_s02_targetzone_cheers {
+  animation: act3ExitCheers var(--act3-exit-cheers-duration) ease-in forwards;
+  animation-delay: var(--act3-exit-cheers-delay);
+}
+
+.act3-exit-sequence #act3_s01_main_hotpotTable {
+  animation: act3ExitHotpot var(--act3-exit-hotpot-duration) ease-in forwards;
+  animation-delay: var(--act3-exit-hotpot-delay);
+}
+
+@keyframes act3ExitTitle {
+  from {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  to {
+    opacity: 0;
+    transform: translate(30px, var(--act3-exit-distance-fast)) scale(0.92);
+  }
+}
+
+@keyframes act3ExitDrink {
+  from {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  to {
+    opacity: 0;
+    transform: translate(150px, var(--act3-exit-distance-fast)) scale(0.96);
+  }
+}
+
+@keyframes act3ExitCheers {
+  from {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  to {
+    opacity: 0;
+    transform: translate(55px, var(--act3-exit-distance-mid)) scale(0.98);
+  }
+}
+
+@keyframes act3ExitHotpot {
+  from {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  to {
+    opacity: 0;
+    transform: translate(-45px, var(--act3-exit-distance-slow)) scale(1);
+  }
+}
+
+@keyframes resultGalaxyEnter {
+  from {
+    opacity: 0;
+    transform: translateY(480px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 @keyframes guideBubbleEnter {

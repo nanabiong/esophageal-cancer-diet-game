@@ -9,6 +9,14 @@ const ACT3_STATES = {
   DRINK_CHOICE: "act3_state_02_drink_choice"
 };
 
+const PHASES = {
+  INTRO: "act3_intro",
+  FOOD: "act3_food",
+  DRINK: "act3_drink",
+  EXIT_SCROLL: "act3_exit_scroll",
+  RESULT_GALAXY: "result_galaxy"
+};
+
 const DESIGN_WIDTH = 1920;
 const DESIGN_HEIGHT = 920;
 const SHOW_DEBUG_LABELS = false;
@@ -79,6 +87,11 @@ const HOVER_TOOLTIP_CONFIG = {
   showDelay: 80,
   hideDelay: 80
 };
+const ACT3_EXIT_SCROLL_CONFIG = {
+  maxProgress: 1,
+  resultDelay: 420,
+  completeDelay: 1650
+};
 const ACT3_HOVER_INFO = {
   act3_s01_food_vegetable: {
     title: "蔬菜",
@@ -137,6 +150,7 @@ const ACT3_HOVER_INFO = {
 let act3Choices = null;
 let act3Layouts = null;
 let currentState = null;
+let currentPhase = PHASES.INTRO;
 let isTransitioning = false;
 let isStateLocked = false;
 let isIntroActive = false;
@@ -160,6 +174,12 @@ let hasFoodGuideShown = false;
 let hasDrinkGuideShown = false;
 let hotpotFloatingBubbleTimer = null;
 let isHotpotFloatingBubblesActive = false;
+let isAct3Complete = false;
+let isAct3ScrollExitEnabled = false;
+let isAct3ExitAnimating = false;
+let hasAct3ExitStarted = false;
+let act3ExitProgress = 0;
+let resultGalaxyLayer = null;
 let hoverInfoTooltip = null;
 let hoverInfoShowTimer = null;
 let hoverInfoHideTimer = null;
@@ -255,7 +275,7 @@ function initializeStage() {
   frame.appendChild(objectLayer);
   createHoverInfoTooltip();
   frame.addEventListener("click", handleStageClick);
-  frame.addEventListener("wheel", handleIntroWheel, { passive: false });
+  frame.addEventListener("wheel", handleStageWheel, { passive: false });
   frameTrack.innerHTML = "";
   frameTrack.appendChild(frame);
   updateStageScale();
@@ -294,10 +314,22 @@ function handleStageClick(event) {
 }
 
 function startAct3Intro() {
+  currentPhase = PHASES.INTRO;
   isIntroActive = true;
   introStep = 0;
   currentState = "act3_intro_00_bubble_1";
   showIntroBubble("act3_intro_bubble_1");
+}
+
+function handleStageWheel(event) {
+  if (currentPhase === PHASES.INTRO) {
+    handleIntroWheel(event);
+    return;
+  }
+
+  if (currentPhase === PHASES.EXIT_SCROLL) {
+    handleAct3ExitWheel(event);
+  }
 }
 
 function handleIntroWheel(event) {
@@ -828,10 +860,12 @@ function updateObjectLayout(element, objectConfig, options = {}) {
   element.style.top = `${(objectConfig.y / stage.height) * 100}%`;
   element.style.width = `${(objectConfig.width / stage.width) * 100}%`;
   element.style.height = `${(objectConfig.height / stage.height) * 100}%`;
-  element.style.opacity = objectConfig.opacity ?? 1;
+  const baseOpacity = objectConfig.opacity ?? 1;
+  element.dataset.baseOpacity = String(baseOpacity);
+  element.style.opacity = baseOpacity;
   element.style.zIndex = objectConfig.zIndex ?? 1;
   element.style.transformOrigin = objectConfig.transformOrigin || "left top";
-  element.style.transform = `scale(${objectConfig.scale ?? 1})`;
+  setObjectBaseTransform(element, objectConfig.scale ?? 1);
 
   if (options.exiting) {
     element.dataset.exiting = "true";
@@ -841,6 +875,17 @@ function updateObjectLayout(element, objectConfig, options = {}) {
     element.offsetHeight;
     element.classList.remove("no-transition");
   }
+}
+
+function setObjectBaseTransform(element, scale) {
+  element.dataset.baseScale = String(scale);
+  applyObjectTransform(element);
+}
+
+function applyObjectTransform(element) {
+  const scale = Number(element.dataset.baseScale || 1);
+
+  element.style.transform = `scale(${scale})`;
 }
 
 function enterNewObject(element, finalConfig, duration = transitionDuration) {
@@ -912,14 +957,125 @@ function cleanupExitedObjects() {
   });
 }
 
+function enableAct3ScrollExit() {
+  if (isAct3ScrollExitEnabled) {
+    return;
+  }
+
+  isAct3Complete = true;
+  isAct3ScrollExitEnabled = true;
+  currentPhase = PHASES.EXIT_SCROLL;
+  isStateLocked = true;
+  isFoodChoiceLocked = true;
+  isDrinkChoiceLocked = true;
+  act3ExitProgress = 0;
+  hideHoverInfoTooltip();
+  hideGuidanceBubbles();
+  stopHotpotFloatingBubbles();
+  ensureResultGalaxyLayer();
+  updateResultGalaxyProgress(0);
+  console.log("Act 3 scroll exit enabled", {
+    playerChoices,
+    readyToExit: true
+  });
+}
+
+function handleAct3ExitWheel(event) {
+  if (
+    !isAct3ScrollExitEnabled ||
+    hasAct3ExitStarted ||
+    isAct3ExitAnimating ||
+    activeFoodDrag ||
+    dragPayload
+  ) {
+    return;
+  }
+
+  if (event.deltaY <= 0) {
+    return;
+  }
+
+  event.preventDefault();
+  startAct3ExitSequence();
+}
+
+function ensureResultGalaxyLayer() {
+  if (resultGalaxyLayer) {
+    return resultGalaxyLayer;
+  }
+
+  resultGalaxyLayer = document.createElement("section");
+  resultGalaxyLayer.id = "result_state_01_diet_galaxy";
+  resultGalaxyLayer.className = "result-galaxy-layer";
+  resultGalaxyLayer.innerHTML = `
+    <div class="result-galaxy-card">
+      <p class="result-galaxy-kicker">Result 1</p>
+      <h2>&#39278;&#39135;&#26143;&#31995;</h2>
+      <p>&#20320;&#30340;&#39278;&#39135;&#20542;&#21521;&#27491;&#22312;&#27719;&#32858;&hellip;&hellip;</p>
+    </div>
+  `;
+  objectLayer.appendChild(resultGalaxyLayer);
+  return resultGalaxyLayer;
+}
+
+function updateResultGalaxyProgress(progress) {
+  const layer = ensureResultGalaxyLayer();
+
+  if (progress >= 1) {
+    layer.classList.add("result-enter");
+  }
+}
+
+function startAct3ExitSequence() {
+  if (hasAct3ExitStarted) {
+    return;
+  }
+
+  hasAct3ExitStarted = true;
+  isAct3ExitAnimating = true;
+  isAct3ScrollExitEnabled = false;
+  hideHoverInfoTooltip();
+  hideGuidanceBubbles();
+  stopHotpotFloatingBubbles();
+  ensureResultGalaxyLayer();
+  objectLayer.classList.add("act3-exit-sequence");
+
+  window.setTimeout(() => {
+    resultGalaxyLayer?.classList.add("result-enter");
+  }, ACT3_EXIT_SCROLL_CONFIG.resultDelay);
+
+  window.setTimeout(() => {
+    enterResultGalaxyState();
+  }, ACT3_EXIT_SCROLL_CONFIG.completeDelay);
+}
+
+function enterResultGalaxyState() {
+  if (currentPhase === PHASES.RESULT_GALAXY) {
+    return;
+  }
+
+  act3ExitProgress = ACT3_EXIT_SCROLL_CONFIG.maxProgress;
+  isAct3ScrollExitEnabled = false;
+  isAct3ExitAnimating = false;
+  currentPhase = PHASES.RESULT_GALAXY;
+  currentState = "result_state_01_diet_galaxy";
+  updateResultGalaxyProgress(1);
+  console.log("Entered result_state_01_diet_galaxy", {
+    playerChoices,
+    act3ExitProgress
+  });
+}
+
 function setupStateInteractions(stateId) {
   if (stateId === ACT3_STATES.FOOD_CHOICE) {
+    currentPhase = PHASES.FOOD;
     isFoodChoiceLocked = false;
     selectedFoods = [];
     showFoodGuidance();
   }
 
   if (stateId === ACT3_STATES.DRINK_CHOICE) {
+    currentPhase = PHASES.DRINK;
     isFoodChoiceLocked = true;
     lockFoodDragSources();
     showCheerZoneBreathBubble();
@@ -1257,6 +1413,8 @@ function bindHoverInfo(element, objectId) {
 
 function shouldSuppressHoverInfo(element) {
   return (
+    currentPhase === PHASES.EXIT_SCROLL ||
+    currentPhase === PHASES.RESULT_GALAXY ||
     element.classList.contains("is-used") ||
     element.classList.contains("dragging") ||
     element.classList.contains("is-dragging")
@@ -2021,6 +2179,10 @@ function playCheersAnimation(selectedDrinkElement) {
     cheersZone.classList.remove("is-cheering");
     spark.remove();
   }, 820);
+
+  window.setTimeout(() => {
+    enableAct3ScrollExit();
+  }, Math.max(900, CHEERS_SPARKLE_CONFIG.delayFromCheersStart + CHEERS_SPARKLE_CONFIG.duration + 120));
 }
 
 function getPotCount(targetId) {

@@ -107,8 +107,8 @@ const RESULT_GALAXY_LOCATING_CONFIG = {
   colors: ["#87BDF9", "#FAC4DE", "#88CF90", "#FFD933", "#F05618"],
   minSize: 14,
   maxSize: 96,
-  fieldWidth: 1920,
-  fieldHeight: 920,
+  fieldWidth: 1280,
+  fieldHeight: 640,
   mouseFollowStrength: 42,
   depthMotionMultiplier: 1.5,
   floatStrength: 18,
@@ -120,8 +120,6 @@ const RESULT_GALAXY_LOCATING_CONFIG = {
   orbitSpeedMax: 0.00075,
   freeMotionDuration: 500,
   ringAssembleDuration: 16000,
-  freeMotionSpreadX: 860,
-  freeMotionSpreadY: 420,
   orbitTiltDeg: -24,
   orbitDriftMin: 8,
   orbitDriftMax: 32,
@@ -1250,20 +1248,18 @@ function generateGalaxyParticles() {
 
   const config = RESULT_GALAXY_LOCATING_CONFIG;
   const shapeTypes = ["radial", "circle", "triangle", "rect"];
-  const safeMinSize = Math.max(6, Number(config.minSize) || 0);
-  const safeMaxSize = Math.max(safeMinSize, Number(config.maxSize) || 0);
 
   galaxyLocatingField.innerHTML = "";
   galaxyLocatingParticles = [];
 
   for (let index = 0; index < config.particleCount; index += 1) {
-    const size = randomBetween(safeMinSize, safeMaxSize);
-    const normalizedSize = normalizeValue(size, safeMinSize, safeMaxSize);
+    const size = randomBetween(config.minSize, config.maxSize);
+    const normalizedSize = normalizeValue(size, config.minSize, config.maxSize);
     const depth = 0.35 + normalizedSize * 0.85;
     const angle = randomBetween(0, Math.PI * 2);
     const distance = Math.sqrt(Math.random());
-    const ellipseRadiusX = Math.max(0, config.freeMotionSpreadX - size * 0.5) * distance;
-    const ellipseRadiusY = Math.max(0, config.freeMotionSpreadY - size * 0.5) * distance;
+    const ellipseRadiusX = (config.fieldWidth * 0.5 - size * 0.5) * distance;
+    const ellipseRadiusY = (config.fieldHeight * 0.36 - size * 0.5) * distance;
     const offsetX = Math.cos(angle) * ellipseRadiusX + randomBetween(-80, 80);
     const offsetY = Math.sin(angle) * ellipseRadiusY + randomBetween(-58, 58);
     const rotation = randomBetween(config.rotationMin, config.rotationMax);

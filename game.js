@@ -138,7 +138,7 @@ const ACT0_ALARM_CONFIG = {
 const RESULT_GALAXY_LOCATING_CONFIG = {
   stateId: RESULT_STATES.GALAXY_LOCATING,
   particleCount: 120,
-  colors: ["#87BDF9", "#FAC4DE", "#88CF90", "#FFD933", "#F05618"],
+  colors: ["#87BDF9", "#F99605", "#4199FB", "#FAC4DE", "#FF74B7", "#88CF90", "#FFD933", "#F05618"],
   minSize: 10,
   maxSize: 60,
   fieldWidth: 1280,

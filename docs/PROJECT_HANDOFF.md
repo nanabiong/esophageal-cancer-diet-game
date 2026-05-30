@@ -160,3 +160,42 @@ docs/
 - 不要把结算逻辑塞进 `handleDrinkDrop()`、food 拖拽主链路、或状态切换核心逻辑里
 - 优先新增独立的 result helper / result render / result transition 函数区
 - 每次改动前先确认这次只碰一个明确目标
+
+## 9. 当前最新进度摘要（2026-05-30）
+
+当前项目已经跑通完整演示链路：
+
+```text
+act0 -> act3 -> result demo
+```
+
+### 已完成
+
+- Act0 闹钟导入。
+- Act3 火锅 / 饮品选择。
+- 结算过渡页星云粒子。
+- 结算页 1 饮食星系 demo。
+- 结算页 2 风险说明 demo。
+
+### 当前待做
+
+- 整理文件结构。
+- 清理旧 `data/` 文件。
+- 接入真实数值表。
+- 制作 Act1 早饭。
+- 制作 Act2 午饭。
+- 用真实计算替换 result demo 文案和数值。
+
+### 后续新对话开始时必须先读
+
+- `docs/ACT3_DEV_RULES.md`
+- `docs/ACT3_CURRENT_STRUCTURE.md`
+- `docs/PROJECT_HANDOFF.md`
+
+### 后续原则
+
+- 小步修改。
+- 不重构。
+- 先做项目清点报告。
+- 不直接删除文件，先移动到 `archive/`。
+- 不改已稳定的 Act0 / Act3 / Result 逻辑。

@@ -1,0 +1,26 @@
+{
+  "_note": "Act1 breakfast choice data template. Placeholder only. This file is not fetched by the current demo.",
+  "_todo": [
+    "Fill choices after Act1 breakfast interaction design is confirmed.",
+    "Keep scoring fields compatible with Act3 where possible: riskTags and tendencyScores.",
+    "Do not change current playerChoices structure without a separate migration plan."
+  ],
+  "actId": "act1",
+  "steps": [
+    {
+      "stepId": "act1_s01_breakfastChoice",
+      "interactionType": "placeholder_breakfast_choice",
+      "choiceLimit": null,
+      "recordAs": {
+        "sceneId": "act1",
+        "stepId": "act1_s01_breakfastChoice",
+        "interactionType": "placeholder_breakfast_choice",
+        "selectedChoices": [],
+        "riskTags": [],
+        "tendencyScores": {}
+      }
+    }
+  ],
+  "choices": [],
+  "targets": []
+}

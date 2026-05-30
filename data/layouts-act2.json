@@ -1,0 +1,30 @@
+{
+  "_note": "Act2 lunch layout template. Placeholder only. This file is not fetched by the current demo.",
+  "_todo": [
+    "Fill stage objects after Act2 visual design is confirmed.",
+    "Keep field names close to layouts-act3.json: stage, defaults, introBubbles, guidanceBubbles, sharedChildren, states.",
+    "Use x, y, width, height, opacity, scale, zIndex, image, bgImage, children, and childrenRef for layout data."
+  ],
+  "stage": {
+    "width": 1920,
+    "height": 920
+  },
+  "defaults": {
+    "duration": 900,
+    "easing": "cubic-bezier(0.65, 0, 0.22, 1)"
+  },
+  "introBubbles": {},
+  "guidanceDefaults": {},
+  "guidanceBubbles": {},
+  "sharedChildren": {},
+  "states": {
+    "act2_state_00_title": {
+      "_note": "Title or opening state placeholder.",
+      "objects": {}
+    },
+    "act2_state_01_choice": {
+      "_note": "Main lunch choice state placeholder.",
+      "objects": {}
+    }
+  }
+}

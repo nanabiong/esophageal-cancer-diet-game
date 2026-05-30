@@ -1,0 +1,36 @@
+{
+  "_note": "Real scoring rules template. Placeholder only. This file is not fetched by the current demo.",
+  "_todo": [
+    "Use this file later to convert playerChoices into persona and risk outputs.",
+    "Keep persona tendency scoring separate from medical riskTags.",
+    "Result rendering should read calculated output, not infer choices from DOM."
+  ],
+  "version": 1,
+  "input": {
+    "source": "playerChoices",
+    "requiredFields": [
+      "sceneId",
+      "stepId",
+      "interactionType",
+      "riskTags",
+      "tendencyScores"
+    ]
+  },
+  "personaScoring": {
+    "_note": "Rules for converting tendencyScores into diet persona dimensions.",
+    "dimensions": [],
+    "resultMapping": []
+  },
+  "riskScoring": {
+    "_note": "Rules for converting riskTags into risk categories and scores.",
+    "tagWeights": {},
+    "categories": [],
+    "scoreBands": []
+  },
+  "output": {
+    "personaResultId": null,
+    "personaScores": {},
+    "riskScores": {},
+    "riskTags": []
+  }
+}

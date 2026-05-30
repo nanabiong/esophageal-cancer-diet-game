@@ -1,0 +1,26 @@
+{
+  "_note": "Act2 lunch choice data template. Placeholder only. This file is not fetched by the current demo.",
+  "_todo": [
+    "Fill choices after Act2 lunch interaction design is confirmed.",
+    "Keep scoring fields compatible with Act3 where possible: riskTags and tendencyScores.",
+    "Do not change current playerChoices structure without a separate migration plan."
+  ],
+  "actId": "act2",
+  "steps": [
+    {
+      "stepId": "act2_s01_lunchChoice",
+      "interactionType": "placeholder_lunch_choice",
+      "choiceLimit": null,
+      "recordAs": {
+        "sceneId": "act2",
+        "stepId": "act2_s01_lunchChoice",
+        "interactionType": "placeholder_lunch_choice",
+        "selectedChoices": [],
+        "riskTags": [],
+        "tendencyScores": {}
+      }
+    }
+  ],
+  "choices": [],
+  "targets": []
+}

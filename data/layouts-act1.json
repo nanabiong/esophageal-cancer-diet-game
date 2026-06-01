@@ -1,9 +1,9 @@
 {
-  "_note": "Act1 breakfast layout template. Placeholder only. This file is not fetched by the current demo.",
+  "_note": "Act1 breakfast layout. Low-fidelity placeholder only.",
   "_todo": [
-    "Fill stage objects after Act1 visual design is confirmed.",
-    "Keep field names close to layouts-act3.json: stage, defaults, introBubbles, guidanceBubbles, sharedChildren, states.",
-    "Use x, y, width, height, opacity, scale, zIndex, image, bgImage, children, and childrenRef for layout data."
+    "Adjust option positions and sizes here before replacing boxes with final images.",
+    "Keep field names close to layouts-act3.json: stage, defaults, states, objects.",
+    "Use image or bgImage later when final breakfast assets are ready."
   ],
   "stage": {
     "width": 1920,
@@ -13,18 +13,127 @@
     "duration": 900,
     "easing": "cubic-bezier(0.65, 0, 0.22, 1)"
   },
-  "introBubbles": {},
-  "guidanceDefaults": {},
-  "guidanceBubbles": {},
-  "sharedChildren": {},
   "states": {
-    "act1_state_00_title": {
-      "_note": "Title or opening state placeholder.",
-      "objects": {}
+    "act1_01_breakfast_choice": {
+      "_note": "Act1 1-1 breakfast choice low-fidelity state.",
+      "nextStateDelay": 1300,
+      "objects": {
+        "act1_s01_bubble_hurry": {
+          "type": "bubble",
+          "x": 80,
+          "y": 352,
+          "width": 430,
+          "height": 138,
+          "opacity": 1,
+          "scale": 1,
+          "zIndex": 20,
+          "content": "\u518d\u4e0d\u8d70\u8981\u8fdf\u5230\u4e86\uff0c\u65e9\u996d\u5c31\u9009\u5b83\u5427\uff01"
+        },
+        "act1_s01_breakfast_overnightPizza": {
+          "type": "breakfastOption",
+          "x": 136,
+          "y": 96,
+          "width": 210,
+          "height": 270,
+          "opacity": 1,
+          "scale": 1,
+          "zIndex": 8,
+          "choiceId": "act1_s01_breakfast_overnightPizza",
+          "exitDuration": 760,
+          "exitDriftX": -52,
+          "exitDriftY": -260
+        },
+        "act1_s01_breakfast_baguetteCheese": {
+          "type": "breakfastOption",
+          "x": 390,
+          "y": 486,
+          "width": 390,
+          "height": 220,
+          "opacity": 1,
+          "scale": 1,
+          "zIndex": 7,
+          "choiceId": "act1_s01_breakfast_baguetteCheese",
+          "exitDuration": 980,
+          "exitDriftX": -24,
+          "exitDriftY": -330
+        },
+        "act1_s01_breakfast_hotPorridge": {
+          "type": "breakfastOption",
+          "x": 1266,
+          "y": 538,
+          "width": 220,
+          "height": 304,
+          "opacity": 1,
+          "scale": 1,
+          "zIndex": 8,
+          "choiceId": "act1_s01_breakfast_hotPorridge",
+          "exitDuration": 1180,
+          "exitDriftX": 30,
+          "exitDriftY": -420
+        },
+        "act1_s01_breakfast_eggHamSandwich": {
+          "type": "breakfastOption",
+          "x": 1382,
+          "y": 96,
+          "width": 514,
+          "height": 220,
+          "opacity": 1,
+          "scale": 1,
+          "zIndex": 6,
+          "choiceId": "act1_s01_breakfast_eggHamSandwich",
+          "exitDuration": 900,
+          "exitDriftX": 72,
+          "exitDriftY": -300
+        },
+        "act1_s01_breakfast_cornEggMilk": {
+          "type": "breakfastOption",
+          "x": 848,
+          "y": 190,
+          "width": 270,
+          "height": 320,
+          "opacity": 1,
+          "scale": 1,
+          "zIndex": 9,
+          "choiceId": "act1_s01_breakfast_cornEggMilk",
+          "exitDuration": 1040,
+          "exitDriftX": 12,
+          "exitDriftY": -360
+        }
+      }
     },
-    "act1_state_01_choice": {
-      "_note": "Main breakfast choice state placeholder.",
-      "objects": {}
+    "act1_02_microwave_heat": {
+      "_note": "Act1 1-2 microwave heating low-fidelity state. Hold pointer down to heat up; release to cool down.",
+      "heating": {
+        "minTemperature": 0,
+        "maxTemperature": 100,
+        "completionTemperature": 100,
+        "heatUpPerSecond": 42,
+        "coolDownPerSecond": 24
+      },
+      "objects": {
+        "act1_s02_main_microwave": {
+          "type": "microwavePanel",
+          "x": 180,
+          "y": 120,
+          "width": 1040,
+          "height": 680,
+          "opacity": 1,
+          "scale": 1,
+          "zIndex": 8,
+          "content": "\u5fae\u6ce2\u7089\u52a0\u5de5"
+        },
+        "act1_s02_temperature_gauge": {
+          "type": "temperatureGauge",
+          "x": 1360,
+          "y": 220,
+          "width": 360,
+          "height": 360,
+          "opacity": 1,
+          "scale": 1,
+          "zIndex": 9,
+          "content": "\u957f\u6309\u52a0\u70ed"
+        }
+      }
     }
   }
 }

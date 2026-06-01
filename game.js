@@ -7,8 +7,18 @@ const act0Files = {
   layouts: "data/layouts-act0.json"
 };
 
+const act1Files = {
+  choices: "data/choices-act1.json",
+  layouts: "data/layouts-act1.json"
+};
+
 const resultFiles = {
   layouts: "data/layouts-result.json"
+};
+
+const ACT1_STATES = {
+  BREAKFAST_CHOICE: "act1_01_breakfast_choice",
+  MICROWAVE_HEAT: "act1_02_microwave_heat"
 };
 
 const ACT3_STATES = {
@@ -19,6 +29,8 @@ const ACT3_STATES = {
 
 const PHASES = {
   ACT0: "act0_alarm_intro",
+  ACT1_BREAKFAST: "act1_breakfast",
+  ACT1_HEATING: "act1_heating",
   INTRO: "act3_intro",
   FOOD: "act3_food",
   DRINK: "act3_drink",
@@ -479,6 +491,8 @@ const ACT3_HOVER_INFO = {
   }
 };
 
+let act1Choices = null;
+let act1Layouts = null;
 let act3Choices = null;
 let act3Layouts = null;
 let currentState = null;
@@ -497,6 +511,13 @@ let selectedFoods = [];
 const usedFoodIds = new Set();
 let selectedDrinkId = null;
 let isDrinkChoiceLocked = false;
+let selectedAct1BreakfastId = null;
+let isAct1BreakfastLocked = false;
+let act1HeatValue = 0;
+let isAct1HeatingPressed = false;
+let isAct1HeatingComplete = false;
+let act1HeatAnimationFrame = 0;
+let act1HeatLastTimestamp = 0;
 let playerChoices = [];
 let bubbleTimers = [];
 let guidanceTimers = [];
@@ -581,9 +602,35 @@ async function loadAct3Data() {
   act3Choices = await choicesResponse.json();
   act3Layouts = await layoutsResponse.json();
   await loadAct0Data();
+  await loadAct1Data();
   await loadResultData();
   transitionDuration = act3Layouts.defaults?.duration || transitionDuration;
   console.log("Act 3 数据读取完成：", { act3Choices, act3Layouts });
+}
+
+async function loadAct1Data() {
+  try {
+    const [choicesResponse, layoutsResponse] = await Promise.all([
+      fetch(act1Files.choices),
+      fetch(act1Files.layouts)
+    ]);
+
+    if (!choicesResponse.ok) {
+      throw new Error(`${act1Files.choices} 读取失败`);
+    }
+
+    if (!layoutsResponse.ok) {
+      throw new Error(`${act1Files.layouts} 读取失败`);
+    }
+
+    act1Choices = await choicesResponse.json();
+    act1Layouts = await layoutsResponse.json();
+    console.log("Act 1 数据读取完成：", { act1Choices, act1Layouts });
+  } catch (error) {
+    act1Choices = { choices: [] };
+    act1Layouts = { states: {} };
+    console.warn("Act 1 数据读取失败，使用空配置：", error);
+  }
 }
 
 async function loadAct0Data() {
@@ -801,6 +848,342 @@ function startAct3Intro() {
   introStep = 0;
   currentState = "act3_intro_00_bubble_1";
   showIntroBubble("act3_intro_bubble_1");
+}
+
+function enterAct1BreakfastChoice() {
+  const state = getAct1StateConfig(ACT1_STATES.BREAKFAST_CHOICE);
+
+  currentPhase = PHASES.ACT1_BREAKFAST;
+  currentState = ACT1_STATES.BREAKFAST_CHOICE;
+  isStateLocked = false;
+  isAct1BreakfastLocked = false;
+  selectedAct1BreakfastId = null;
+  hideHoverInfoTooltip();
+  hideGuidanceBubbles();
+  stopHotpotFloatingBubbles();
+  updateStageHeader("\u7b2c\u4e00\u5e55\u4f4e\u4fdd\u771f\u539f\u578b", "\u65e9\u6668\u2014\u2014\u65e9\u996d\u9009\u62e9");
+  objectLayer?.classList.remove("act3-exit-sequence");
+  objectLayer.querySelectorAll(".act1-scene-object").forEach((element) => element.remove());
+
+  Object.entries(state.objects || {}).forEach(([objectId, objectConfig]) => {
+    const element = createAct1ObjectElement(objectId, objectConfig);
+
+    updateAct1ObjectLayout(element, objectConfig);
+    objectLayer.appendChild(element);
+  });
+
+  console.log("Entered act1_01_breakfast_choice", { playerChoices });
+}
+
+function getAct1StateConfig(stateId) {
+  const state = act1Layouts?.states?.[stateId];
+
+  if (!state) {
+    throw new Error(`Missing Act1 state layout: ${stateId}`);
+  }
+
+  return state;
+}
+
+function createAct1ObjectElement(objectId, objectConfig) {
+  const isBreakfastOption = objectConfig.type === "breakfastOption";
+  const isMicrowavePanel = objectConfig.type === "microwavePanel";
+  const isTemperatureGauge = objectConfig.type === "temperatureGauge";
+  const element = document.createElement(isBreakfastOption ? "button" : "div");
+
+  if (isBreakfastOption) {
+    const choice = getAct1BreakfastChoice(objectConfig.choiceId || objectId);
+    const sketch = document.createElement("span");
+    const label = document.createElement("span");
+
+    element.type = "button";
+    element.dataset.choiceId = choice?.id || objectConfig.choiceId || objectId;
+    element.dataset.exitDuration = String(objectConfig.exitDuration || 900);
+    element.style.setProperty("--act1-exit-duration", `${objectConfig.exitDuration || 900}ms`);
+    element.style.setProperty("--act1-exit-x", `${objectConfig.exitDriftX || 0}px`);
+    element.style.setProperty("--act1-exit-y", `${objectConfig.exitDriftY || -300}px`);
+    sketch.className = "act1-breakfast-sketch";
+    sketch.dataset.sketch = choice?.id || objectId;
+    label.className = "act1-breakfast-label";
+    label.textContent = choice?.label || objectConfig.label || objectId;
+    element.appendChild(sketch);
+    element.appendChild(label);
+    element.addEventListener("click", () => handleAct1BreakfastChoice(element));
+    bindHoverInfo(element, element.dataset.choiceId);
+  } else if (isMicrowavePanel) {
+    element.innerHTML = `
+      <div class="act1-microwave-title">${objectConfig.content || ""}</div>
+      <div class="act1-microwave-window">
+        <span class="act1-microwave-food"></span>
+        <span class="act1-microwave-steam"></span>
+      </div>
+      <div class="act1-microwave-hint">按住鼠标加热</div>
+    `;
+    element.addEventListener("pointerdown", startAct1HeatingPress);
+  } else if (isTemperatureGauge) {
+    element.innerHTML = `
+      <div class="act1-gauge-ring">
+        <span class="act1-gauge-needle"></span>
+      </div>
+      <div class="act1-gauge-readout">0%</div>
+      <div class="act1-gauge-label">${objectConfig.content || ""}</div>
+    `;
+    element.addEventListener("pointerdown", startAct1HeatingPress);
+  } else {
+    element.textContent = objectConfig.content || "";
+  }
+
+  element.id = objectId;
+  element.dataset.objectId = objectId;
+  element.dataset.objectType = objectConfig.type;
+  element.className = getAct1ObjectClassName(objectConfig.type);
+  return element;
+}
+
+function getAct1ObjectClassName(type) {
+  if (type === "breakfastOption") {
+    return "act1-scene-object act1-breakfast-option";
+  }
+
+  if (type === "microwavePanel") {
+    return "act1-scene-object act1-microwave-panel";
+  }
+
+  if (type === "temperatureGauge") {
+    return "act1-scene-object act1-temperature-gauge";
+  }
+
+  if (type === "bubble") {
+    return "act1-scene-object act1-breakfast-bubble act3-panel";
+  }
+
+  return "act1-scene-object act3-panel";
+}
+
+function updateAct1ObjectLayout(element, objectConfig) {
+  const stage = act1Layouts?.stage || { width: DESIGN_WIDTH, height: DESIGN_HEIGHT };
+
+  element.style.left = `${(objectConfig.x / stage.width) * 100}%`;
+  element.style.top = `${(objectConfig.y / stage.height) * 100}%`;
+  element.style.width = `${(objectConfig.width / stage.width) * 100}%`;
+  element.style.height = `${(objectConfig.height / stage.height) * 100}%`;
+  element.style.opacity = objectConfig.opacity ?? 1;
+  element.style.zIndex = objectConfig.zIndex ?? 1;
+  element.style.transformOrigin = objectConfig.transformOrigin || "center center";
+  element.style.transform = `scale(${objectConfig.scale ?? 1})`;
+}
+
+function getAct1BreakfastChoice(choiceId) {
+  return act1Choices?.choices?.find((choice) => choice.id === choiceId) || null;
+}
+
+function handleAct1BreakfastChoice(optionElement) {
+  if (isAct1BreakfastLocked || currentPhase !== PHASES.ACT1_BREAKFAST) {
+    return;
+  }
+
+  const choice = getAct1BreakfastChoice(optionElement.dataset.choiceId);
+
+  if (!choice) {
+    return;
+  }
+
+  isAct1BreakfastLocked = true;
+  selectedAct1BreakfastId = choice.id;
+  isStateLocked = true;
+  hideHoverInfoTooltip();
+  recordAct1BreakfastChoice(choice);
+  optionElement.classList.add("is-selected");
+  optionElement.disabled = true;
+  objectLayer.querySelectorAll(".act1-breakfast-option").forEach((element) => {
+    if (element === optionElement) {
+      return;
+    }
+
+    const exitDuration = Number(element.dataset.exitDuration || 900);
+
+    element.disabled = true;
+    element.classList.add("is-leaving");
+    window.setTimeout(() => {
+      element.remove();
+    }, exitDuration + 80);
+  });
+
+  window.setTimeout(() => {
+    enterAct1MicrowaveHeat();
+  }, getAct1StateConfig(ACT1_STATES.BREAKFAST_CHOICE).nextStateDelay || 1300);
+}
+
+function recordAct1BreakfastChoice(choice) {
+  const record = {
+    sceneId: "act1",
+    stepId: "act1_breakfastChoice",
+    interactionType: "click_breakfast_choice",
+    breakfastId: choice.id,
+    breakfastName: choice.name,
+    label: choice.label,
+    riskTags: choice.riskTags || [],
+    tendencyScores: choice.tendencyScores || {},
+    hoverText: choice.hoverText || ""
+  };
+
+  playerChoices.push(record);
+  console.log("Act 1 breakfast choice:", record);
+  console.log("Act 1 playerChoices:", playerChoices);
+}
+
+function enterAct1MicrowaveHeat() {
+  const state = getAct1StateConfig(ACT1_STATES.MICROWAVE_HEAT);
+
+  currentPhase = PHASES.ACT1_HEATING;
+  currentState = ACT1_STATES.MICROWAVE_HEAT;
+  isStateLocked = false;
+  isAct1HeatingPressed = false;
+  isAct1HeatingComplete = false;
+  act1HeatValue = getAct1HeatingConfig().minTemperature;
+  stopAct1HeatLoop();
+  hideHoverInfoTooltip();
+  updateStageHeader("\u7b2c\u4e00\u5e55\u4f4e\u4fdd\u771f\u539f\u578b", "\u65e9\u6668\u2014\u2014\u5fae\u6ce2\u52a0\u70ed");
+  objectLayer.querySelectorAll(".act1-scene-object").forEach((element) => element.remove());
+
+  Object.entries(state.objects || {}).forEach(([objectId, objectConfig]) => {
+    const element = createAct1ObjectElement(objectId, objectConfig);
+
+    updateAct1ObjectLayout(element, objectConfig);
+    objectLayer.appendChild(element);
+  });
+
+  updateAct1HeatVisuals();
+  startAct1HeatLoop();
+  console.log("Entered act1_02_microwave_heat", { selectedAct1BreakfastId });
+}
+
+function getAct1HeatingConfig() {
+  const config = getAct1StateConfig(ACT1_STATES.MICROWAVE_HEAT).heating || {};
+
+  return {
+    minTemperature: config.minTemperature ?? 0,
+    maxTemperature: config.maxTemperature ?? 100,
+    completionTemperature: config.completionTemperature ?? config.maxTemperature ?? 100,
+    heatUpPerSecond: config.heatUpPerSecond ?? 42,
+    coolDownPerSecond: config.coolDownPerSecond ?? 24
+  };
+}
+
+function startAct1HeatingPress(event) {
+  if (currentPhase !== PHASES.ACT1_HEATING || isAct1HeatingComplete) {
+    return;
+  }
+
+  event.preventDefault();
+  isAct1HeatingPressed = true;
+  objectLayer.querySelectorAll(".act1-microwave-panel, .act1-temperature-gauge").forEach((element) => {
+    element.classList.add("is-heating");
+  });
+}
+
+function stopAct1HeatingPress() {
+  isAct1HeatingPressed = false;
+  objectLayer?.querySelectorAll(".act1-microwave-panel, .act1-temperature-gauge").forEach((element) => {
+    element.classList.remove("is-heating");
+  });
+}
+
+function startAct1HeatLoop() {
+  act1HeatLastTimestamp = performance.now();
+  act1HeatAnimationFrame = window.requestAnimationFrame(updateAct1HeatLoop);
+  window.addEventListener("pointerup", stopAct1HeatingPress);
+  window.addEventListener("pointercancel", stopAct1HeatingPress);
+}
+
+function stopAct1HeatLoop() {
+  if (act1HeatAnimationFrame) {
+    window.cancelAnimationFrame(act1HeatAnimationFrame);
+    act1HeatAnimationFrame = 0;
+  }
+
+  window.removeEventListener("pointerup", stopAct1HeatingPress);
+  window.removeEventListener("pointercancel", stopAct1HeatingPress);
+}
+
+function updateAct1HeatLoop(timestamp) {
+  const config = getAct1HeatingConfig();
+  const elapsedSeconds = Math.max(0, (timestamp - act1HeatLastTimestamp) / 1000);
+  const delta = isAct1HeatingPressed
+    ? config.heatUpPerSecond * elapsedSeconds
+    : -config.coolDownPerSecond * elapsedSeconds;
+
+  act1HeatLastTimestamp = timestamp;
+  act1HeatValue = Math.max(
+    config.minTemperature,
+    Math.min(config.maxTemperature, act1HeatValue + delta)
+  );
+  updateAct1HeatVisuals();
+
+  if (act1HeatValue >= config.completionTemperature) {
+    completeAct1Heating();
+    return;
+  }
+
+  act1HeatAnimationFrame = window.requestAnimationFrame(updateAct1HeatLoop);
+}
+
+function updateAct1HeatVisuals() {
+  const config = getAct1HeatingConfig();
+  const range = Math.max(1, config.maxTemperature - config.minTemperature);
+  const progress = Math.max(0, Math.min(1, (act1HeatValue - config.minTemperature) / range));
+  const percent = Math.round(progress * 100);
+
+  objectLayer?.querySelectorAll(".act1-temperature-gauge").forEach((element) => {
+    element.style.setProperty("--act1-heat-progress", `${percent}%`);
+    element.style.setProperty("--act1-heat-ratio", progress.toFixed(3));
+    element.style.setProperty("--act1-gauge-fill", `${(progress * 75).toFixed(2)}%`);
+    element.style.setProperty("--act1-heat-deg", `${-135 + progress * 270}deg`);
+    element.dataset.temperature = String(percent);
+    element.querySelector(".act1-gauge-readout").textContent = `${percent}%`;
+  });
+  objectLayer?.querySelectorAll(".act1-microwave-panel").forEach((element) => {
+    element.style.setProperty("--act1-heat-progress", `${percent}%`);
+    element.style.setProperty("--act1-heat-ratio", progress.toFixed(3));
+  });
+}
+
+function completeAct1Heating() {
+  if (isAct1HeatingComplete) {
+    return;
+  }
+
+  const config = getAct1HeatingConfig();
+
+  isAct1HeatingComplete = true;
+  isAct1HeatingPressed = false;
+  act1HeatValue = config.maxTemperature;
+  stopAct1HeatLoop();
+  updateAct1HeatVisuals();
+  objectLayer.querySelectorAll(".act1-microwave-panel, .act1-temperature-gauge").forEach((element) => {
+    element.classList.add("is-complete");
+    element.classList.remove("is-heating");
+  });
+  recordAct1HeatingResult();
+}
+
+function recordAct1HeatingResult() {
+  const config = getAct1HeatingConfig();
+  const record = {
+    sceneId: "act1",
+    stepId: "act1_heatingResult",
+    interactionType: "hold_to_heat",
+    breakfastId: selectedAct1BreakfastId,
+    completed: true,
+    temperature: Math.round(act1HeatValue),
+    completionTemperature: config.completionTemperature,
+    riskTags: [],
+    tendencyScores: {}
+  };
+
+  playerChoices.push(record);
+  console.log("Act 1 heating result:", record);
+  console.log("Act 1 playerChoices:", playerChoices);
 }
 
 function startConfiguredEntry() {
@@ -1037,7 +1420,7 @@ function completeAct0() {
       return;
     }
 
-    startAct3Intro();
+    enterAct1BreakfastChoice();
   }, ACT0_ALARM_CONFIG.completeDelay);
 }
 
@@ -3194,7 +3577,7 @@ function createHoverInfoTooltip() {
 }
 
 function bindHoverInfo(element, objectId) {
-  const hoverInfo = ACT3_HOVER_INFO[objectId];
+  const hoverInfo = getHoverInfo(objectId);
 
   element.classList.toggle("has-hover-info", Boolean(hoverInfo));
 
@@ -3218,6 +3601,19 @@ function bindHoverInfo(element, objectId) {
   element.addEventListener("pointerleave", scheduleHideHoverInfo);
   element.addEventListener("pointerdown", hideHoverInfoTooltip);
   element.addEventListener("dragstart", hideHoverInfoTooltip);
+}
+
+function getHoverInfo(objectId) {
+  const act1Choice = getAct1BreakfastChoice(objectId);
+
+  if (act1Choice) {
+    return {
+      title: act1Choice.label || act1Choice.name,
+      body: act1Choice.hoverText || ""
+    };
+  }
+
+  return ACT3_HOVER_INFO[objectId];
 }
 
 function shouldSuppressHoverInfo(element) {
@@ -3246,7 +3642,7 @@ function scheduleHideHoverInfo() {
 }
 
 function showHoverInfoTooltip(objectId, event) {
-  const hoverInfo = ACT3_HOVER_INFO[objectId];
+  const hoverInfo = getHoverInfo(objectId);
   const tooltip = createHoverInfoTooltip();
 
   if (!hoverInfo || !tooltip) {

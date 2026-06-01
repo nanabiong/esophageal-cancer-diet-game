@@ -12,14 +12,33 @@ const act1Files = {
   layouts: "data/layouts-act1.json"
 };
 
+const act2Files = {
+  choices: "data/choices-act2.json",
+  layouts: "data/layouts-act2.json"
+};
+
 const resultFiles = {
   layouts: "data/layouts-result.json"
 };
 
 const ACT1_STATES = {
   BREAKFAST_CHOICE: "act1_01_breakfast_choice",
-  MICROWAVE_HEAT: "act1_02_microwave_heat"
+  MICROWAVE_HEAT: "act1_02_microwave_heat",
+  EATING_SPEED: "act1_03_eating_speed"
 };
+
+const ACT2_STATES = {
+  LUNCH_INTRO: "act2_01_lunch_intro",
+  LUNCH_CHOICE: "act2_02_lunch_choice",
+  LUNCH_DONE: "act2_03_lunch_done"
+};
+
+// ---------------------------------------------------------------------------
+// Act2 Lunch Module constants placeholder
+// Keep Act2 additions inside clearly marked Act2 sections. Do not mix Act2
+// state constants into Act1 or Act3 interaction code unless a task explicitly
+// asks for shared behavior.
+// ---------------------------------------------------------------------------
 
 const ACT3_STATES = {
   TITLE: "act3_state_00_title",
@@ -31,6 +50,8 @@ const PHASES = {
   ACT0: "act0_alarm_intro",
   ACT1_BREAKFAST: "act1_breakfast",
   ACT1_HEATING: "act1_heating",
+  ACT1_EATING: "act1_eating",
+  ACT2_LUNCH: "act2_lunch",
   INTRO: "act3_intro",
   FOOD: "act3_food",
   DRINK: "act3_drink",
@@ -493,6 +514,8 @@ const ACT3_HOVER_INFO = {
 
 let act1Choices = null;
 let act1Layouts = null;
+let act2Choices = null;
+let act2Layouts = null;
 let act3Choices = null;
 let act3Layouts = null;
 let currentState = null;
@@ -518,6 +541,12 @@ let isAct1HeatingPressed = false;
 let isAct1HeatingComplete = false;
 let act1HeatAnimationFrame = 0;
 let act1HeatLastTimestamp = 0;
+let act1EatingClickCount = 0;
+let act1EatingStartedAt = 0;
+let act1EatingRequiredClicks = 1;
+let isAct1EatingComplete = false;
+let selectedAct2LunchId = null;
+let isAct2LunchLocked = false;
 let playerChoices = [];
 let bubbleTimers = [];
 let guidanceTimers = [];
@@ -603,6 +632,7 @@ async function loadAct3Data() {
   act3Layouts = await layoutsResponse.json();
   await loadAct0Data();
   await loadAct1Data();
+  await loadAct2Data();
   await loadResultData();
   transitionDuration = act3Layouts.defaults?.duration || transitionDuration;
   console.log("Act 3 数据读取完成：", { act3Choices, act3Layouts });
@@ -630,6 +660,31 @@ async function loadAct1Data() {
     act1Choices = { choices: [] };
     act1Layouts = { states: {} };
     console.warn("Act 1 数据读取失败，使用空配置：", error);
+  }
+}
+
+async function loadAct2Data() {
+  try {
+    const [choicesResponse, layoutsResponse] = await Promise.all([
+      fetch(act2Files.choices),
+      fetch(act2Files.layouts)
+    ]);
+
+    if (!choicesResponse.ok) {
+      throw new Error(`${act2Files.choices} 读取失败`);
+    }
+
+    if (!layoutsResponse.ok) {
+      throw new Error(`${act2Files.layouts} 读取失败`);
+    }
+
+    act2Choices = await choicesResponse.json();
+    act2Layouts = await layoutsResponse.json();
+    console.log("Act 2 数据读取完成：", { act2Choices, act2Layouts });
+  } catch (error) {
+    act2Choices = { choices: [] };
+    act2Layouts = { states: {} };
+    console.warn("Act 2 数据读取失败，使用空配置：", error);
   }
 }
 
@@ -850,6 +905,15 @@ function startAct3Intro() {
   showIntroBubble("act3_intro_bubble_1");
 }
 
+// ---------------------------------------------------------------------------
+// Act1 Breakfast Module
+// Owner area for Act1 breakfast flow only.
+// Allowed here: Act1 state entry, Act1 low-fidelity rendering, Act1-specific
+// interactions, and Act1 records appended to playerChoices.
+// Avoid here: Act0 alarm internals, Act3 drag/drop, Result transitions, and
+// changes to existing playerChoices/riskTags semantics.
+// ---------------------------------------------------------------------------
+
 function enterAct1BreakfastChoice() {
   const state = getAct1StateConfig(ACT1_STATES.BREAKFAST_CHOICE);
 
@@ -889,6 +953,7 @@ function createAct1ObjectElement(objectId, objectConfig) {
   const isBreakfastOption = objectConfig.type === "breakfastOption";
   const isMicrowavePanel = objectConfig.type === "microwavePanel";
   const isTemperatureGauge = objectConfig.type === "temperatureGauge";
+  const isEatingFood = objectConfig.type === "eatingFood";
   const element = document.createElement(isBreakfastOption ? "button" : "div");
 
   if (isBreakfastOption) {
@@ -929,6 +994,27 @@ function createAct1ObjectElement(objectId, objectConfig) {
       <div class="act1-gauge-label">${objectConfig.content || ""}</div>
     `;
     element.addEventListener("pointerdown", startAct1HeatingPress);
+  } else if (objectConfig.type === "atmosphereFrame") {
+    element.innerHTML = `
+      <div class="act1-window-tree"></div>
+      <div class="act1-window-rain"></div>
+      <div class="act1-window-bird"></div>
+      <div class="act1-window-label">${objectConfig.content || ""}</div>
+    `;
+  } else if (objectConfig.type === "eatingTable") {
+    element.innerHTML = `
+      <div class="act1-table-line"></div>
+      <div class="act1-table-label">${objectConfig.content || ""}</div>
+    `;
+  } else if (isEatingFood) {
+    element.innerHTML = `
+      <div class="act1-plate"></div>
+      <button class="act1-eating-food-button" type="button">
+        <span class="act1-eating-food-bite"></span>
+        <span class="act1-eating-food-label">${objectConfig.content || ""}</span>
+      </button>
+    `;
+    element.querySelector(".act1-eating-food-button").addEventListener("click", handleAct1EatingFoodClick);
   } else {
     element.textContent = objectConfig.content || "";
   }
@@ -951,6 +1037,18 @@ function getAct1ObjectClassName(type) {
 
   if (type === "temperatureGauge") {
     return "act1-scene-object act1-temperature-gauge";
+  }
+
+  if (type === "atmosphereFrame") {
+    return "act1-scene-object act1-atmosphere-frame";
+  }
+
+  if (type === "eatingTable") {
+    return "act1-scene-object act1-eating-table";
+  }
+
+  if (type === "eatingFood") {
+    return "act1-scene-object act1-eating-food";
   }
 
   if (type === "bubble") {
@@ -1165,6 +1263,9 @@ function completeAct1Heating() {
     element.classList.remove("is-heating");
   });
   recordAct1HeatingResult();
+  window.setTimeout(() => {
+    enterAct1EatingSpeed();
+  }, 700);
 }
 
 function recordAct1HeatingResult() {
@@ -1184,6 +1285,296 @@ function recordAct1HeatingResult() {
   playerChoices.push(record);
   console.log("Act 1 heating result:", record);
   console.log("Act 1 playerChoices:", playerChoices);
+}
+
+function enterAct1EatingSpeed() {
+  const state = getAct1StateConfig(ACT1_STATES.EATING_SPEED);
+  const config = getAct1EatingConfig();
+
+  currentPhase = PHASES.ACT1_EATING;
+  currentState = ACT1_STATES.EATING_SPEED;
+  isStateLocked = false;
+  act1EatingClickCount = 0;
+  act1EatingStartedAt = 0;
+  act1EatingRequiredClicks = config.requiredClicks;
+  isAct1EatingComplete = false;
+  hideHoverInfoTooltip();
+  updateStageHeader("\u7b2c\u4e00\u5e55\u4f4e\u4fdd\u771f\u539f\u578b", "\u65e9\u6668\u2014\u2014\u5403\u65e9\u996d");
+  objectLayer.querySelectorAll(".act1-scene-object").forEach((element) => element.remove());
+
+  Object.entries(state.objects || {}).forEach(([objectId, objectConfig]) => {
+    const element = createAct1ObjectElement(objectId, objectConfig);
+
+    updateAct1ObjectLayout(element, objectConfig);
+    objectLayer.appendChild(element);
+  });
+
+  updateAct1EatingVisuals();
+  console.log("Entered act1_03_eating_speed", { selectedAct1BreakfastId });
+}
+
+function getAct1EatingConfig() {
+  const config = getAct1StateConfig(ACT1_STATES.EATING_SPEED).eating || {};
+
+  return {
+    requiredClicks: Math.max(1, config.requiredClicks ?? 6),
+    fastMaxMs: config.fastMaxMs ?? 3500,
+    mediumMaxMs: config.mediumMaxMs ?? 7000,
+    nextStateDelay: config.nextStateDelay ?? 1200
+  };
+}
+
+function handleAct1EatingFoodClick() {
+  if (currentPhase !== PHASES.ACT1_EATING || isAct1EatingComplete) {
+    return;
+  }
+
+  if (!act1EatingStartedAt) {
+    act1EatingStartedAt = performance.now();
+  }
+
+  act1EatingClickCount = Math.min(act1EatingRequiredClicks, act1EatingClickCount + 1);
+  updateAct1EatingVisuals();
+
+  if (act1EatingClickCount >= act1EatingRequiredClicks) {
+    completeAct1Eating();
+  }
+}
+
+function updateAct1EatingVisuals() {
+  const progress = Math.max(0, Math.min(1, act1EatingClickCount / act1EatingRequiredClicks));
+  const remaining = Math.max(0, 1 - progress);
+
+  objectLayer?.querySelectorAll(".act1-eating-food").forEach((element) => {
+    element.style.setProperty("--act1-food-remaining", remaining.toFixed(3));
+    element.style.setProperty("--act1-bite-size", `${Math.round(progress * 90)}px`);
+    element.dataset.eatenClicks = String(act1EatingClickCount);
+    element.dataset.requiredClicks = String(act1EatingRequiredClicks);
+    const label = element.querySelector(".act1-eating-food-label");
+
+    if (label) {
+      label.textContent = progress >= 1
+        ? "\u53ea\u5269\u76d8\u5b50"
+        : `${act1EatingClickCount}/${act1EatingRequiredClicks}`;
+    }
+  });
+}
+
+function completeAct1Eating() {
+  if (isAct1EatingComplete) {
+    return;
+  }
+
+  isAct1EatingComplete = true;
+  const elapsedMs = Math.max(0, Math.round(performance.now() - act1EatingStartedAt));
+  const config = getAct1EatingConfig();
+  const eatingSpeed = getAct1EatingSpeed(elapsedMs, config);
+
+  objectLayer.querySelectorAll(".act1-eating-food").forEach((element) => {
+    element.classList.add("is-complete");
+  });
+  recordAct1EatingSpeed(elapsedMs, eatingSpeed);
+
+  window.setTimeout(() => {
+    objectLayer.querySelectorAll(".act1-scene-object").forEach((element) => element.remove());
+    enterAct2LunchIntro();
+  }, config.nextStateDelay);
+}
+
+function getAct1EatingSpeed(elapsedMs, config) {
+  if (elapsedMs <= config.fastMaxMs) {
+    return "fast";
+  }
+
+  if (elapsedMs <= config.mediumMaxMs) {
+    return "medium";
+  }
+
+  return "slow";
+}
+
+function recordAct1EatingSpeed(elapsedMs, eatingSpeed) {
+  const record = {
+    sceneId: "act1",
+    stepId: "act1_eatingSpeed",
+    interactionType: "click_to_eat",
+    breakfastId: selectedAct1BreakfastId,
+    clickCount: act1EatingClickCount,
+    requiredClicks: act1EatingRequiredClicks,
+    elapsedMs,
+    eatingSpeed,
+    riskTags: [],
+    tendencyScores: {}
+  };
+
+  playerChoices.push(record);
+  console.log("Act 1 eating speed:", record);
+  console.log("Act 1 playerChoices:", playerChoices);
+}
+
+// ---------------------------------------------------------------------------
+// Act2 Lunch Module
+// Reserved for future Act2 lunch flow.
+// Add Act2 functions below this marker when implementing lunch behavior.
+// Do not insert Act2 logic into Act1 Breakfast Module, Act3 drag/drop handlers,
+// or Result animation helpers.
+// ---------------------------------------------------------------------------
+
+function enterAct2LunchIntro() {
+  renderAct2State(ACT2_STATES.LUNCH_INTRO);
+  window.setTimeout(() => {
+    enterAct2LunchChoice();
+  }, getAct2StateConfig(ACT2_STATES.LUNCH_INTRO).nextStateDelay || 1200);
+}
+
+function enterAct2LunchChoice() {
+  selectedAct2LunchId = null;
+  isAct2LunchLocked = false;
+  renderAct2State(ACT2_STATES.LUNCH_CHOICE);
+}
+
+function enterAct2LunchDone() {
+  renderAct2State(ACT2_STATES.LUNCH_DONE);
+  window.setTimeout(() => {
+    objectLayer.querySelectorAll(".act2-scene-object").forEach((element) => element.remove());
+    startAct3Intro();
+  }, getAct2StateConfig(ACT2_STATES.LUNCH_DONE).nextStateDelay || 1200);
+}
+
+function renderAct2State(stateId) {
+  const state = getAct2StateConfig(stateId);
+
+  currentPhase = PHASES.ACT2_LUNCH;
+  currentState = stateId;
+  isStateLocked = false;
+  hideHoverInfoTooltip();
+  updateStageHeader("\u7b2c\u4e8c\u5e55\u4f4e\u4fdd\u771f\u539f\u578b", "\u4e2d\u5348\u2014\u2014\u5348\u9910\u9009\u62e9");
+  objectLayer.querySelectorAll(".act2-scene-object").forEach((element) => element.remove());
+
+  Object.entries(state.objects || {}).forEach(([objectId, objectConfig]) => {
+    const element = createAct2ObjectElement(objectId, objectConfig);
+
+    updateAct2ObjectLayout(element, objectConfig);
+    objectLayer.appendChild(element);
+  });
+
+  console.log(`Entered ${stateId}`, { playerChoices });
+}
+
+function getAct2StateConfig(stateId) {
+  const state = act2Layouts?.states?.[stateId];
+
+  if (!state) {
+    throw new Error(`Missing Act2 state layout: ${stateId}`);
+  }
+
+  return state;
+}
+
+function createAct2ObjectElement(objectId, objectConfig) {
+  const isLunchOption = objectConfig.type === "lunchOption";
+  const element = document.createElement(isLunchOption ? "button" : "div");
+
+  if (isLunchOption) {
+    const choice = getAct2LunchChoice(objectConfig.choiceId || objectId);
+    const sketch = document.createElement("span");
+    const label = document.createElement("span");
+
+    element.type = "button";
+    element.dataset.choiceId = choice?.id || objectConfig.choiceId || objectId;
+    sketch.className = "act2-lunch-sketch";
+    sketch.dataset.sketch = choice?.id || objectId;
+    label.className = "act2-lunch-label";
+    label.textContent = choice?.label || objectConfig.label || objectId;
+    element.appendChild(sketch);
+    element.appendChild(label);
+    element.addEventListener("click", () => handleAct2LunchChoice(element));
+    bindHoverInfo(element, element.dataset.choiceId);
+  } else {
+    element.textContent = objectConfig.content || "";
+  }
+
+  element.id = objectId;
+  element.dataset.objectId = objectId;
+  element.dataset.objectType = objectConfig.type;
+  element.className = getAct2ObjectClassName(objectConfig.type);
+  return element;
+}
+
+function getAct2ObjectClassName(type) {
+  if (type === "lunchOption") {
+    return "act2-scene-object act2-lunch-option";
+  }
+
+  if (type === "act2IntroPanel") {
+    return "act2-scene-object act2-intro-panel act3-panel";
+  }
+
+  if (type === "act2DonePanel") {
+    return "act2-scene-object act2-done-panel act3-panel";
+  }
+
+  return "act2-scene-object act3-panel";
+}
+
+function updateAct2ObjectLayout(element, objectConfig) {
+  const stage = act2Layouts?.stage || { width: DESIGN_WIDTH, height: DESIGN_HEIGHT };
+
+  element.style.left = `${(objectConfig.x / stage.width) * 100}%`;
+  element.style.top = `${(objectConfig.y / stage.height) * 100}%`;
+  element.style.width = `${(objectConfig.width / stage.width) * 100}%`;
+  element.style.height = `${(objectConfig.height / stage.height) * 100}%`;
+  element.style.opacity = objectConfig.opacity ?? 1;
+  element.style.zIndex = objectConfig.zIndex ?? 1;
+  element.style.transformOrigin = objectConfig.transformOrigin || "center center";
+  element.style.transform = `scale(${objectConfig.scale ?? 1})`;
+}
+
+function getAct2LunchChoice(choiceId) {
+  return act2Choices?.choices?.find((choice) => choice.id === choiceId) || null;
+}
+
+function handleAct2LunchChoice(optionElement) {
+  if (isAct2LunchLocked || currentPhase !== PHASES.ACT2_LUNCH) {
+    return;
+  }
+
+  const choice = getAct2LunchChoice(optionElement.dataset.choiceId);
+
+  if (!choice) {
+    return;
+  }
+
+  isAct2LunchLocked = true;
+  selectedAct2LunchId = choice.id;
+  hideHoverInfoTooltip();
+  recordAct2LunchChoice(choice);
+  optionElement.classList.add("is-selected");
+  objectLayer.querySelectorAll(".act2-lunch-option").forEach((element) => {
+    element.disabled = true;
+  });
+
+  window.setTimeout(() => {
+    enterAct2LunchDone();
+  }, 520);
+}
+
+function recordAct2LunchChoice(choice) {
+  const record = {
+    sceneId: "act2",
+    stepId: "act2_lunchChoice",
+    interactionType: "click_lunch_choice",
+    lunchId: choice.id,
+    lunchName: choice.name,
+    label: choice.label,
+    riskTags: choice.riskTags || [],
+    tendencyScores: choice.tendencyScores || {},
+    hoverText: choice.hoverText || ""
+  };
+
+  playerChoices.push(record);
+  console.log("Act 2 lunch choice:", record);
+  console.log("Act 2 playerChoices:", playerChoices);
 }
 
 function startConfiguredEntry() {
@@ -3610,6 +4001,15 @@ function getHoverInfo(objectId) {
     return {
       title: act1Choice.label || act1Choice.name,
       body: act1Choice.hoverText || ""
+    };
+  }
+
+  const act2Choice = getAct2LunchChoice(objectId);
+
+  if (act2Choice) {
+    return {
+      title: act2Choice.label || act2Choice.name,
+      body: act2Choice.hoverText || ""
     };
   }
 

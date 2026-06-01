@@ -1,26 +1,51 @@
 {
-  "_note": "Act2 lunch choice data template. Placeholder only. This file is not fetched by the current demo.",
+  "_note": "Act2 lunch choice data. Low-fidelity placeholder values for the first lunch selection.",
   "_todo": [
-    "Fill choices after Act2 lunch interaction design is confirmed.",
-    "Keep scoring fields compatible with Act3 where possible: riskTags and tendencyScores.",
+    "Replace riskTags and tendencyScores with real values after the scoring table is confirmed.",
+    "Keep each choice id matched with layouts-act2.json object choiceId.",
     "Do not change current playerChoices structure without a separate migration plan."
   ],
   "actId": "act2",
   "steps": [
     {
-      "stepId": "act2_s01_lunchChoice",
-      "interactionType": "placeholder_lunch_choice",
-      "choiceLimit": null,
-      "recordAs": {
-        "sceneId": "act2",
-        "stepId": "act2_s01_lunchChoice",
-        "interactionType": "placeholder_lunch_choice",
-        "selectedChoices": [],
-        "riskTags": [],
-        "tendencyScores": {}
-      }
+      "stepId": "act2_lunchChoice",
+      "interactionType": "click_lunch_choice",
+      "choiceLimit": 1
     }
   ],
-  "choices": [],
+  "choices": [
+    {
+      "id": "act2_s02_lunch_onigiri",
+      "name": "\u4fbf\u5229\u5e97\u996d\u56e2",
+      "label": "\u4fbf\u5229\u5e97\u996d\u56e2",
+      "riskTags": [],
+      "tendencyScores": {},
+      "hoverText": "\u62ff\u8d77\u6765\u5c31\u80fd\u5403\uff0c\u662f\u6700\u5feb\u7684\u4e2d\u5348\u89e3\u6cd5\u3002"
+    },
+    {
+      "id": "act2_s02_lunch_malatang",
+      "name": "\u9ebb\u8fa3\u70eb",
+      "label": "\u9ebb\u8fa3\u70eb",
+      "riskTags": [],
+      "tendencyScores": {},
+      "hoverText": "\u70ed\u6c14\u3001\u6c64\u5e95\u548c\u81ea\u9009\u83dc\u88c5\u5728\u4e00\u7897\u91cc\u3002"
+    },
+    {
+      "id": "act2_s02_lunch_friedChickenBurger",
+      "name": "\u70b8\u9e21\u6c49\u5821",
+      "label": "\u70b8\u9e21\u6c49\u5821",
+      "riskTags": [],
+      "tendencyScores": {},
+      "hoverText": "\u9999\u8106\u3001\u9876\u9971\uff0c\u4e5f\u5f88\u96be\u5ffd\u7565\u7684\u4e00\u987f\u3002"
+    },
+    {
+      "id": "act2_s02_lunch_canteenSet",
+      "name": "\u516c\u53f8\u98df\u5802\u5957\u9910",
+      "label": "\u516c\u53f8\u98df\u5802\u5957\u9910",
+      "riskTags": [],
+      "tendencyScores": {},
+      "hoverText": "\u4e3b\u98df\u3001\u83dc\u548c\u6c64\u90fd\u5728\u4e00\u4e2a\u76d8\u5b50\u91cc\uff0c\u7a33\u7a33\u5f53\u5f53\u3002"
+    }
+  ],
   "targets": []
 }

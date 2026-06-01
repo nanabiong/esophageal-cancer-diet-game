@@ -134,6 +134,61 @@
           "content": "\u957f\u6309\u52a0\u70ed"
         }
       }
+    },
+    "act1_03_eating_speed": {
+      "_note": "Act1 1-3 eating speed low-fidelity state. Click the selected breakfast until it is finished.",
+      "eating": {
+        "requiredClicks": 6,
+        "fastMaxMs": 3500,
+        "mediumMaxMs": 7000,
+        "nextStateDelay": 1200
+      },
+      "objects": {
+        "act1_s03_window_atmosphere": {
+          "type": "atmosphereFrame",
+          "x": 374,
+          "y": 48,
+          "width": 1130,
+          "height": 312,
+          "opacity": 1,
+          "scale": 1,
+          "zIndex": 4,
+          "content": "\u7a97\u53f0 / \u6811 / \u5c0f\u9e1f"
+        },
+        "act1_s03_bubble_start": {
+          "type": "bubble",
+          "x": 82,
+          "y": 478,
+          "width": 330,
+          "height": 118,
+          "opacity": 1,
+          "scale": 1,
+          "zIndex": 20,
+          "content": "\u5f00\u52a8\u5566!"
+        },
+        "act1_s03_table": {
+          "type": "eatingTable",
+          "x": 358,
+          "y": 506,
+          "width": 1198,
+          "height": 384,
+          "opacity": 1,
+          "scale": 1,
+          "zIndex": 5,
+          "content": "\u9910\u684c"
+        },
+        "act1_s03_selected_food": {
+          "type": "eatingFood",
+          "x": 762,
+          "y": 594,
+          "width": 390,
+          "height": 220,
+          "opacity": 1,
+          "scale": 1,
+          "zIndex": 9,
+          "content": "\u70b9\u51fb\u5f00\u5403"
+        }
+      }
     }
   }
 }

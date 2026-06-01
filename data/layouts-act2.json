@@ -1,9 +1,9 @@
 {
-  "_note": "Act2 lunch layout template. Placeholder only. This file is not fetched by the current demo.",
+  "_note": "Act2 lunch low-fidelity placeholder flow.",
   "_todo": [
-    "Fill stage objects after Act2 visual design is confirmed.",
-    "Keep field names close to layouts-act3.json: stage, defaults, introBubbles, guidanceBubbles, sharedChildren, states.",
-    "Use x, y, width, height, opacity, scale, zIndex, image, bgImage, children, and childrenRef for layout data."
+    "Adjust lunch option positions and sizes here before replacing placeholders with final art.",
+    "Keep field names close to layouts-act3.json: stage, defaults, states, objects.",
+    "This file is fetched by Act2 only after Act2 is entered."
   ],
   "stage": {
     "width": 1920,
@@ -13,18 +13,89 @@
     "duration": 900,
     "easing": "cubic-bezier(0.65, 0, 0.22, 1)"
   },
-  "introBubbles": {},
-  "guidanceDefaults": {},
-  "guidanceBubbles": {},
-  "sharedChildren": {},
   "states": {
-    "act2_state_00_title": {
-      "_note": "Title or opening state placeholder.",
-      "objects": {}
+    "act2_01_lunch_intro": {
+      "_note": "Act2 lunch intro placeholder.",
+      "nextStateDelay": 1200,
+      "objects": {
+        "act2_s01_intro_panel": {
+          "type": "act2IntroPanel",
+          "x": 468,
+          "y": 254,
+          "width": 984,
+          "height": 330,
+          "opacity": 1,
+          "scale": 1,
+          "zIndex": 6,
+          "content": "\u4e2d\u5348\u5230\u4e86\uff0c\u8be5\u5403\u70b9\u4ec0\u4e48\uff1f"
+        }
+      }
     },
-    "act2_state_01_choice": {
-      "_note": "Main lunch choice state placeholder.",
-      "objects": {}
+    "act2_02_lunch_choice": {
+      "_note": "Act2 lunch choice placeholder.",
+      "objects": {
+        "act2_s02_lunch_onigiri": {
+          "type": "lunchOption",
+          "x": 210,
+          "y": 210,
+          "width": 330,
+          "height": 260,
+          "opacity": 1,
+          "scale": 1,
+          "zIndex": 8,
+          "choiceId": "act2_s02_lunch_onigiri"
+        },
+        "act2_s02_lunch_malatang": {
+          "type": "lunchOption",
+          "x": 620,
+          "y": 420,
+          "width": 360,
+          "height": 280,
+          "opacity": 1,
+          "scale": 1,
+          "zIndex": 9,
+          "choiceId": "act2_s02_lunch_malatang"
+        },
+        "act2_s02_lunch_friedChickenBurger": {
+          "type": "lunchOption",
+          "x": 1030,
+          "y": 180,
+          "width": 390,
+          "height": 250,
+          "opacity": 1,
+          "scale": 1,
+          "zIndex": 8,
+          "choiceId": "act2_s02_lunch_friedChickenBurger"
+        },
+        "act2_s02_lunch_canteenSet": {
+          "type": "lunchOption",
+          "x": 1354,
+          "y": 520,
+          "width": 390,
+          "height": 250,
+          "opacity": 1,
+          "scale": 1,
+          "zIndex": 7,
+          "choiceId": "act2_s02_lunch_canteenSet"
+        }
+      }
+    },
+    "act2_03_lunch_done": {
+      "_note": "Act2 lunch recorded placeholder.",
+      "nextStateDelay": 1200,
+      "objects": {
+        "act2_s03_done_panel": {
+          "type": "act2DonePanel",
+          "x": 540,
+          "y": 300,
+          "width": 840,
+          "height": 260,
+          "opacity": 1,
+          "scale": 1,
+          "zIndex": 10,
+          "content": "\u5348\u9910\u9009\u62e9\u5df2\u8bb0\u5f55\u3002"
+        }
+      }
     }
   }
 }

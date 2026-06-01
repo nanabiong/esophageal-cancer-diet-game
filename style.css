@@ -837,6 +837,12 @@ button:disabled {
   font-weight: 400;
 }
 
+/* ---------------------------------------------------------------------------
+   Act1 Breakfast Styles
+   Keep Act1-only low-fidelity breakfast and microwave styles in this section.
+   Do not place Act3 drag/drop, Act0 alarm, or Result animation styles here.
+--------------------------------------------------------------------------- */
+
 .act1-breakfast-bubble {
   justify-content: center;
   border-radius: 26px;
@@ -1160,6 +1166,296 @@ button:disabled {
 .act1-temperature-gauge.is-complete .act1-gauge-readout::after {
   content: " \5b8c\6210";
   font-size: 22px;
+}
+
+.act1-atmosphere-frame {
+  overflow: hidden;
+  border: 4px solid #171717;
+  background:
+    linear-gradient(180deg, rgba(235, 244, 242, 0.94), rgba(214, 226, 221, 0.92));
+  box-shadow: 6px 6px 0 rgba(0, 0, 0, 0.12);
+}
+
+.act1-window-tree {
+  position: absolute;
+  left: 36%;
+  top: -20%;
+  width: 120px;
+  height: 390px;
+  border-radius: 999px;
+  background: #171717;
+  transform: rotate(12deg);
+}
+
+.act1-window-tree::before,
+.act1-window-tree::after {
+  content: "";
+  position: absolute;
+  border-radius: 999px;
+  background: rgba(55, 86, 70, 0.72);
+}
+
+.act1-window-tree::before {
+  left: -210px;
+  top: -12px;
+  width: 360px;
+  height: 150px;
+}
+
+.act1-window-tree::after {
+  left: 28px;
+  top: 36px;
+  width: 360px;
+  height: 132px;
+}
+
+.act1-window-rain {
+  position: absolute;
+  inset: 0;
+  background:
+    repeating-linear-gradient(105deg, transparent 0 34px, rgba(255, 255, 255, 0.82) 35px 40px, transparent 41px 74px);
+  opacity: 0.7;
+}
+
+.act1-window-bird {
+  position: absolute;
+  right: 84px;
+  bottom: 48px;
+  width: 70px;
+  height: 82px;
+  border: 4px solid #171717;
+  border-radius: 48% 52% 42% 42%;
+  background: rgba(255, 255, 255, 0.5);
+}
+
+.act1-window-bird::before,
+.act1-window-bird::after {
+  content: "";
+  position: absolute;
+  background: #171717;
+}
+
+.act1-window-bird::before {
+  left: 22px;
+  top: 24px;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  box-shadow: 22px 0 0 #171717;
+}
+
+.act1-window-bird::after {
+  left: 20px;
+  bottom: -26px;
+  width: 30px;
+  height: 30px;
+  border-left: 4px solid #171717;
+  border-right: 4px solid #171717;
+  background: transparent;
+}
+
+.act1-window-label {
+  position: absolute;
+  left: 28px;
+  bottom: 20px;
+  font-family: YouYuan, "幼圆", "Microsoft YaHei", sans-serif;
+  font-size: 22px;
+  font-weight: 800;
+}
+
+.act1-eating-table {
+  border: 4px solid #171717;
+  background: #d7d7d7;
+  box-shadow: 6px 6px 0 rgba(0, 0, 0, 0.12);
+}
+
+.act1-table-line {
+  position: absolute;
+  left: 12%;
+  right: 12%;
+  bottom: 62px;
+  height: 5px;
+  background: #171717;
+}
+
+.act1-table-label {
+  position: absolute;
+  left: 28px;
+  top: 24px;
+  font-family: YouYuan, "幼圆", "Microsoft YaHei", sans-serif;
+  font-size: 24px;
+  font-weight: 800;
+}
+
+.act1-eating-food {
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+}
+
+.act1-plate {
+  position: absolute;
+  left: 12%;
+  right: 12%;
+  bottom: 16%;
+  height: 36%;
+  border: 5px solid #171717;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.34);
+}
+
+.act1-eating-food-button {
+  position: relative;
+  z-index: 2;
+  width: 72%;
+  height: 58%;
+  border: 5px solid #171717;
+  border-radius: 42% 54% 46% 50%;
+  background: #f2e4bd;
+  cursor: pointer;
+  pointer-events: auto;
+  transform:
+    scale(calc(0.22 + var(--act1-food-remaining, 1) * 0.78))
+    rotate(-4deg);
+  transform-origin: center;
+  transition:
+    transform 140ms ease,
+    opacity 140ms ease;
+}
+
+.act1-eating-food-button:active {
+  transform:
+    scale(calc(0.2 + var(--act1-food-remaining, 1) * 0.72))
+    rotate(-4deg);
+}
+
+.act1-eating-food-bite {
+  position: absolute;
+  right: -10px;
+  top: -8px;
+  width: var(--act1-bite-size, 0);
+  height: var(--act1-bite-size, 0);
+  border-radius: 50%;
+  background: #d7d7d7;
+}
+
+.act1-eating-food-label {
+  position: relative;
+  z-index: 2;
+  font-family: YouYuan, "幼圆", "Microsoft YaHei", sans-serif;
+  font-size: 24px;
+  font-weight: 900;
+}
+
+.act1-eating-food.is-complete .act1-eating-food-button {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* ---------------------------------------------------------------------------
+   Act2 Lunch Styles
+   Reserved for future Act2 lunch UI. Add Act2-only selectors here using an
+   .act2-* prefix to avoid collisions with Act1, Act3, Act0, and Result styles.
+--------------------------------------------------------------------------- */
+
+.act2-scene-object {
+  position: absolute;
+  transition:
+    transform 180ms ease,
+    opacity 260ms ease;
+  will-change: transform, opacity;
+}
+
+.act2-intro-panel,
+.act2-done-panel {
+  align-items: center;
+  justify-content: center;
+  border-radius: 28px;
+  background: rgba(255, 250, 235, 0.94);
+  color: #382620;
+  font-family: YouYuan, "幼圆", "Microsoft YaHei", sans-serif;
+  font-size: 38px;
+  font-weight: 800;
+  line-height: 1.45;
+  text-align: center;
+}
+
+.act2-lunch-option {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  padding: 18px;
+  border: 3px solid #171717;
+  background: #d7d7d7;
+  color: #171717;
+  cursor: pointer;
+  font-family: YouYuan, "幼圆", "Microsoft YaHei", sans-serif;
+  box-shadow:
+    5px 5px 0 rgba(0, 0, 0, 0.14),
+    -1px -1px 0 rgba(0, 0, 0, 0.22);
+}
+
+.act2-lunch-option:hover:not(:disabled) {
+  transform: scale(1.045);
+  background: #e2ded4;
+}
+
+.act2-lunch-option.is-selected {
+  opacity: 1;
+  background: #f2e4bd;
+  transform: scale(1.06);
+}
+
+.act2-lunch-option.is-selected:disabled {
+  opacity: 1;
+}
+
+.act2-lunch-sketch {
+  position: relative;
+  width: min(72%, 220px);
+  height: min(56%, 150px);
+  border: 4px solid #171717;
+  background:
+    linear-gradient(135deg, transparent 46%, #171717 47% 49%, transparent 50%),
+    rgba(255, 255, 255, 0.22);
+  transform: rotate(-1.5deg);
+}
+
+.act2-lunch-sketch::before,
+.act2-lunch-sketch::after {
+  content: "";
+  position: absolute;
+  border: 4px solid #171717;
+  pointer-events: none;
+}
+
+.act2-lunch-sketch::before {
+  left: 18%;
+  top: 34%;
+  width: 64%;
+  height: 30%;
+  border-radius: 999px;
+}
+
+.act2-lunch-sketch::after {
+  left: 38%;
+  top: 18%;
+  width: 24%;
+  height: 58%;
+  border-top: 0;
+  border-bottom: 0;
+  transform: rotate(8deg);
+}
+
+.act2-lunch-label {
+  position: relative;
+  z-index: 2;
+  font-size: 26px;
+  font-weight: 800;
+  line-height: 1.2;
+  text-align: center;
 }
 
 .cheers-sparkle-layer {

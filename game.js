@@ -1420,6 +1420,9 @@ function recordAct1EatingSpeed(elapsedMs, eatingSpeed) {
 // or Result animation helpers.
 // ---------------------------------------------------------------------------
 
+let act2LunchPlateItems = [];
+let act2LunchDrag = null;
+
 function enterAct2LunchIntro() {
   renderAct2State(ACT2_STATES.LUNCH_INTRO);
   window.setTimeout(() => {
@@ -1428,9 +1431,10 @@ function enterAct2LunchIntro() {
 }
 
 function enterAct2LunchChoice() {
-  selectedAct2LunchId = null;
+  act2LunchPlateItems = [];
   isAct2LunchLocked = false;
   renderAct2State(ACT2_STATES.LUNCH_CHOICE);
+  syncAct2FinishButton();
 }
 
 function enterAct2LunchDone() {
@@ -1447,6 +1451,7 @@ function renderAct2State(stateId) {
   currentPhase = PHASES.ACT2_LUNCH;
   currentState = stateId;
   isStateLocked = false;
+  act2LunchDrag = null;
   hideHoverInfoTooltip();
   updateStageHeader("\u7b2c\u4e8c\u5e55\u4f4e\u4fdd\u771f\u539f\u578b", "\u4e2d\u5348\u2014\u2014\u5348\u9910\u9009\u62e9");
   objectLayer.querySelectorAll(".act2-scene-object").forEach((element) => element.remove());
@@ -1472,38 +1477,48 @@ function getAct2StateConfig(stateId) {
 }
 
 function createAct2ObjectElement(objectId, objectConfig) {
-  const isLunchOption = objectConfig.type === "lunchOption";
-  const element = document.createElement(isLunchOption ? "button" : "div");
-
-  if (isLunchOption) {
-    const choice = getAct2LunchChoice(objectConfig.choiceId || objectId);
-    const sketch = document.createElement("span");
-    const label = document.createElement("span");
-
-    element.type = "button";
-    element.dataset.choiceId = choice?.id || objectConfig.choiceId || objectId;
-    sketch.className = "act2-lunch-sketch";
-    sketch.dataset.sketch = choice?.id || objectId;
-    label.className = "act2-lunch-label";
-    label.textContent = choice?.label || objectConfig.label || objectId;
-    element.appendChild(sketch);
-    element.appendChild(label);
-    element.addEventListener("click", () => handleAct2LunchChoice(element));
-    bindHoverInfo(element, element.dataset.choiceId);
-  } else {
-    element.textContent = objectConfig.content || "";
-  }
+  const isButton = objectConfig.type === "act2FinishButton";
+  const element = document.createElement(isButton ? "button" : "div");
 
   element.id = objectId;
   element.dataset.objectId = objectId;
   element.dataset.objectType = objectConfig.type;
   element.className = getAct2ObjectClassName(objectConfig.type);
+
+  if (objectConfig.type === "act2ConveyorWindow") {
+    renderAct2ConveyorWindow(element, objectConfig);
+  } else if (objectConfig.type === "act2PlateSlot") {
+    renderAct2PlateSlot(element, objectConfig);
+  } else if (objectConfig.type === "act2FinishButton") {
+    element.type = "button";
+    element.textContent = objectConfig.content || "完成午餐选择";
+    element.addEventListener("click", finishAct2LunchChoice);
+  } else {
+    element.textContent = objectConfig.content || "";
+  }
+
   return element;
 }
 
 function getAct2ObjectClassName(type) {
-  if (type === "lunchOption") {
-    return "act2-scene-object act2-lunch-option";
+  if (type === "act2ConveyorWindow") {
+    return "act2-scene-object act2-conveyor-window";
+  }
+
+  if (type === "act2Plate") {
+    return "act2-scene-object act2-plate";
+  }
+
+  if (type === "act2PlateSlot") {
+    return "act2-scene-object act2-plate-slot";
+  }
+
+  if (type === "act2Hands") {
+    return "act2-scene-object act2-hands";
+  }
+
+  if (type === "act2FinishButton") {
+    return "act2-scene-object act2-finish-button";
   }
 
   if (type === "act2IntroPanel") {
@@ -1531,49 +1546,240 @@ function updateAct2ObjectLayout(element, objectConfig) {
 }
 
 function getAct2LunchChoice(choiceId) {
-  return act2Choices?.choices?.find((choice) => choice.id === choiceId) || null;
+  const choice = act2Choices?.choices?.find((item) => item.id === choiceId);
+
+  if (!choice) {
+    return null;
+  }
+
+  return {
+    ...choice,
+    hoverText: choice.hoverText || choice.description || ""
+  };
 }
 
-function handleAct2LunchChoice(optionElement) {
-  if (isAct2LunchLocked || currentPhase !== PHASES.ACT2_LUNCH) {
+function getAct2LunchStepConfig() {
+  return act2Choices?.steps?.[0] || {
+    stepId: "act2_s01_lunchPlateChoice",
+    interactionType: "drag_lunch_foods_to_plate",
+    choiceLimit: 4
+  };
+}
+
+function renderAct2ConveyorWindow(element, objectConfig) {
+  const lane = act2Layouts?.conveyors?.[objectConfig.laneId] || {};
+  const label = document.createElement("div");
+  const track = document.createElement("div");
+  const repeatedChoiceIds = [...(lane.choiceIds || []), ...(lane.choiceIds || [])];
+
+  label.className = "act2-conveyor-label";
+  label.textContent = objectConfig.content || "食堂窗口";
+  track.className = "act2-conveyor-track";
+  track.style.setProperty("--act2-conveyor-duration", `${lane.duration || 38000}ms`);
+
+  repeatedChoiceIds.forEach((choiceId) => {
+    const choice = getAct2LunchChoice(choiceId);
+
+    if (!choice) {
+      return;
+    }
+
+    const food = createAct2LunchFoodCard(choice);
+    track.appendChild(food);
+  });
+
+  element.appendChild(label);
+  element.appendChild(track);
+}
+
+function createAct2LunchFoodCard(choice) {
+  const food = document.createElement("button");
+  const plate = document.createElement("span");
+  const name = document.createElement("span");
+  const category = document.createElement("span");
+
+  food.type = "button";
+  food.className = "act2-lunch-food";
+  food.dataset.choiceId = choice.id;
+  food.dataset.type = "act2LunchFood";
+  plate.className = "act2-lunch-food-mark";
+  name.className = "act2-lunch-food-name";
+  name.textContent = choice.label || choice.name;
+  category.className = "act2-lunch-food-category";
+  category.textContent = choice.category || "";
+  food.appendChild(plate);
+  food.appendChild(name);
+  food.appendChild(category);
+  bindAct2LunchDragSource(food, choice.id);
+  bindHoverInfo(food, choice.id);
+  return food;
+}
+
+function renderAct2PlateSlot(element, objectConfig) {
+  element.dataset.slotIndex = String(objectConfig.slotIndex);
+  element.textContent = objectConfig.content || `格子 ${Number(objectConfig.slotIndex) + 1}`;
+}
+
+function bindAct2LunchDragSource(element, choiceId) {
+  element.addEventListener("pointerdown", (event) => {
+    startAct2LunchDrag(event, element, choiceId);
+  });
+}
+
+function startAct2LunchDrag(event, sourceElement, choiceId) {
+  if (
+    isAct2LunchLocked ||
+    currentState !== ACT2_STATES.LUNCH_CHOICE ||
+    act2LunchPlateItems.length >= getAct2LunchChoiceLimit()
+  ) {
     return;
   }
 
-  const choice = getAct2LunchChoice(optionElement.dataset.choiceId);
+  const choice = getAct2LunchChoice(choiceId);
 
   if (!choice) {
     return;
   }
 
-  isAct2LunchLocked = true;
-  selectedAct2LunchId = choice.id;
+  event.preventDefault();
   hideHoverInfoTooltip();
-  recordAct2LunchChoice(choice);
-  optionElement.classList.add("is-selected");
-  objectLayer.querySelectorAll(".act2-lunch-option").forEach((element) => {
+  const ghost = sourceElement.cloneNode(true);
+  const rect = sourceElement.getBoundingClientRect();
+
+  ghost.classList.add("act2-lunch-drag-ghost");
+  ghost.style.width = `${rect.width}px`;
+  ghost.style.height = `${rect.height}px`;
+  document.body.appendChild(ghost);
+
+  act2LunchDrag = {
+    choice,
+    ghost,
+    offsetX: event.clientX - rect.left,
+    offsetY: event.clientY - rect.top
+  };
+
+  sourceElement.classList.add("is-dragging");
+  moveAct2LunchDrag(event);
+  window.addEventListener("pointermove", moveAct2LunchDrag);
+  window.addEventListener("pointerup", finishAct2LunchDrag, { once: true });
+}
+
+function moveAct2LunchDrag(event) {
+  if (!act2LunchDrag) {
+    return;
+  }
+
+  act2LunchDrag.ghost.style.left = `${event.clientX - act2LunchDrag.offsetX}px`;
+  act2LunchDrag.ghost.style.top = `${event.clientY - act2LunchDrag.offsetY}px`;
+}
+
+function finishAct2LunchDrag(event) {
+  if (!act2LunchDrag) {
+    return;
+  }
+
+  window.removeEventListener("pointermove", moveAct2LunchDrag);
+  objectLayer.querySelectorAll(".act2-lunch-food.is-dragging").forEach((element) => {
+    element.classList.remove("is-dragging");
+  });
+  const targetSlot = getAct2PlateSlotAtPoint(event.clientX, event.clientY);
+
+  if (targetSlot) {
+    handleAct2PlateDrop(targetSlot, act2LunchDrag.choice);
+  }
+
+  act2LunchDrag.ghost.remove();
+  act2LunchDrag = null;
+}
+
+function getAct2PlateSlotAtPoint(x, y) {
+  return [...objectLayer.querySelectorAll(".act2-plate-slot")].find((slot) => {
+    if (slot.classList.contains("is-filled")) {
+      return false;
+    }
+
+    const rect = slot.getBoundingClientRect();
+    return x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom;
+  }) || null;
+}
+
+function handleAct2PlateDrop(slotElement, choice) {
+  if (
+    isAct2LunchLocked ||
+    slotElement.classList.contains("is-filled") ||
+    act2LunchPlateItems.length >= getAct2LunchChoiceLimit()
+  ) {
+    return;
+  }
+
+  const slotIndex = Number(slotElement.dataset.slotIndex);
+  const selectedFood = {
+    foodId: choice.id,
+    foodName: choice.name,
+    label: choice.label,
+    category: choice.category || "无",
+    description: choice.description || "",
+    riskTags: choice.riskTags || [],
+    tendencyScores: choice.tendencyScores || {},
+    slotIndex
+  };
+
+  act2LunchPlateItems.push(selectedFood);
+  slotElement.classList.add("is-filled");
+  slotElement.innerHTML = `
+    <span class="act2-slot-food-name">${choice.label || choice.name}</span>
+    <span class="act2-slot-food-category">${choice.category || "无"}</span>
+  `;
+  syncAct2FinishButton();
+  console.log("Act 2 plate drop:", selectedFood);
+}
+
+function syncAct2FinishButton() {
+  const button = objectLayer?.querySelector(".act2-finish-button");
+
+  if (!button) {
+    return;
+  }
+
+  const canFinish = act2LunchPlateItems.length >= 1 && !isAct2LunchLocked;
+  button.classList.toggle("is-visible", canFinish);
+  button.disabled = !canFinish;
+}
+
+function finishAct2LunchChoice() {
+  if (isAct2LunchLocked || act2LunchPlateItems.length < 1) {
+    return;
+  }
+
+  isAct2LunchLocked = true;
+  recordAct2LunchPlateChoice();
+  objectLayer.querySelectorAll(".act2-lunch-food").forEach((element) => {
     element.disabled = true;
   });
-
+  syncAct2FinishButton();
   window.setTimeout(() => {
     enterAct2LunchDone();
   }, 520);
 }
 
-function recordAct2LunchChoice(choice) {
+function getAct2LunchChoiceLimit() {
+  return getAct2LunchStepConfig().choiceLimit || 4;
+}
+
+function recordAct2LunchPlateChoice() {
+  const stepConfig = getAct2LunchStepConfig();
+  const selectedFoods = act2LunchPlateItems.map((food) => ({ ...food }));
   const record = {
     sceneId: "act2",
-    stepId: "act2_lunchChoice",
-    interactionType: "click_lunch_choice",
-    lunchId: choice.id,
-    lunchName: choice.name,
-    label: choice.label,
-    riskTags: choice.riskTags || [],
-    tendencyScores: choice.tendencyScores || {},
-    hoverText: choice.hoverText || ""
+    stepId: stepConfig.stepId,
+    interactionType: stepConfig.interactionType,
+    selectedFoods,
+    riskTags: uniqueTags(selectedFoods.flatMap((food) => food.riskTags)),
+    tendencyScores: mergeTendencyScores(selectedFoods.map((food) => food.tendencyScores))
   };
 
   playerChoices.push(record);
-  console.log("Act 2 lunch choice:", record);
+  console.log("Act 2 lunch plate choice:", record);
   console.log("Act 2 playerChoices:", playerChoices);
 }
 

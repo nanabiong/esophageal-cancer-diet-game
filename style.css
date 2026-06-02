@@ -1368,9 +1368,11 @@ button:disabled {
 
 .act2-intro-panel,
 .act2-done-panel {
+  display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 28px;
+  border: 3px solid #171717;
+  border-radius: 8px;
   background: rgba(255, 250, 235, 0.94);
   color: #382620;
   font-family: YouYuan, "幼圆", "Microsoft YaHei", sans-serif;
@@ -1380,82 +1382,223 @@ button:disabled {
   text-align: center;
 }
 
-.act2-lunch-option {
+.act2-conveyor-window {
+  overflow: hidden;
+  border: 4px solid #171717;
+  border-radius: 8px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.55), rgba(255, 255, 255, 0)),
+    #cfd8dc;
+  box-shadow: 5px 5px 0 rgba(0, 0, 0, 0.16);
+}
+
+.act2-conveyor-label {
+  position: absolute;
+  left: 18px;
+  top: 10px;
+  z-index: 2;
+  padding: 4px 10px;
+  border: 2px solid #171717;
+  background: #fff8df;
+  color: #171717;
+  font-family: YouYuan, "幼圆", "Microsoft YaHei", sans-serif;
+  font-size: 18px;
+  font-weight: 800;
+}
+
+.act2-conveyor-track {
+  position: absolute;
+  left: 0;
+  top: 44px;
+  display: flex;
+  gap: 28px;
+  width: max-content;
+  padding: 0 28px;
+  animation: act2ConveyorMove var(--act2-conveyor-duration, 38000ms) linear infinite;
+}
+
+.act2-conveyor-window:hover .act2-conveyor-track {
+  animation-play-state: paused;
+}
+
+.act2-lunch-food {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 14px;
-  padding: 18px;
+  gap: 7px;
+  width: 188px;
+  height: 104px;
+  padding: 8px 10px;
   border: 3px solid #171717;
-  background: #d7d7d7;
+  border-radius: 8px;
+  background: #f9f0d2;
   color: #171717;
   cursor: pointer;
   font-family: YouYuan, "幼圆", "Microsoft YaHei", sans-serif;
+  line-height: 1.15;
   box-shadow:
-    5px 5px 0 rgba(0, 0, 0, 0.14),
-    -1px -1px 0 rgba(0, 0, 0, 0.22);
+    4px 4px 0 rgba(0, 0, 0, 0.16),
+    inset 0 -7px 0 rgba(0, 0, 0, 0.05);
+  touch-action: none;
 }
 
-.act2-lunch-option:hover:not(:disabled) {
-  transform: scale(1.045);
-  background: #e2ded4;
+.act2-lunch-food:hover:not(:disabled),
+.act2-lunch-food.is-dragging {
+  background: #fff6bf;
+  transform: translateY(-4px);
 }
 
-.act2-lunch-option.is-selected {
-  opacity: 1;
-  background: #f2e4bd;
-  transform: scale(1.06);
-}
-
-.act2-lunch-option.is-selected:disabled {
-  opacity: 1;
-}
-
-.act2-lunch-sketch {
-  position: relative;
-  width: min(72%, 220px);
-  height: min(56%, 150px);
-  border: 4px solid #171717;
+.act2-lunch-food-mark {
+  width: 42px;
+  height: 28px;
+  border: 3px solid #171717;
+  border-radius: 50%;
   background:
-    linear-gradient(135deg, transparent 46%, #171717 47% 49%, transparent 50%),
-    rgba(255, 255, 255, 0.22);
-  transform: rotate(-1.5deg);
+    radial-gradient(circle at 36% 38%, #ffffff 0 22%, transparent 23%),
+    #a8d5ba;
 }
 
-.act2-lunch-sketch::before,
-.act2-lunch-sketch::after {
-  content: "";
-  position: absolute;
-  border: 4px solid #171717;
+.act2-lunch-food-name {
+  max-width: 100%;
+  font-size: 20px;
+  font-weight: 900;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.act2-lunch-food-category {
+  max-width: 100%;
+  color: #5a4a38;
+  font-size: 14px;
+  font-weight: 700;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.act2-lunch-drag-ghost {
+  position: fixed;
+  z-index: 9999;
+  pointer-events: none;
+  opacity: 0.92;
+  transform: rotate(-2deg);
+}
+
+.act2-hands {
   pointer-events: none;
 }
 
-.act2-lunch-sketch::before {
-  left: 18%;
-  top: 34%;
-  width: 64%;
-  height: 30%;
+.act2-hands::before,
+.act2-hands::after {
+  content: "";
+  position: absolute;
+  top: 82px;
+  width: 260px;
+  height: 78px;
+  border: 4px solid #171717;
   border-radius: 999px;
+  background: #f0c29c;
 }
 
-.act2-lunch-sketch::after {
-  left: 38%;
-  top: 18%;
-  width: 24%;
-  height: 58%;
-  border-top: 0;
-  border-bottom: 0;
+.act2-hands::before {
+  left: 48px;
   transform: rotate(8deg);
 }
 
-.act2-lunch-label {
-  position: relative;
-  z-index: 2;
-  font-size: 26px;
+.act2-hands::after {
+  right: 48px;
+  transform: rotate(-8deg);
+}
+
+.act2-plate {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 5px solid #171717;
+  border-radius: 44px;
+  background: #eaf0f0;
+  color: rgba(23, 23, 23, 0.28);
+  font-family: YouYuan, "幼圆", "Microsoft YaHei", sans-serif;
+  font-size: 36px;
+  font-weight: 900;
+  pointer-events: none;
+}
+
+.act2-plate-slot {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 10px;
+  border: 3px dashed #171717;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.45);
+  color: rgba(23, 23, 23, 0.46);
+  font-family: YouYuan, "幼圆", "Microsoft YaHei", sans-serif;
+  font-size: 22px;
   font-weight: 800;
-  line-height: 1.2;
   text-align: center;
+}
+
+.act2-plate-slot.is-filled {
+  border-style: solid;
+  background: #fff1b8;
+  color: #171717;
+}
+
+.act2-slot-food-name {
+  max-width: 100%;
+  font-size: 20px;
+  font-weight: 900;
+  line-height: 1.1;
+}
+
+.act2-slot-food-category {
+  max-width: 100%;
+  color: #5f5140;
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 1.1;
+}
+
+.act2-finish-button {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  border: 3px solid #171717;
+  border-radius: 8px;
+  background: #9ed6bd;
+  color: #171717;
+  cursor: pointer;
+  font-family: YouYuan, "幼圆", "Microsoft YaHei", sans-serif;
+  font-size: 24px;
+  font-weight: 900;
+  box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.16);
+}
+
+.act2-finish-button.is-visible {
+  display: flex;
+}
+
+.act2-finish-button:hover:not(:disabled) {
+  transform: translateY(-3px);
+  background: #b5e7c9;
+}
+
+.act2-finish-button:disabled {
+  cursor: default;
+  opacity: 0;
+}
+
+@keyframes act2ConveyorMove {
+  from {
+    transform: translateX(0);
+  }
+
+  to {
+    transform: translateX(-50%);
+  }
 }
 
 .cheers-sparkle-layer {

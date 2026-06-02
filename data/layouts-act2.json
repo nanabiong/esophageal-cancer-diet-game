@@ -434,6 +434,41 @@
           }
         ]
       },
+      "parkScene": {
+        "scene": {
+          "x": 339.14,
+          "y": 107.01,
+          "width": 1190,
+          "height": 650,
+          "zIndex": 8
+        },
+        "dog": {
+          "x": 1210,
+          "y": 282,
+          "width": 190,
+          "height": 150,
+          "state1Text": "狗",
+          "state2Text": "狗！",
+          "interval": 600,
+          "zIndex": 13
+        },
+        "cat": {
+          "x": 438,
+          "y": 298,
+          "width": 170,
+          "height": 135,
+          "text": "猫！",
+          "zIndex": 13
+        },
+        "bird": {
+          "x": 850,
+          "y": 506,
+          "width": 120,
+          "height": 90,
+          "text": "鸟",
+          "zIndex": 14
+        }
+      },
       "objects": {
         "act2_s05_comic_focus": {
           "type": "act2ComicFocus",

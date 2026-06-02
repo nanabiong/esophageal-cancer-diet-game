@@ -1430,10 +1430,15 @@ let act2WorkBubbleTimers = [];
 let act2FriendBubbleTotal = 0;
 let act2FriendBubbleCompleted = 0;
 let act2FriendBubbleTimers = [];
+let act2DogState = 1;
+let act2DogTimer = null;
+let act2BirdCleared = false;
+let act2ParkTimers = [];
 const ACT2_LUNCH_PLACE_SELECT_STATE = "act2_04_lunch_place_select";
 const ACT2_LUNCH_PLACE_FOCUS_STATE = "act2_05_lunch_place_focus";
 const ACT2_WORK_BUBBLE_PLACE_ID = "act2_place_coworkers";
 const ACT2_FRIEND_MEAL_PLACE_ID = "act2_place_canteen_table";
+const ACT2_PARK_SCENE_PLACE_ID = "act2_place_park_bench";
 
 function enterAct2LunchIntro() {
   renderAct2State(ACT2_STATES.LUNCH_INTRO);
@@ -1471,6 +1476,7 @@ function renderAct2State(stateId) {
 
   cleanupAct2WorkBubbles();
   cleanupAct2FriendMealInteraction();
+  cleanupAct2ParkScene();
   currentPhase = PHASES.ACT2_LUNCH;
   currentState = stateId;
   isStateLocked = false;
@@ -1493,6 +1499,9 @@ function renderAct2State(stateId) {
   }
   if (stateId === ACT2_LUNCH_PLACE_FOCUS_STATE && isAct2FriendMealPlaceSelected()) {
     startAct2FriendMealInteraction();
+  }
+  if (stateId === ACT2_LUNCH_PLACE_FOCUS_STATE && isAct2ParkScenePlaceSelected()) {
+    createAct2ParkScene();
   }
   console.log(`Entered ${stateId}`, { playerChoices });
 }
@@ -1531,7 +1540,7 @@ function createAct2ObjectElement(objectId, objectConfig) {
   } else if (objectConfig.type === "act2LunchEndButton") {
     element.type = "button";
     element.textContent = objectConfig.content || "午餐结束";
-    if (isAct2WorkBubblePlaceSelected() || isAct2FriendMealPlaceSelected()) {
+    if (isAct2WorkBubblePlaceSelected() || isAct2FriendMealPlaceSelected() || isAct2ParkScenePlaceSelected()) {
       element.hidden = true;
       element.disabled = true;
       element.classList.add("is-hidden");
@@ -1640,6 +1649,10 @@ function isAct2WorkBubblePlaceSelected() {
 
 function isAct2FriendMealPlaceSelected() {
   return selectedAct2LunchPlaceId === ACT2_FRIEND_MEAL_PLACE_ID;
+}
+
+function isAct2ParkScenePlaceSelected() {
+  return selectedAct2LunchPlaceId === ACT2_PARK_SCENE_PLACE_ID;
 }
 
 function renderAct2ConveyorWindow(element, objectConfig) {
@@ -1766,7 +1779,7 @@ function expandAct2ComicPanel(placeId) {
   }
 
   selectedAct2LunchPlaceId = place.id;
-  if (!isAct2WorkBubblePlaceSelected() && !isAct2FriendMealPlaceSelected()) {
+  if (!isAct2WorkBubblePlaceSelected() && !isAct2FriendMealPlaceSelected() && !isAct2ParkScenePlaceSelected()) {
     recordAct2LunchPlaceChoice(place);
   }
   enterAct2LunchPlaceFocus();
@@ -2185,7 +2198,129 @@ function cleanupAct2FriendMealInteraction() {
   ).forEach((element) => element.remove());
 }
 
-function recordAct2LunchPlaceChoice(place) {
+function createAct2ParkScene() {
+  cleanupAct2ParkScene();
+  const config = getAct2StateConfig(ACT2_LUNCH_PLACE_FOCUS_STATE).parkScene || {};
+
+  act2BirdCleared = false;
+  const scene = document.createElement("div");
+  scene.className = "act2-scene-object act2-park-scene";
+  updateAct2ObjectLayout(scene, {
+    ...(config.scene || {}),
+    x: config.scene?.x ?? 339.14,
+    y: config.scene?.y ?? 107.01,
+    width: config.scene?.width ?? 1190,
+    height: config.scene?.height ?? 650,
+    opacity: 1,
+    scale: 1,
+    zIndex: config.scene?.zIndex || 8
+  });
+  objectLayer.appendChild(scene);
+
+  const dog = document.createElement("div");
+  dog.className = "act2-scene-object act2-dog";
+  dog.dataset.state = "dog_state_1";
+  dog.textContent = config.dog?.state1Text || "狗";
+  updateAct2ObjectLayout(dog, {
+    ...(config.dog || {}),
+    opacity: 1,
+    scale: 1,
+    zIndex: config.dog?.zIndex || 13
+  });
+  objectLayer.appendChild(dog);
+
+  const cat = document.createElement("div");
+  cat.className = "act2-scene-object act2-cat";
+  cat.textContent = config.cat?.text || "猫！";
+  updateAct2ObjectLayout(cat, {
+    ...(config.cat || {}),
+    opacity: 1,
+    scale: 1,
+    zIndex: config.cat?.zIndex || 13
+  });
+  objectLayer.appendChild(cat);
+
+  const bird = document.createElement("button");
+  bird.type = "button";
+  bird.className = "act2-scene-object act2-bird";
+  bird.textContent = config.bird?.text || "鸟";
+  updateAct2ObjectLayout(bird, {
+    ...(config.bird || {}),
+    opacity: 1,
+    scale: 1,
+    zIndex: config.bird?.zIndex || 14
+  });
+  bird.addEventListener("click", () => handleAct2BirdClick(bird));
+  objectLayer.appendChild(bird);
+
+  startAct2DogHowling(dog, config.dog || {});
+}
+
+function startAct2DogHowling(dog, dogConfig = {}) {
+  act2DogState = 1;
+  if (act2DogTimer) {
+    window.clearInterval(act2DogTimer);
+  }
+
+  act2DogTimer = window.setInterval(() => {
+    toggleAct2DogState(dog, dogConfig);
+  }, dogConfig.interval || 600);
+}
+
+function toggleAct2DogState(dog, dogConfig = {}) {
+  if (!dog || currentState !== ACT2_LUNCH_PLACE_FOCUS_STATE || !isAct2ParkScenePlaceSelected()) {
+    return;
+  }
+
+  act2DogState = act2DogState === 1 ? 2 : 1;
+  dog.dataset.state = `dog_state_${act2DogState}`;
+  dog.textContent = act2DogState === 1
+    ? dogConfig.state1Text || "狗"
+    : dogConfig.state2Text || "狗！";
+}
+
+function handleAct2BirdClick(bird) {
+  if (!bird || act2BirdCleared || bird.classList.contains("is-cleared")) {
+    return;
+  }
+
+  act2BirdCleared = true;
+  bird.classList.add("is-cleared");
+  const timer = window.setTimeout(() => {
+    bird.remove();
+  }, 620);
+  const completeTimer = window.setTimeout(() => {
+    completeAct2ParkScene();
+  }, 5620);
+
+  act2ParkTimers.push(timer, completeTimer);
+}
+
+function completeAct2ParkScene() {
+  const place = getAct2LunchPlaceChoice(selectedAct2LunchPlaceId);
+
+  if (place) {
+    recordAct2LunchPlaceChoice(place, { birdCleared: true });
+  }
+
+  cleanupAct2ParkScene();
+  enterAct2LunchDone();
+}
+
+function cleanupAct2ParkScene() {
+  if (act2DogTimer) {
+    window.clearInterval(act2DogTimer);
+    act2DogTimer = null;
+  }
+
+  act2ParkTimers.forEach((timer) => window.clearTimeout(timer));
+  act2ParkTimers = [];
+  act2DogState = 1;
+  act2BirdCleared = false;
+  objectLayer?.querySelectorAll(".act2-park-scene, .act2-dog, .act2-cat, .act2-bird").forEach((element) => element.remove());
+}
+
+function recordAct2LunchPlaceChoice(place, extraFields = {}) {
   const stepConfig = getAct2LunchPlaceStepConfig();
   const record = {
     sceneId: "act2",
@@ -2197,7 +2332,8 @@ function recordAct2LunchPlaceChoice(place) {
     eatingMode: place.eatingMode || "无",
     description: place.description || "",
     riskTags: place.riskTags || [],
-    tendencyScores: place.tendencyScores || {}
+    tendencyScores: place.tendencyScores || {},
+    ...extraFields
   };
 
   playerChoices.push(record);

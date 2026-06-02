@@ -280,6 +280,160 @@
     },
     "act2_05_lunch_place_focus": {
       "_note": "Act2 focused comic panel lunch place with persistent plate.",
+      "workBubbleRounds": [
+        [
+          {
+            "x": 358,
+            "y": 82,
+            "width": 280,
+            "height": 82,
+            "text": "这个表下午要吗？",
+            "overlapPlate": false
+          },
+          {
+            "x": 1290,
+            "y": 118,
+            "width": 300,
+            "height": 82,
+            "text": "客户又改需求了",
+            "overlapPlate": false
+          },
+          {
+            "x": 720,
+            "y": 210,
+            "width": 300,
+            "height": 82,
+            "text": "开会链接发你了",
+            "overlapPlate": false
+          }
+        ],
+        [
+          {
+            "x": 466,
+            "y": 486,
+            "width": 300,
+            "height": 86,
+            "text": "开会链接发你了",
+            "overlapPlate": false
+          },
+          {
+            "x": 884,
+            "y": 642,
+            "width": 330,
+            "height": 90,
+            "text": "你现在方便看一下吗？",
+            "overlapPlate": true
+          },
+          {
+            "x": 1120,
+            "y": 574,
+            "width": 300,
+            "height": 86,
+            "text": "客户又改需求了",
+            "overlapPlate": true
+          }
+        ],
+        [
+          {
+            "x": 780,
+            "y": 706,
+            "width": 360,
+            "height": 92,
+            "text": "麻烦五分钟内回复一下",
+            "overlapPlate": true
+          },
+          {
+            "x": 520,
+            "y": 672,
+            "width": 310,
+            "height": 88,
+            "text": "这个表下午要吗？",
+            "overlapPlate": true
+          }
+        ]
+      ],
+      "friendMealInteraction": {
+        "toastHand": {
+          "x": 214,
+          "y": 96,
+          "width": 210,
+          "height": 130
+        },
+        "toastBubble": {
+          "x": 412,
+          "y": 96,
+          "width": 160,
+          "height": 70,
+          "text": "干杯！"
+        },
+        "topBubbles": [
+          {
+            "x": 330,
+            "y": 68,
+            "width": 180,
+            "height": 68,
+            "text": "干杯！"
+          },
+          {
+            "x": 760,
+            "y": 86,
+            "width": 320,
+            "height": 72,
+            "text": "今天终于能好好吃一顿了"
+          },
+          {
+            "x": 1210,
+            "y": 130,
+            "width": 210,
+            "height": 68,
+            "text": "这个好吃！"
+          },
+          {
+            "x": 1016,
+            "y": 260,
+            "width": 190,
+            "height": 68,
+            "text": "再来一口！"
+          }
+        ],
+        "bottomBubbles": [
+          {
+            "x": 414,
+            "y": 508,
+            "width": 140,
+            "height": 74,
+            "text": "辣椒"
+          },
+          {
+            "x": 596,
+            "y": 542,
+            "width": 140,
+            "height": 74,
+            "text": "火焰"
+          },
+          {
+            "x": 838,
+            "y": 514,
+            "width": 140,
+            "height": 74,
+            "text": "星星"
+          },
+          {
+            "x": 1086,
+            "y": 544,
+            "width": 140,
+            "height": 74,
+            "text": "饭团"
+          },
+          {
+            "x": 1284,
+            "y": 502,
+            "width": 140,
+            "height": 74,
+            "text": "笑脸"
+          }
+        ]
+      },
       "objects": {
         "act2_s05_comic_focus": {
           "type": "act2ComicFocus",

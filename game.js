@@ -1423,8 +1423,17 @@ function recordAct1EatingSpeed(elapsedMs, eatingSpeed) {
 let act2LunchPlateItems = [];
 let act2LunchDrag = null;
 let selectedAct2LunchPlaceId = null;
+let act2WorkBubbleRound = 0;
+let act2WorkBubbleActiveCount = 0;
+let act2WorkBubbleClearedCount = 0;
+let act2WorkBubbleTimers = [];
+let act2FriendBubbleTotal = 0;
+let act2FriendBubbleCompleted = 0;
+let act2FriendBubbleTimers = [];
 const ACT2_LUNCH_PLACE_SELECT_STATE = "act2_04_lunch_place_select";
 const ACT2_LUNCH_PLACE_FOCUS_STATE = "act2_05_lunch_place_focus";
+const ACT2_WORK_BUBBLE_PLACE_ID = "act2_place_coworkers";
+const ACT2_FRIEND_MEAL_PLACE_ID = "act2_place_canteen_table";
 
 function enterAct2LunchIntro() {
   renderAct2State(ACT2_STATES.LUNCH_INTRO);
@@ -1460,6 +1469,8 @@ function enterAct2LunchDone() {
 function renderAct2State(stateId) {
   const state = getAct2StateConfig(stateId);
 
+  cleanupAct2WorkBubbles();
+  cleanupAct2FriendMealInteraction();
   currentPhase = PHASES.ACT2_LUNCH;
   currentState = stateId;
   isStateLocked = false;
@@ -1477,6 +1488,12 @@ function renderAct2State(stateId) {
 
   syncAct2PlateSlots();
   syncAct2FinishButton();
+  if (stateId === ACT2_LUNCH_PLACE_FOCUS_STATE && isAct2WorkBubblePlaceSelected()) {
+    startAct2WorkBubbleInterruption();
+  }
+  if (stateId === ACT2_LUNCH_PLACE_FOCUS_STATE && isAct2FriendMealPlaceSelected()) {
+    startAct2FriendMealInteraction();
+  }
   console.log(`Entered ${stateId}`, { playerChoices });
 }
 
@@ -1514,6 +1531,11 @@ function createAct2ObjectElement(objectId, objectConfig) {
   } else if (objectConfig.type === "act2LunchEndButton") {
     element.type = "button";
     element.textContent = objectConfig.content || "午餐结束";
+    if (isAct2WorkBubblePlaceSelected() || isAct2FriendMealPlaceSelected()) {
+      element.hidden = true;
+      element.disabled = true;
+      element.classList.add("is-hidden");
+    }
     element.addEventListener("click", finishAct2LunchScene);
   } else {
     element.textContent = objectConfig.content || "";
@@ -1610,6 +1632,14 @@ function getAct2LunchPlaceStepConfig() {
 
 function getAct2LunchPlaceChoice(placeId) {
   return act2Choices?.lunchPlaces?.find((place) => place.id === placeId) || null;
+}
+
+function isAct2WorkBubblePlaceSelected() {
+  return selectedAct2LunchPlaceId === ACT2_WORK_BUBBLE_PLACE_ID;
+}
+
+function isAct2FriendMealPlaceSelected() {
+  return selectedAct2LunchPlaceId === ACT2_FRIEND_MEAL_PLACE_ID;
 }
 
 function renderAct2ConveyorWindow(element, objectConfig) {
@@ -1736,7 +1766,9 @@ function expandAct2ComicPanel(placeId) {
   }
 
   selectedAct2LunchPlaceId = place.id;
-  recordAct2LunchPlaceChoice(place);
+  if (!isAct2WorkBubblePlaceSelected() && !isAct2FriendMealPlaceSelected()) {
+    recordAct2LunchPlaceChoice(place);
+  }
   enterAct2LunchPlaceFocus();
 }
 
@@ -1909,6 +1941,248 @@ function finishAct2LunchScene() {
   }
 
   enterAct2LunchDone();
+}
+
+function startAct2WorkBubbleInterruption() {
+  cleanupAct2WorkBubbles();
+  act2WorkBubbleRound = 0;
+  act2WorkBubbleActiveCount = 0;
+  act2WorkBubbleClearedCount = 0;
+  const timer = window.setTimeout(() => {
+    advanceAct2WorkBubbleRound();
+  }, 80);
+
+  act2WorkBubbleTimers.push(timer);
+}
+
+function advanceAct2WorkBubbleRound() {
+  const rounds = getAct2StateConfig(ACT2_LUNCH_PLACE_FOCUS_STATE).workBubbleRounds || [];
+  const bubbles = rounds[act2WorkBubbleRound] || [];
+
+  if (!bubbles.length) {
+    completeAct2WorkBubbleInterruption();
+    return;
+  }
+
+  act2WorkBubbleActiveCount = bubbles.length;
+  act2WorkBubbleClearedCount = 0;
+  bubbles.forEach((bubbleConfig, index) => {
+    const timer = window.setTimeout(() => {
+      spawnAct2WorkBubble(bubbleConfig, index);
+    }, index * 70);
+
+    act2WorkBubbleTimers.push(timer);
+  });
+}
+
+function spawnAct2WorkBubble(bubbleConfig, index) {
+  if (currentState !== ACT2_LUNCH_PLACE_FOCUS_STATE || !isAct2WorkBubblePlaceSelected()) {
+    return;
+  }
+
+  const bubble = document.createElement("button");
+
+  bubble.type = "button";
+  bubble.className = "act2-scene-object act2-work-bubble";
+  bubble.dataset.round = String(act2WorkBubbleRound);
+  bubble.dataset.index = String(index);
+  bubble.dataset.overlapPlate = String(Boolean(bubbleConfig.overlapPlate));
+  bubble.textContent = bubbleConfig.text || "";
+  updateAct2ObjectLayout(bubble, {
+    x: bubbleConfig.x,
+    y: bubbleConfig.y,
+    width: bubbleConfig.width,
+    height: bubbleConfig.height,
+    opacity: 1,
+    scale: 1,
+    zIndex: bubbleConfig.zIndex || 35
+  });
+  bubble.addEventListener("click", () => handleAct2WorkBubbleClick(bubble));
+  objectLayer.appendChild(bubble);
+}
+
+function handleAct2WorkBubbleClick(bubble) {
+  if (!bubble || bubble.classList.contains("is-clearing")) {
+    return;
+  }
+
+  bubble.classList.add("is-clearing");
+  act2WorkBubbleClearedCount += 1;
+  window.setTimeout(() => {
+    bubble.remove();
+    if (act2WorkBubbleClearedCount >= act2WorkBubbleActiveCount) {
+      act2WorkBubbleRound += 1;
+      advanceAct2WorkBubbleRound();
+    }
+  }, 220);
+}
+
+function completeAct2WorkBubbleInterruption() {
+  const place = getAct2LunchPlaceChoice(selectedAct2LunchPlaceId);
+
+  if (place) {
+    recordAct2LunchPlaceChoice(place);
+  }
+
+  cleanupAct2WorkBubbles();
+  enterAct2LunchDone();
+}
+
+function cleanupAct2WorkBubbles() {
+  act2WorkBubbleTimers.forEach((timer) => window.clearTimeout(timer));
+  act2WorkBubbleTimers = [];
+  act2WorkBubbleActiveCount = 0;
+  act2WorkBubbleClearedCount = 0;
+  objectLayer?.querySelectorAll(".act2-work-bubble").forEach((bubble) => bubble.remove());
+}
+
+function startAct2FriendMealInteraction() {
+  cleanupAct2FriendMealInteraction();
+  const config = getAct2StateConfig(ACT2_LUNCH_PLACE_FOCUS_STATE).friendMealInteraction || {};
+
+  spawnAct2FriendToast(config);
+  const topTimer = window.setTimeout(() => {
+    spawnAct2FriendTopBubbles(config);
+  }, 160);
+  const clearTimer = window.setTimeout(() => {
+    clearAct2FriendToast();
+    clearAct2FriendTopBubbles();
+    spawnAct2FriendBottomBubbles(config);
+  }, 3000);
+
+  act2FriendBubbleTimers.push(topTimer, clearTimer);
+}
+
+function spawnAct2FriendToast(config) {
+  if (config.toastHand) {
+    const hand = document.createElement("div");
+
+    hand.className = "act2-scene-object act2-friend-toast-hand";
+    updateAct2ObjectLayout(hand, {
+      ...config.toastHand,
+      opacity: 1,
+      scale: 1,
+      zIndex: 30
+    });
+    objectLayer.appendChild(hand);
+  }
+
+  if (config.toastBubble) {
+    const bubble = document.createElement("div");
+
+    bubble.className = "act2-scene-object act2-friend-toast-bubble";
+    bubble.textContent = config.toastBubble.text || "干杯！";
+    updateAct2ObjectLayout(bubble, {
+      ...config.toastBubble,
+      opacity: 1,
+      scale: 1,
+      zIndex: 31
+    });
+    objectLayer.appendChild(bubble);
+  }
+}
+
+function spawnAct2FriendTopBubbles(config) {
+  (config.topBubbles || []).forEach((bubbleConfig, index) => {
+    const timer = window.setTimeout(() => {
+      const bubble = document.createElement("div");
+
+      bubble.className = "act2-scene-object act2-friend-top-bubble";
+      bubble.textContent = bubbleConfig.text || "";
+      updateAct2ObjectLayout(bubble, {
+        ...bubbleConfig,
+        opacity: 1,
+        scale: 1,
+        zIndex: bubbleConfig.zIndex || 32
+      });
+      objectLayer.appendChild(bubble);
+    }, index * 120);
+
+    act2FriendBubbleTimers.push(timer);
+  });
+}
+
+function clearAct2FriendTopBubbles() {
+  objectLayer?.querySelectorAll(".act2-friend-top-bubble").forEach((bubble) => {
+    bubble.classList.add("is-leaving");
+    window.setTimeout(() => bubble.remove(), 320);
+  });
+}
+
+function spawnAct2FriendBottomBubbles(config) {
+  const bottomBubbles = config.bottomBubbles || [];
+
+  act2FriendBubbleTotal = bottomBubbles.length;
+  act2FriendBubbleCompleted = 0;
+  bottomBubbles.forEach((bubbleConfig, index) => {
+    const timer = window.setTimeout(() => {
+      const bubble = document.createElement("button");
+
+      bubble.type = "button";
+      bubble.className = "act2-scene-object act2-friend-bottom-bubble";
+      bubble.textContent = bubbleConfig.text || "";
+      updateAct2ObjectLayout(bubble, {
+        ...bubbleConfig,
+        opacity: 1,
+        scale: 1,
+        zIndex: bubbleConfig.zIndex || 34
+      });
+      bubble.addEventListener("click", () => handleAct2FriendBubbleClick(bubble));
+      objectLayer.appendChild(bubble);
+    }, index * 110);
+
+    act2FriendBubbleTimers.push(timer);
+  });
+}
+
+function handleAct2FriendBubbleClick(bubble) {
+  if (!bubble || bubble.classList.contains("is-heart")) {
+    return;
+  }
+
+  bubble.classList.add("is-heart");
+  bubble.textContent = "❤️";
+  const removeTimer = window.setTimeout(() => {
+    bubble.remove();
+    act2FriendBubbleCompleted += 1;
+    if (act2FriendBubbleCompleted >= act2FriendBubbleTotal) {
+      const completeTimer = window.setTimeout(() => {
+        completeAct2FriendMealInteraction();
+      }, 180);
+
+      act2FriendBubbleTimers.push(completeTimer);
+    }
+  }, 560);
+
+  act2FriendBubbleTimers.push(removeTimer);
+}
+
+function clearAct2FriendToast() {
+  objectLayer?.querySelectorAll(".act2-friend-toast-hand, .act2-friend-toast-bubble").forEach((element) => {
+    element.classList.add("is-leaving");
+    window.setTimeout(() => element.remove(), 320);
+  });
+}
+
+function completeAct2FriendMealInteraction() {
+  const place = getAct2LunchPlaceChoice(selectedAct2LunchPlaceId);
+
+  if (place) {
+    recordAct2LunchPlaceChoice(place);
+  }
+
+  cleanupAct2FriendMealInteraction();
+  enterAct2LunchDone();
+}
+
+function cleanupAct2FriendMealInteraction() {
+  act2FriendBubbleTimers.forEach((timer) => window.clearTimeout(timer));
+  act2FriendBubbleTimers = [];
+  act2FriendBubbleTotal = 0;
+  act2FriendBubbleCompleted = 0;
+  objectLayer?.querySelectorAll(
+    ".act2-friend-toast-hand, .act2-friend-toast-bubble, .act2-friend-top-bubble, .act2-friend-bottom-bubble"
+  ).forEach((element) => element.remove());
 }
 
 function recordAct2LunchPlaceChoice(place) {

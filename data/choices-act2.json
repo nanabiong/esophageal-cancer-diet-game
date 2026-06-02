@@ -149,13 +149,13 @@
   "lunchPlaces": [
     {
       "id": "act2_place_canteen_table",
-      "name": "食堂小桌子",
-      "label": "食堂小桌子",
-      "eatingMode": "快速进食",
+      "name": "和朋友一起聚餐",
+      "label": "和朋友一起聚餐",
+      "eatingMode": "无",
       "description": "低保真占位描述，后续替换正式文案。",
-      "riskTags": ["冲刺"],
+      "riskTags": ["仪式"],
       "tendencyScores": {
-        "D": 2
+        "O": 2
       }
     },
     {

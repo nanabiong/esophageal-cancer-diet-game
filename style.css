@@ -1731,6 +1731,204 @@ button:disabled {
   background: #b5e7c9;
 }
 
+.act2-lunch-end-button[hidden],
+.act2-lunch-end-button.is-hidden {
+  display: none !important;
+}
+
+.act2-work-bubble {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 18px;
+  border: 3px solid #171717;
+  border-radius: 22px;
+  background: #fff8df;
+  color: #171717;
+  cursor: pointer;
+  font-family: YouYuan, "幼圆", "Microsoft YaHei", sans-serif;
+  font-size: 22px;
+  font-weight: 900;
+  line-height: 1.25;
+  text-align: center;
+  box-shadow: 5px 5px 0 rgba(0, 0, 0, 0.18);
+}
+
+.act2-work-bubble[data-overlap-plate="true"] {
+  background: #ffe1e1;
+}
+
+.act2-work-bubble:hover {
+  transform: scale(1.04);
+}
+
+.act2-work-bubble.is-clearing {
+  pointer-events: none;
+  animation: act2WorkBubbleFadeOut 220ms ease-out forwards;
+}
+
+.act2-friend-toast-hand {
+  border: 3px solid #171717;
+  border-radius: 26px;
+  background: #d7d7d7;
+  transform: rotate(-10deg);
+  pointer-events: none;
+  box-shadow: 5px 5px 0 rgba(0, 0, 0, 0.16);
+}
+
+.act2-friend-toast-hand::before,
+.act2-friend-toast-hand::after {
+  content: "";
+  position: absolute;
+  border: 3px solid #171717;
+  background: #f0c29c;
+}
+
+.act2-friend-toast-hand::before {
+  left: 22px;
+  top: 58px;
+  width: 112px;
+  height: 42px;
+  border-radius: 999px;
+}
+
+.act2-friend-toast-hand::after {
+  right: 28px;
+  top: 24px;
+  width: 44px;
+  height: 72px;
+  border-radius: 12px;
+  background: #e9f1ff;
+}
+
+.act2-friend-toast-bubble,
+.act2-friend-top-bubble,
+.act2-friend-bottom-bubble {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 14px;
+  border: 3px solid #171717;
+  border-radius: 22px;
+  background: #fff8df;
+  color: #171717;
+  font-family: YouYuan, "幼圆", "Microsoft YaHei", sans-serif;
+  font-size: 20px;
+  font-weight: 900;
+  line-height: 1.22;
+  text-align: center;
+  box-shadow: 5px 5px 0 rgba(0, 0, 0, 0.16);
+}
+
+.act2-friend-toast-bubble,
+.act2-friend-top-bubble {
+  pointer-events: none;
+  animation: act2FriendTopBubbleIn 260ms ease-out forwards;
+}
+
+.act2-friend-top-bubble.is-leaving {
+  animation: act2FriendTopBubbleOut 320ms ease-out forwards;
+}
+
+.act2-friend-toast-hand.is-leaving,
+.act2-friend-toast-bubble.is-leaving {
+  animation: act2FriendTopBubbleOut 320ms ease-out forwards;
+}
+
+.act2-friend-bottom-bubble {
+  cursor: pointer;
+  background: #eef7ff;
+  transform-origin: center bottom;
+  animation: act2FriendBottomBubbleIn 640ms cubic-bezier(0.18, 0.98, 0.28, 1) forwards;
+  will-change: transform, opacity;
+}
+
+.act2-friend-bottom-bubble:hover {
+  transform: scale(1.05);
+}
+
+.act2-friend-bottom-bubble.is-heart {
+  pointer-events: none;
+  background: #ffe4ef;
+  color: #d71962;
+  animation: act2FriendHeartFloat 560ms ease-out forwards;
+}
+
+@keyframes act2FriendTopBubbleIn {
+  from {
+    opacity: 0;
+    transform: translateY(-18px) scale(0.94);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes act2FriendTopBubbleOut {
+  from {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+
+  to {
+    opacity: 0;
+    transform: translateY(-20px) scale(0.92);
+  }
+}
+
+@keyframes act2FriendBottomBubbleIn {
+  0% {
+    opacity: 0;
+    transform: translateY(58px) scale(0.72);
+  }
+
+  35% {
+    opacity: 0.92;
+    transform: translateY(18px) scale(0.96);
+  }
+
+  72% {
+    opacity: 1;
+    transform: translateY(-8px) scale(1.04);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes act2FriendHeartFloat {
+  0% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+
+  45% {
+    opacity: 1;
+    transform: translateY(-22px) scale(1.22);
+  }
+
+  100% {
+    opacity: 0;
+    transform: translateY(-72px) scale(0.9);
+  }
+}
+
+@keyframes act2WorkBubbleFadeOut {
+  from {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  to {
+    opacity: 0;
+    transform: scale(0.86) translateY(-10px);
+  }
+}
+
 @keyframes act2ConveyorMove {
   from {
     transform: translateX(0);

@@ -1422,6 +1422,9 @@ function recordAct1EatingSpeed(elapsedMs, eatingSpeed) {
 
 let act2LunchPlateItems = [];
 let act2LunchDrag = null;
+let selectedAct2LunchPlaceId = null;
+const ACT2_LUNCH_PLACE_SELECT_STATE = "act2_04_lunch_place_select";
+const ACT2_LUNCH_PLACE_FOCUS_STATE = "act2_05_lunch_place_focus";
 
 function enterAct2LunchIntro() {
   renderAct2State(ACT2_STATES.LUNCH_INTRO);
@@ -1432,9 +1435,18 @@ function enterAct2LunchIntro() {
 
 function enterAct2LunchChoice() {
   act2LunchPlateItems = [];
+  selectedAct2LunchPlaceId = null;
   isAct2LunchLocked = false;
   renderAct2State(ACT2_STATES.LUNCH_CHOICE);
   syncAct2FinishButton();
+}
+
+function enterAct2LunchPlaceSelect() {
+  renderAct2State(ACT2_LUNCH_PLACE_SELECT_STATE);
+}
+
+function enterAct2LunchPlaceFocus() {
+  renderAct2State(ACT2_LUNCH_PLACE_FOCUS_STATE);
 }
 
 function enterAct2LunchDone() {
@@ -1463,6 +1475,8 @@ function renderAct2State(stateId) {
     objectLayer.appendChild(element);
   });
 
+  syncAct2PlateSlots();
+  syncAct2FinishButton();
   console.log(`Entered ${stateId}`, { playerChoices });
 }
 
@@ -1477,7 +1491,7 @@ function getAct2StateConfig(stateId) {
 }
 
 function createAct2ObjectElement(objectId, objectConfig) {
-  const isButton = objectConfig.type === "act2FinishButton";
+  const isButton = objectConfig.type === "act2FinishButton" || objectConfig.type === "act2LunchEndButton";
   const element = document.createElement(isButton ? "button" : "div");
 
   element.id = objectId;
@@ -1489,10 +1503,18 @@ function createAct2ObjectElement(objectId, objectConfig) {
     renderAct2ConveyorWindow(element, objectConfig);
   } else if (objectConfig.type === "act2PlateSlot") {
     renderAct2PlateSlot(element, objectConfig);
+  } else if (objectConfig.type === "act2ComicGrid") {
+    renderAct2ComicPanelSelector(element, objectConfig);
+  } else if (objectConfig.type === "act2ComicFocus") {
+    renderAct2ComicFocus(element);
   } else if (objectConfig.type === "act2FinishButton") {
     element.type = "button";
     element.textContent = objectConfig.content || "完成午餐选择";
     element.addEventListener("click", finishAct2LunchChoice);
+  } else if (objectConfig.type === "act2LunchEndButton") {
+    element.type = "button";
+    element.textContent = objectConfig.content || "午餐结束";
+    element.addEventListener("click", finishAct2LunchScene);
   } else {
     element.textContent = objectConfig.content || "";
   }
@@ -1519,6 +1541,18 @@ function getAct2ObjectClassName(type) {
 
   if (type === "act2FinishButton") {
     return "act2-scene-object act2-finish-button";
+  }
+
+  if (type === "act2ComicGrid") {
+    return "act2-scene-object act2-comic-grid";
+  }
+
+  if (type === "act2ComicFocus") {
+    return "act2-scene-object act2-comic-focus";
+  }
+
+  if (type === "act2LunchEndButton") {
+    return "act2-scene-object act2-lunch-end-button";
   }
 
   if (type === "act2IntroPanel") {
@@ -1560,10 +1594,22 @@ function getAct2LunchChoice(choiceId) {
 
 function getAct2LunchStepConfig() {
   return act2Choices?.steps?.[0] || {
-    stepId: "act2_s01_lunchPlateChoice",
+    stepId: "act2_lunchPlateChoice",
     interactionType: "drag_lunch_foods_to_plate",
     choiceLimit: 4
   };
+}
+
+function getAct2LunchPlaceStepConfig() {
+  return act2Choices?.steps?.[1] || {
+    stepId: "act2_lunchPlaceChoice",
+    interactionType: "click_lunch_place",
+    choiceLimit: 1
+  };
+}
+
+function getAct2LunchPlaceChoice(placeId) {
+  return act2Choices?.lunchPlaces?.find((place) => place.id === placeId) || null;
 }
 
 function renderAct2ConveyorWindow(element, objectConfig) {
@@ -1618,6 +1664,80 @@ function createAct2LunchFoodCard(choice) {
 function renderAct2PlateSlot(element, objectConfig) {
   element.dataset.slotIndex = String(objectConfig.slotIndex);
   element.textContent = objectConfig.content || `格子 ${Number(objectConfig.slotIndex) + 1}`;
+}
+
+function syncAct2PlateSlots() {
+  objectLayer?.querySelectorAll(".act2-plate-slot").forEach((slotElement) => {
+    const slotIndex = Number(slotElement.dataset.slotIndex);
+    const selectedFood = act2LunchPlateItems.find((food) => food.slotIndex === slotIndex);
+
+    if (!selectedFood) {
+      slotElement.classList.remove("is-filled");
+      slotElement.textContent = `格子 ${slotIndex + 1}`;
+      return;
+    }
+
+    slotElement.classList.add("is-filled");
+    slotElement.innerHTML = `
+      <span class="act2-slot-food-name">${selectedFood.label || selectedFood.foodName}</span>
+      <span class="act2-slot-food-category">${selectedFood.category || "无"}</span>
+    `;
+  });
+}
+
+function renderAct2ComicPanelSelector(element, objectConfig) {
+  (objectConfig.panels || []).forEach((panelConfig) => {
+    const place = getAct2LunchPlaceChoice(panelConfig.placeId);
+
+    if (!place) {
+      return;
+    }
+
+    const panel = document.createElement("button");
+    const shot = document.createElement("span");
+
+    panel.type = "button";
+    panel.setAttribute("aria-label", place.label || place.name);
+    panel.className = "act2-comic-panel";
+    panel.dataset.placeId = place.id;
+    panel.style.gridColumn = String(panelConfig.column || 1);
+    panel.style.gridRow = String(panelConfig.row || 1);
+    shot.className = "act2-comic-panel-shot";
+    shot.dataset.shot = panelConfig.shot || "";
+    panel.appendChild(shot);
+    panel.addEventListener("click", () => expandAct2ComicPanel(place.id));
+    element.appendChild(panel);
+  });
+}
+
+function renderAct2ComicFocus(element) {
+  const place = getAct2LunchPlaceChoice(selectedAct2LunchPlaceId);
+
+  if (!place) {
+    element.textContent = "请选择一个漫画分镜。";
+    return;
+  }
+
+  element.dataset.placeId = place.id;
+  element.innerHTML = `
+    <div class="act2-comic-focus-frame" data-place-id="${place.id}"></div>
+  `;
+}
+
+function expandAct2ComicPanel(placeId) {
+  if (currentPhase !== PHASES.ACT2_LUNCH || currentState !== ACT2_LUNCH_PLACE_SELECT_STATE) {
+    return;
+  }
+
+  const place = getAct2LunchPlaceChoice(placeId);
+
+  if (!place) {
+    return;
+  }
+
+  selectedAct2LunchPlaceId = place.id;
+  recordAct2LunchPlaceChoice(place);
+  enterAct2LunchPlaceFocus();
 }
 
 function bindAct2LunchDragSource(element, choiceId) {
@@ -1758,7 +1878,7 @@ function finishAct2LunchChoice() {
   });
   syncAct2FinishButton();
   window.setTimeout(() => {
-    enterAct2LunchDone();
+    enterAct2LunchPlaceSelect();
   }, 520);
 }
 
@@ -1783,7 +1903,45 @@ function recordAct2LunchPlateChoice() {
   console.log("Act 2 playerChoices:", playerChoices);
 }
 
+function finishAct2LunchScene() {
+  if (currentState !== ACT2_LUNCH_PLACE_FOCUS_STATE) {
+    return;
+  }
+
+  enterAct2LunchDone();
+}
+
+function recordAct2LunchPlaceChoice(place) {
+  const stepConfig = getAct2LunchPlaceStepConfig();
+  const record = {
+    sceneId: "act2",
+    stepId: stepConfig.stepId,
+    interactionType: stepConfig.interactionType,
+    placeId: place.id,
+    placeName: place.name,
+    label: place.label,
+    eatingMode: place.eatingMode || "无",
+    description: place.description || "",
+    riskTags: place.riskTags || [],
+    tendencyScores: place.tendencyScores || {}
+  };
+
+  playerChoices.push(record);
+  console.log("Act 2 lunch place choice:", record);
+  console.log("Act 2 playerChoices:", playerChoices);
+}
+
+// DEBUG ACT2 START
+const debugMode = true;
+// DEBUG ACT2 END
+
 function startConfiguredEntry() {
+  // DEBUG ACT2 START
+  if (debugMode) {
+    renderDebugEntryControls();
+  }
+  // DEBUG ACT2 END
+
   if (!PREVIEW_ENTRY_CONFIG.enabled) {
     enterAct0();
     return;
@@ -1791,6 +1949,57 @@ function startConfiguredEntry() {
 
   startPreviewEntry();
 }
+
+// DEBUG ACT2 START
+function renderDebugEntryControls() {
+  document.querySelector(".debug-entry-controls")?.remove();
+
+  const controls = document.createElement("div");
+  const jumpAct2Button = document.createElement("button");
+
+  controls.className = "debug-entry-controls";
+  jumpAct2Button.type = "button";
+  jumpAct2Button.textContent = "跳到 Act2 开始测试";
+  jumpAct2Button.addEventListener("click", startDebugAct2Entry);
+  controls.appendChild(jumpAct2Button);
+  document.querySelector("#app")?.appendChild(controls);
+}
+
+function removeDebugEntryControls() {
+  document.querySelector(".debug-entry-controls")?.remove();
+}
+
+function startDebugAct2Entry() {
+  removeDebugEntryControls();
+  isIntroActive = false;
+  introStep = 0;
+  isWheelLocked = false;
+  isIntroAnimating = false;
+  isTransitioning = false;
+  isStateLocked = false;
+  hideIntroBubble();
+  hideGuidanceBubbles();
+  hideHoverInfoTooltip();
+  stopHotpotFloatingBubbles();
+  cleanupAct0Layer();
+  cleanupGalaxyLocatingLayer();
+  resultGalaxyLayer?.remove();
+  resultGalaxyLayer = null;
+  resultRiskLayer = null;
+  objectLayer?.querySelectorAll(".act1-scene-object, .act2-scene-object").forEach((element) => element.remove());
+  objectLayer?.classList.remove("act3-exit-sequence");
+  hasAct3ExitStarted = false;
+  isAct3ExitAnimating = false;
+  isAct3ScrollExitEnabled = false;
+  isAct3Complete = false;
+  act3ExitProgress = 0;
+  hasResultRiskIntroStarted = false;
+  resultRiskIntroStep = 0;
+  resultRiskIntroWheelLocked = false;
+  currentState = null;
+  enterAct2LunchIntro();
+}
+// DEBUG ACT2 END
 
 function startPreviewEntry() {
   isIntroActive = false;

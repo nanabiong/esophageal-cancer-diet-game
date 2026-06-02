@@ -163,6 +163,217 @@
         }
       }
     },
+    "act2_04_lunch_place_select": {
+      "_note": "Act2 comic panel lunch place selection with persistent plate.",
+      "objects": {
+        "act2_s04_comic_grid": {
+          "type": "act2ComicGrid",
+          "x": 220,
+          "y": 76,
+          "width": 1480,
+          "height": 414,
+          "opacity": 1,
+          "scale": 1,
+          "zIndex": 7,
+          "panels": [
+            {
+              "placeId": "act2_place_canteen_table",
+              "row": 1,
+              "column": 1,
+              "shot": "table-corner",
+              "caption": "桌角特写"
+            },
+            {
+              "placeId": "act2_place_coworkers",
+              "row": 1,
+              "column": 2,
+              "shot": "chat",
+              "caption": "人物聊天特写"
+            },
+            {
+              "placeId": "act2_place_park_bench",
+              "row": 2,
+              "column": 1,
+              "shot": "bench",
+              "caption": "长椅特写"
+            },
+            {
+              "placeId": "act2_place_office_desk",
+              "row": 2,
+              "column": 2,
+              "shot": "screen",
+              "caption": "电脑屏幕特写"
+            }
+          ]
+        },
+        "act2_s04_hands": {
+          "type": "act2Hands",
+          "x": 412,
+          "y": 628,
+          "width": 1096,
+          "height": 196,
+          "opacity": 1,
+          "scale": 1,
+          "zIndex": 3,
+          "content": "手"
+        },
+        "act2_s04_plate": {
+          "type": "act2Plate",
+          "x": 560,
+          "y": 498,
+          "width": 800,
+          "height": 270,
+          "opacity": 1,
+          "scale": 1,
+          "zIndex": 6,
+          "content": "餐盘"
+        },
+        "act2_s04_plate_slot_1": {
+          "type": "act2PlateSlot",
+          "slotIndex": 0,
+          "x": 605,
+          "y": 538,
+          "width": 160,
+          "height": 170,
+          "opacity": 1,
+          "scale": 1,
+          "zIndex": 8,
+          "content": "格子 1"
+        },
+        "act2_s04_plate_slot_2": {
+          "type": "act2PlateSlot",
+          "slotIndex": 1,
+          "x": 797,
+          "y": 538,
+          "width": 160,
+          "height": 170,
+          "opacity": 1,
+          "scale": 1,
+          "zIndex": 8,
+          "content": "格子 2"
+        },
+        "act2_s04_plate_slot_3": {
+          "type": "act2PlateSlot",
+          "slotIndex": 2,
+          "x": 989,
+          "y": 538,
+          "width": 160,
+          "height": 170,
+          "opacity": 1,
+          "scale": 1,
+          "zIndex": 8,
+          "content": "格子 3"
+        },
+        "act2_s04_plate_slot_4": {
+          "type": "act2PlateSlot",
+          "slotIndex": 3,
+          "x": 1181,
+          "y": 538,
+          "width": 160,
+          "height": 170,
+          "opacity": 1,
+          "scale": 1,
+          "zIndex": 8,
+          "content": "格子 4"
+        }
+      }
+    },
+    "act2_05_lunch_place_focus": {
+      "_note": "Act2 focused comic panel lunch place with persistent plate.",
+      "objects": {
+        "act2_s05_comic_focus": {
+          "type": "act2ComicFocus",
+          "x": 150,
+          "y": 60,
+          "width": 1620,
+          "height": 420,
+          "opacity": 1,
+          "scale": 1,
+          "zIndex": 7
+        },
+        "act2_s05_confirm_button": {
+          "type": "act2LunchEndButton",
+          "x": 1320,
+          "y": 392,
+          "width": 330,
+          "height": 68,
+          "opacity": 1,
+          "scale": 1,
+          "zIndex": 12,
+          "content": "午餐结束"
+        },
+        "act2_s05_hands": {
+          "type": "act2Hands",
+          "x": 412,
+          "y": 628,
+          "width": 1096,
+          "height": 196,
+          "opacity": 1,
+          "scale": 1,
+          "zIndex": 3,
+          "content": "手"
+        },
+        "act2_s05_plate": {
+          "type": "act2Plate",
+          "x": 560,
+          "y": 498,
+          "width": 800,
+          "height": 270,
+          "opacity": 1,
+          "scale": 1,
+          "zIndex": 6,
+          "content": "餐盘"
+        },
+        "act2_s05_plate_slot_1": {
+          "type": "act2PlateSlot",
+          "slotIndex": 0,
+          "x": 605,
+          "y": 538,
+          "width": 160,
+          "height": 170,
+          "opacity": 1,
+          "scale": 1,
+          "zIndex": 8,
+          "content": "格子 1"
+        },
+        "act2_s05_plate_slot_2": {
+          "type": "act2PlateSlot",
+          "slotIndex": 1,
+          "x": 797,
+          "y": 538,
+          "width": 160,
+          "height": 170,
+          "opacity": 1,
+          "scale": 1,
+          "zIndex": 8,
+          "content": "格子 2"
+        },
+        "act2_s05_plate_slot_3": {
+          "type": "act2PlateSlot",
+          "slotIndex": 2,
+          "x": 989,
+          "y": 538,
+          "width": 160,
+          "height": 170,
+          "opacity": 1,
+          "scale": 1,
+          "zIndex": 8,
+          "content": "格子 3"
+        },
+        "act2_s05_plate_slot_4": {
+          "type": "act2PlateSlot",
+          "slotIndex": 3,
+          "x": 1181,
+          "y": 538,
+          "width": 160,
+          "height": 170,
+          "opacity": 1,
+          "scale": 1,
+          "zIndex": 8,
+          "content": "格子 4"
+        }
+      }
+    },
     "act2_03_lunch_done": {
       "_note": "Act2 lunch recorded placeholder.",
       "nextStateDelay": 1200,

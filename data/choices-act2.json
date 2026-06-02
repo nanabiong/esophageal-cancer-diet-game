@@ -8,9 +8,14 @@
   "actId": "act2",
   "steps": [
     {
-      "stepId": "act2_s01_lunchPlateChoice",
+      "stepId": "act2_lunchPlateChoice",
       "interactionType": "drag_lunch_foods_to_plate",
       "choiceLimit": 4
+    },
+    {
+      "stepId": "act2_lunchPlaceChoice",
+      "interactionType": "click_lunch_place",
+      "choiceLimit": 1
     }
   ],
   "choices": [
@@ -138,6 +143,52 @@
         "L": 2,
         "C": 2,
         "A": 1
+      }
+    }
+  ],
+  "lunchPlaces": [
+    {
+      "id": "act2_place_canteen_table",
+      "name": "食堂小桌子",
+      "label": "食堂小桌子",
+      "eatingMode": "快速进食",
+      "description": "低保真占位描述，后续替换正式文案。",
+      "riskTags": ["冲刺"],
+      "tendencyScores": {
+        "D": 2
+      }
+    },
+    {
+      "id": "act2_place_coworkers",
+      "name": "食堂和同事吃",
+      "label": "食堂和同事吃",
+      "eatingMode": "无",
+      "description": "低保真占位描述，后续替换正式文案。",
+      "riskTags": ["仪式"],
+      "tendencyScores": {
+        "O": 2
+      }
+    },
+    {
+      "id": "act2_place_park_bench",
+      "name": "公园长椅上",
+      "label": "公园长椅上",
+      "eatingMode": "无",
+      "description": "低保真占位描述，后续替换正式文案。",
+      "riskTags": ["仪式"],
+      "tendencyScores": {
+        "O": 3
+      }
+    },
+    {
+      "id": "act2_place_office_desk",
+      "name": "办公桌前",
+      "label": "办公桌前",
+      "eatingMode": "不规律进食",
+      "description": "低保真占位描述，后续替换正式文案。",
+      "riskTags": ["冲刺"],
+      "tendencyScores": {
+        "D": 3
       }
     }
   ]

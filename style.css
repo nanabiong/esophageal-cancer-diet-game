@@ -125,6 +125,19 @@ button:disabled {
   font-weight: 700;
 }
 
+.debug-entry-controls {
+  position: absolute;
+  right: 24px;
+  top: 24px;
+  z-index: 120;
+  display: flex;
+  gap: 10px;
+}
+
+.debug-entry-controls button {
+  background: #d7f0ff;
+}
+
 .frame-viewport,
 .stage-wrapper {
   position: relative;
@@ -1368,9 +1381,11 @@ button:disabled {
 
 .act2-intro-panel,
 .act2-done-panel {
+  display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 28px;
+  border: 3px solid #171717;
+  border-radius: 8px;
   background: rgba(255, 250, 235, 0.94);
   color: #382620;
   font-family: YouYuan, "幼圆", "Microsoft YaHei", sans-serif;
@@ -1380,82 +1395,1131 @@ button:disabled {
   text-align: center;
 }
 
-.act2-lunch-option {
+.act2-intro-bubble {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 22px 28px;
+  border: 3px solid #171717;
+  border-radius: 24px;
+  background: #fff8df;
+  color: #171717;
+  font-family: YouYuan, "幼圆", "Microsoft YaHei", sans-serif;
+  font-size: 28px;
+  font-weight: 900;
+  line-height: 1.35;
+  text-align: left;
+  box-shadow: 5px 5px 0 rgba(0, 0, 0, 0.16);
+}
+
+.act2-intro-bubble::after {
+  content: "";
+  position: absolute;
+  left: 42px;
+  bottom: -22px;
+  width: 34px;
+  height: 34px;
+  border-right: 3px solid #171717;
+  border-bottom: 3px solid #171717;
+  background: #fff8df;
+  transform: rotate(45deg);
+}
+
+.act2-intro-bubble-text {
+  position: relative;
+  z-index: 1;
+}
+
+.act2-intro-bubble.is-exiting {
+  animation: act2IntroBubbleFadeOut 260ms ease-out forwards;
+}
+
+.act2-conveyor-window {
+  overflow: hidden;
+  border: 4px solid #171717;
+  border-radius: 8px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.55), rgba(255, 255, 255, 0)),
+    #cfd8dc;
+  box-shadow: 5px 5px 0 rgba(0, 0, 0, 0.16);
+}
+
+.act2-static-image-preview {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 4px solid #171717;
+  border-radius: 8px;
+  background:
+    linear-gradient(135deg, transparent 48%, rgba(23, 23, 23, 0.18) 49% 51%, transparent 52%),
+    linear-gradient(45deg, transparent 48%, rgba(23, 23, 23, 0.12) 49% 51%, transparent 52%),
+    #d6d6d6;
+  color: #171717;
+  font-family: YouYuan, "幼圆", "Microsoft YaHei", sans-serif;
+  font-size: 30px;
+  font-weight: 900;
+  box-shadow: 5px 5px 0 rgba(0, 0, 0, 0.16);
+  pointer-events: none;
+}
+
+.act2-static-image-preview.is-exiting {
+  animation: act2IntroBubbleFadeOut 260ms ease-out forwards;
+}
+
+.act2-conveyor-window.is-exiting,
+.act2-prep-area.is-exiting {
+  animation: act2IntroBubbleFadeOut 260ms ease-out forwards;
+}
+
+.act2-static-image-preview-label {
+  padding: 10px 18px;
+  border: 3px solid #171717;
+  background: #fff8df;
+}
+
+.act2-enter-from-left {
+  animation: act2EnterFromLeft 720ms cubic-bezier(0.65, 0, 0.22, 1) both;
+}
+
+.act2-enter-from-right {
+  animation: act2EnterFromRight 760ms cubic-bezier(0.65, 0, 0.22, 1) both;
+}
+
+.act2-cannot-go-back-hint {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 20px;
+  border: 3px solid #171717;
+  border-radius: 20px;
+  background: #fff8df;
+  color: #171717;
+  font-family: YouYuan, "幼圆", "Microsoft YaHei", sans-serif;
+  font-size: 22px;
+  font-weight: 900;
+  line-height: 1.25;
+  text-align: center;
+  box-shadow: 5px 5px 0 rgba(0, 0, 0, 0.16);
+}
+
+.act2-cannot-go-back-hint.is-exiting {
+  animation: act2IntroBubbleFadeOut 260ms ease-out forwards;
+}
+
+.act2-choice-window-a-enter {
+  animation: act2ChoiceWindowAEnter 720ms cubic-bezier(0.65, 0, 0.22, 1) both;
+}
+
+.act2-choice-window-b-enter {
+  animation: act2ChoiceWindowBEnter 760ms cubic-bezier(0.65, 0, 0.22, 1) both;
+}
+
+.act2-choice-plate-enter {
+  animation: act2ChoicePlateEnter 760ms cubic-bezier(0.65, 0, 0.22, 1) both;
+}
+
+.act2-conveyor-label {
+  position: absolute;
+  left: 18px;
+  top: 10px;
+  z-index: 2;
+  padding: 4px 10px;
+  border: 2px solid #171717;
+  background: #fff8df;
+  color: #171717;
+  font-family: YouYuan, "幼圆", "Microsoft YaHei", sans-serif;
+  font-size: 18px;
+  font-weight: 800;
+}
+
+.act2-conveyor-track {
+  position: absolute;
+  left: 0;
+  top: 58px;
+  display: flex;
+  gap: 34px;
+  width: max-content;
+  padding: 0 34px;
+  animation: act2ConveyorMove var(--act2-conveyor-duration, 38000ms) linear infinite;
+}
+
+.act2-conveyor-window:hover .act2-conveyor-track {
+  animation-play-state: paused;
+}
+
+.act2-lunch-food {
+  width: 280px;
+  height: 180px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #171717;
+  cursor: default;
+  font-family: YouYuan, "幼圆", "Microsoft YaHei", sans-serif;
+  line-height: 1.15;
+  touch-action: none;
+}
+
+.act2-conveyor-food-card {
+  position: relative;
+}
+
+.act2-conveyor-food-card.is-dragging .act2-food-plate {
+  transform: translateX(-50%);
+}
+
+.act2-conveyor-food-card.is-empty .act2-food-item {
+  opacity: 0;
+  pointer-events: none;
+  visibility: hidden;
+}
+
+.act2-conveyor-food-card.is-picked .act2-food-item {
+  opacity: 0;
+  pointer-events: none;
+  visibility: hidden;
+}
+
+.act2-conveyor-food-card.is-picked .act2-food-plate,
+.act2-food-plate-empty {
+  background:
+    radial-gradient(ellipse at 50% 42%, rgba(255, 255, 255, 0.96) 0 48%, transparent 49%),
+    #efefef;
+}
+
+.act2-food-plate {
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  width: 260px;
+  height: 100px;
+  border: 3px solid #171717;
+  border-radius: 50%;
+  background:
+    radial-gradient(ellipse at 50% 42%, rgba(255, 255, 255, 0.92) 0 40%, transparent 41%),
+    #e8e8e8;
+  box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.16);
+  transform: translateX(-50%);
+}
+
+.act2-food-item {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  z-index: 2;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  gap: 8px;
+  width: 160px;
+  height: 150px;
+  padding: 10px;
+  border: 3px solid #171717;
+  border-radius: 8px;
+  background: #fff1b8;
+  cursor: grab;
+  box-shadow:
+    4px 4px 0 rgba(0, 0, 0, 0.16),
+    inset 0 -8px 0 rgba(0, 0, 0, 0.05);
+  transform: translateX(-50%);
+}
+
+.act2-food-item:hover,
+.act2-food-item.is-dragging {
+  transform: translateX(-50%) translateY(-4px);
+}
+
+.act2-food-item.is-dragging {
+  cursor: grabbing;
+}
+
+.act2-lunch-food-name {
+  max-width: 100%;
+  font-size: 20px;
+  font-weight: 900;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.act2-lunch-food-category {
+  max-width: 100%;
+  color: #5a4a38;
+  font-size: 14px;
+  font-weight: 700;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.act2-lunch-drag-ghost {
+  position: fixed;
+  z-index: 9999;
+  pointer-events: none;
+  opacity: 0.92;
+  transform: rotate(-2deg);
+}
+
+.act2-lunch-drag-ghost.act2-food-item {
+  transform: rotate(-2deg);
+}
+
+.act2-prep-area {
+  display: flex;
+  flex-direction: column;
   gap: 14px;
   padding: 18px;
-  border: 3px solid #171717;
-  background: #d7d7d7;
+  border: 4px dashed #171717;
+  border-radius: 10px;
+  background: rgba(255, 248, 223, 0.88);
   color: #171717;
-  cursor: pointer;
   font-family: YouYuan, "幼圆", "Microsoft YaHei", sans-serif;
-  box-shadow:
-    5px 5px 0 rgba(0, 0, 0, 0.14),
-    -1px -1px 0 rgba(0, 0, 0, 0.22);
+  box-shadow: 5px 5px 0 rgba(0, 0, 0, 0.14);
 }
 
-.act2-lunch-option:hover:not(:disabled) {
-  transform: scale(1.045);
-  background: #e2ded4;
+.act2-prep-area-title {
+  font-size: 24px;
+  font-weight: 900;
 }
 
-.act2-lunch-option.is-selected {
-  opacity: 1;
-  background: #f2e4bd;
-  transform: scale(1.06);
+.act2-prep-area-list {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
 }
 
-.act2-lunch-option.is-selected:disabled {
-  opacity: 1;
+.act2-prep-food {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 54px;
+  padding: 8px 10px;
+  border: 3px solid #171717;
+  border-radius: 8px;
+  background: #fff1b8;
+  font-size: 18px;
+  font-weight: 900;
+  text-align: center;
 }
 
-.act2-lunch-sketch {
-  position: relative;
-  width: min(72%, 220px);
-  height: min(56%, 150px);
-  border: 4px solid #171717;
+.act2-prep-food.is-empty {
+  border-style: dashed;
+  background: rgba(255, 255, 255, 0.45);
+  color: rgba(23, 23, 23, 0.42);
+}
+
+.act2-catch-game {
+  border: 4px dashed rgba(23, 23, 23, 0.45);
+  border-radius: 12px;
   background:
-    linear-gradient(135deg, transparent 46%, #171717 47% 49%, transparent 50%),
-    rgba(255, 255, 255, 0.22);
-  transform: rotate(-1.5deg);
-}
-
-.act2-lunch-sketch::before,
-.act2-lunch-sketch::after {
-  content: "";
-  position: absolute;
-  border: 4px solid #171717;
+    linear-gradient(to bottom, rgba(207, 216, 220, 0.72), rgba(255, 248, 223, 0.24)),
+    rgba(255, 255, 255, 0.42);
   pointer-events: none;
 }
 
-.act2-lunch-sketch::before {
-  left: 18%;
-  top: 34%;
-  width: 64%;
-  height: 30%;
-  border-radius: 999px;
+.act2-catch-plate {
+  pointer-events: none;
 }
 
-.act2-lunch-sketch::after {
-  left: 38%;
-  top: 18%;
-  width: 24%;
-  height: 58%;
-  border-top: 0;
-  border-bottom: 0;
+.act2-catch-plate-slot {
+  pointer-events: none;
+}
+
+.act2-falling-food {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px;
+  border: 3px solid #171717;
+  border-radius: 8px;
+  background: #fff1b8;
+  color: #171717;
+  font-family: YouYuan, "幼圆", "Microsoft YaHei", sans-serif;
+  font-size: 20px;
+  font-weight: 900;
+  text-align: center;
+  box-shadow:
+    4px 4px 0 rgba(0, 0, 0, 0.16),
+    inset 0 -8px 0 rgba(0, 0, 0, 0.05);
+  pointer-events: none;
+}
+
+.act2-falling-food-name {
+  max-width: 100%;
+}
+
+.act2-hands {
+  display: none;
+  pointer-events: none;
+}
+
+.act2-hands::before,
+.act2-hands::after {
+  content: "";
+  position: absolute;
+  top: 82px;
+  width: 260px;
+  height: 78px;
+  border: 4px solid #171717;
+  border-radius: 999px;
+  background: #f0c29c;
+}
+
+.act2-hands::before {
+  left: 48px;
   transform: rotate(8deg);
 }
 
-.act2-lunch-label {
-  position: relative;
-  z-index: 2;
-  font-size: 26px;
+.act2-hands::after {
+  right: 48px;
+  transform: rotate(-8deg);
+}
+
+.act2-plate {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 4px solid #171717;
+  border-radius: 28px;
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0)),
+    #d7d7d7;
+  color: rgba(23, 23, 23, 0.38);
+  font-family: YouYuan, "幼圆", "Microsoft YaHei", sans-serif;
+  font-size: 28px;
+  font-weight: 900;
+  pointer-events: none;
+  box-shadow: 6px 6px 0 rgba(0, 0, 0, 0.16);
+}
+
+.act2-plate-slot {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 10px;
+  border: 3px dashed #171717;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.45);
+  color: rgba(23, 23, 23, 0.46);
+  font-family: YouYuan, "幼圆", "Microsoft YaHei", sans-serif;
+  font-size: 22px;
   font-weight: 800;
-  line-height: 1.2;
   text-align: center;
+}
+
+.act2-plate-slot.is-filled {
+  border-style: solid;
+  background: #fff1b8;
+  color: #171717;
+}
+
+.act2-plate-slot.is-eaten {
+  opacity: 0.58;
+  background: #e2e2e2;
+}
+
+.act2-plate-slot.is-eaten .act2-slot-food-name {
+  color: #555;
+}
+
+.act2-slot-food-name {
+  max-width: 100%;
+  font-size: 20px;
+  font-weight: 900;
+  line-height: 1.1;
+}
+
+.act2-slot-food-category {
+  max-width: 100%;
+  color: #5f5140;
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 1.1;
+}
+
+.act2-finish-button {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  border: 3px solid #171717;
+  border-radius: 8px;
+  background: #9ed6bd;
+  color: #171717;
+  cursor: pointer;
+  font-family: YouYuan, "幼圆", "Microsoft YaHei", sans-serif;
+  font-size: 24px;
+  font-weight: 900;
+  box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.16);
+}
+
+.act2-finish-button.is-visible {
+  display: flex;
+}
+
+.act2-finish-button:hover:not(:disabled) {
+  transform: translateY(-3px);
+  background: #b5e7c9;
+}
+
+.act2-finish-button:disabled {
+  cursor: default;
+  opacity: 0;
+}
+
+.act2-comic-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-rows: repeat(2, minmax(0, 1fr));
+  gap: 28px;
+  padding: 0;
+}
+
+.act2-comic-panel {
+  position: relative;
+  overflow: hidden;
+  min-width: 0;
+  min-height: 0;
+  padding: 0;
+  border: 4px solid #171717;
+  border-radius: 8px;
+  background: #d1d1d1;
+  color: #171717;
+  cursor: pointer;
+  font-family: YouYuan, "幼圆", "Microsoft YaHei", sans-serif;
+  box-shadow: 5px 5px 0 rgba(0, 0, 0, 0.16);
+}
+
+.act2-comic-panel:hover {
+  transform: translateY(-4px);
+  background: #e4e4e0;
+}
+
+.act2-comic-panel.act2-panel-enter-left {
+  animation: act2PanelEnterLeft 620ms cubic-bezier(0.65, 0, 0.22, 1) both;
+}
+
+.act2-comic-panel.act2-panel-enter-right {
+  animation: act2PanelEnterRight 620ms cubic-bezier(0.65, 0, 0.22, 1) both;
+}
+
+.act2-comic-panel-shot {
+  position: absolute;
+  inset: 18px;
+  border: 4px solid #171717;
+  background:
+    linear-gradient(135deg, transparent 47%, rgba(23, 23, 23, 0.3) 48% 50%, transparent 51%),
+    #b8b8b8;
+}
+
+.act2-comic-panel-shot[data-shot="table-corner"]::before,
+.act2-comic-panel-shot[data-shot="chat"]::before,
+.act2-comic-panel-shot[data-shot="bench"]::before,
+.act2-comic-panel-shot[data-shot="screen"]::before {
+  content: "";
+  position: absolute;
+  border: 3px solid #171717;
+}
+
+.act2-comic-panel-shot[data-shot="table-corner"]::before {
+  left: 36px;
+  top: 50px;
+  width: 150px;
+  height: 38px;
+  background: #9e9e9e;
+}
+
+.act2-comic-panel-shot[data-shot="chat"]::before {
+  left: 58px;
+  top: 28px;
+  width: 62px;
+  height: 62px;
+  border-radius: 50%;
+  box-shadow: 120px 0 0 -3px #b8b8b8, 120px 0 0 0 #171717;
+}
+
+.act2-comic-panel-shot[data-shot="bench"]::before {
+  left: 34px;
+  top: 62px;
+  width: 220px;
+  height: 28px;
+  background: #9e9e9e;
+}
+
+.act2-comic-panel-shot[data-shot="screen"]::before {
+  left: 80px;
+  top: 22px;
+  width: 160px;
+  height: 80px;
+  background: #cfcfcf;
+}
+
+.act2-comic-focus {
+  border: 5px solid #171717;
+  border-radius: 8px;
+  background: #d0d0d0;
+  color: #171717;
+  font-family: YouYuan, "幼圆", "Microsoft YaHei", sans-serif;
+  box-shadow: 7px 7px 0 rgba(0, 0, 0, 0.18);
+}
+
+.act2-comic-focus-frame {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: calc(100% - 64px);
+  height: calc(100% - 64px);
+  border: 4px solid #171717;
+  border-radius: 6px;
+  background:
+    linear-gradient(135deg, transparent 48%, rgba(23, 23, 23, 0.28) 49% 51%, transparent 52%),
+    linear-gradient(45deg, transparent 48%, rgba(23, 23, 23, 0.18) 49% 51%, transparent 52%),
+    #b7b7b7;
+  transform: translate(-50%, -50%);
+}
+
+.act2-lunch-end-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 3px solid #171717;
+  border-radius: 8px;
+  background: #9ed6bd;
+  color: #171717;
+  cursor: pointer;
+  font-family: YouYuan, "幼圆", "Microsoft YaHei", sans-serif;
+  font-size: 22px;
+  font-weight: 900;
+  box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.16);
+}
+
+.act2-lunch-end-button:hover {
+  transform: translateY(-3px);
+  background: #b5e7c9;
+}
+
+.act2-lunch-end-button[hidden],
+.act2-lunch-end-button.is-hidden {
+  display: none !important;
+}
+
+.act2-work-bubble {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 18px;
+  border: 3px solid #171717;
+  border-radius: 22px;
+  background: #fff8df;
+  color: #171717;
+  cursor: pointer;
+  font-family: YouYuan, "幼圆", "Microsoft YaHei", sans-serif;
+  font-size: 22px;
+  font-weight: 900;
+  line-height: 1.25;
+  text-align: center;
+  box-shadow: 5px 5px 0 rgba(0, 0, 0, 0.18);
+}
+
+.act2-work-bubble[data-overlap-plate="true"] {
+  background: #ffe1e1;
+}
+
+.act2-work-bubble:hover {
+  transform: scale(1.04);
+}
+
+.act2-work-bubble.is-clearing {
+  pointer-events: none;
+  animation: act2WorkBubbleFadeOut 220ms ease-out forwards;
+}
+
+.act2-friend-toast-hand {
+  border: 3px solid #171717;
+  border-radius: 26px;
+  background: #d7d7d7;
+  transform: rotate(-10deg);
+  pointer-events: none;
+  box-shadow: 5px 5px 0 rgba(0, 0, 0, 0.16);
+}
+
+.act2-friend-toast-hand::before,
+.act2-friend-toast-hand::after {
+  content: "";
+  position: absolute;
+  border: 3px solid #171717;
+  background: #f0c29c;
+}
+
+.act2-friend-toast-hand::before {
+  left: 22px;
+  top: 58px;
+  width: 112px;
+  height: 42px;
+  border-radius: 999px;
+}
+
+.act2-friend-toast-hand::after {
+  right: 28px;
+  top: 24px;
+  width: 44px;
+  height: 72px;
+  border-radius: 12px;
+  background: #e9f1ff;
+}
+
+.act2-friend-toast-bubble,
+.act2-friend-top-bubble,
+.act2-friend-bottom-bubble {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 14px;
+  border: 3px solid #171717;
+  border-radius: 22px;
+  background: #fff8df;
+  color: #171717;
+  font-family: YouYuan, "幼圆", "Microsoft YaHei", sans-serif;
+  font-size: 20px;
+  font-weight: 900;
+  line-height: 1.22;
+  text-align: center;
+  box-shadow: 5px 5px 0 rgba(0, 0, 0, 0.16);
+}
+
+.act2-friend-toast-bubble,
+.act2-friend-top-bubble {
+  pointer-events: none;
+  animation: act2FriendTopBubbleIn 260ms ease-out forwards;
+}
+
+.act2-friend-top-bubble.is-leaving {
+  animation: act2FriendTopBubbleOut 320ms ease-out forwards;
+}
+
+.act2-friend-toast-hand.is-leaving,
+.act2-friend-toast-bubble.is-leaving {
+  animation: act2FriendTopBubbleOut 320ms ease-out forwards;
+}
+
+.act2-friend-bottom-bubble {
+  cursor: pointer;
+  background: #eef7ff;
+  transform-origin: center bottom;
+  animation: act2FriendBottomBubbleIn 640ms cubic-bezier(0.18, 0.98, 0.28, 1) forwards;
+  will-change: transform, opacity;
+}
+
+.act2-friend-bottom-bubble:hover {
+  transform: scale(1.05);
+}
+
+.act2-friend-bottom-bubble.is-heart {
+  pointer-events: none;
+  background: #ffe4ef;
+  color: #d71962;
+  animation: act2FriendHeartFloat 560ms ease-out forwards;
+}
+
+.act2-park-scene {
+  border: 4px dashed rgba(23, 23, 23, 0.72);
+  border-radius: 8px;
+  background:
+    linear-gradient(to top, rgba(117, 151, 107, 0.5) 0 28%, transparent 28%),
+    linear-gradient(135deg, transparent 48%, rgba(23, 23, 23, 0.18) 49% 51%, transparent 52%),
+    #c8d6cf;
+  pointer-events: none;
+}
+
+.act2-dog,
+.act2-cat,
+.act2-bird {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 3px solid #171717;
+  color: #171717;
+  font-family: YouYuan, "幼圆", "Microsoft YaHei", sans-serif;
+  font-size: 28px;
+  font-weight: 900;
+  line-height: 1;
+  text-align: center;
+  box-shadow: 5px 5px 0 rgba(0, 0, 0, 0.16);
+}
+
+.act2-dog {
+  border-radius: 28px 28px 18px 18px;
+  background: #d8c3a5;
+  pointer-events: none;
+}
+
+.act2-dog[data-state="dog_state_2"] {
+  background: #f1d08d;
+  transform: scale(1.08) rotate(-2deg) !important;
+}
+
+.act2-dog[data-state="dog_state_2"]::after {
+  content: "";
+  position: absolute;
+  right: -28px;
+  top: 22px;
+  width: 22px;
+  height: 44px;
+  border: 3px solid #171717;
+  border-left: 0;
+  border-radius: 0 999px 999px 0;
+}
+
+.act2-cat {
+  border-radius: 24px;
+  background: #dde6f5;
+  pointer-events: none;
+  animation: act2CatStartle 460ms steps(2, end) infinite;
+}
+
+.act2-cat::before,
+.act2-cat::after {
+  content: "!";
+  position: absolute;
+  top: -30px;
+  color: #171717;
+  font-size: 28px;
+}
+
+.act2-cat::before {
+  left: 34px;
+  transform: rotate(-16deg);
+}
+
+.act2-cat::after {
+  right: 34px;
+  transform: rotate(16deg);
+}
+
+.act2-bird {
+  border-radius: 999px;
+  background: #f6f0b6;
+  cursor: pointer;
+  animation: act2BirdIdle 1320ms ease-in-out infinite;
+}
+
+.act2-bird:hover {
+  background: #fff4c8;
+}
+
+.act2-bird.is-cleared {
+  pointer-events: none;
+  animation: act2BirdFlyAway 620ms ease-in forwards;
+}
+
+.act2-eating-progress {
+  overflow: hidden;
+  border: 3px solid #171717;
+  border-radius: 999px;
+  background: #f4f4f4;
+  box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.16);
+  pointer-events: none;
+}
+
+.act2-eating-progress-fill {
+  width: 0;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #9ed6bd, #f2d264);
+  transition: width 180ms ease-out;
+}
+
+.act2-chopsticks {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.act2-chopstick-line {
+  position: absolute;
+  left: 50%;
+  top: 16%;
+  width: 16px;
+  height: 92%;
+  border: 3px solid #171717;
+  border-radius: 999px;
+  background: #d7b27b;
+  box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.14);
+  transform-origin: center 12%;
+  transition: transform 120ms ease-out;
+}
+
+.act2-chopstick-line:first-child {
+  transform: translateX(-22px) rotate(-16deg);
+}
+
+.act2-chopstick-line:last-child {
+  transform: translateX(12px) rotate(16deg);
+}
+
+.act2-chopsticks[data-state="close"] .act2-chopstick-line:first-child {
+  transform: translateX(-13px) rotate(-5deg);
+}
+
+.act2-chopsticks[data-state="close"] .act2-chopstick-line:last-child {
+  transform: translateX(4px) rotate(5deg);
+}
+
+.act2-chopsticks.is-clicking {
+  animation: act2ChopsticksTap 180ms ease-out;
+}
+
+@keyframes act2FriendTopBubbleIn {
+  from {
+    opacity: 0;
+    transform: translateY(-18px) scale(0.94);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes act2FriendTopBubbleOut {
+  from {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+
+  to {
+    opacity: 0;
+    transform: translateY(-20px) scale(0.92);
+  }
+}
+
+@keyframes act2FriendBottomBubbleIn {
+  0% {
+    opacity: 0;
+    transform: translateY(58px) scale(0.72);
+  }
+
+  35% {
+    opacity: 0.92;
+    transform: translateY(18px) scale(0.96);
+  }
+
+  72% {
+    opacity: 1;
+    transform: translateY(-8px) scale(1.04);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes act2FriendHeartFloat {
+  0% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+
+  45% {
+    opacity: 1;
+    transform: translateY(-22px) scale(1.22);
+  }
+
+  100% {
+    opacity: 0;
+    transform: translateY(-72px) scale(0.9);
+  }
+}
+
+@keyframes act2WorkBubbleFadeOut {
+  from {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  to {
+    opacity: 0;
+    transform: scale(0.86) translateY(-10px);
+  }
+}
+
+@keyframes act2CatStartle {
+  0% {
+    transform: translate(0, 0) rotate(-1deg);
+  }
+
+  50% {
+    transform: translate(4px, -2px) rotate(2deg);
+  }
+
+  100% {
+    transform: translate(-3px, 1px) rotate(-2deg);
+  }
+}
+
+@keyframes act2BirdIdle {
+  0% {
+    transform: translateY(0) scale(1);
+  }
+
+  18% {
+    transform: translateY(0) scale(1.08, 0.9);
+  }
+
+  38% {
+    transform: translateY(-34px) scale(0.92, 1.08);
+  }
+
+  58% {
+    transform: translateY(0) scale(1.05, 0.94);
+  }
+
+  72% {
+    transform: translateY(-8px) scale(0.98, 1.02);
+  }
+
+  100% {
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes act2BirdFlyAway {
+  0% {
+    opacity: 1;
+    transform: translate(0, 0) scale(1);
+  }
+
+  55% {
+    opacity: 1;
+    transform: translate(64px, -82px) scale(0.88);
+  }
+
+  100% {
+    opacity: 0;
+    transform: translate(132px, -168px) scale(0.54);
+  }
+}
+
+@keyframes act2ChopsticksTap {
+  0% {
+    transform: scale(1);
+  }
+
+  50% {
+    transform: scale(1.08) rotate(3deg);
+  }
+
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes act2IntroBubbleFadeOut {
+  from {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+
+  to {
+    opacity: 0;
+    transform: translateY(-12px) scale(0.96);
+  }
+}
+
+@keyframes act2ChoiceWindowAEnter {
+  from {
+    transform: translate(202.28px, 253px);
+  }
+
+  to {
+    transform: translate(0, 0);
+  }
+}
+
+@keyframes act2ChoiceWindowBEnter {
+  from {
+    opacity: 0;
+    transform: translateX(760px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes act2ChoicePlateEnter {
+  from {
+    opacity: 0;
+    transform: translateY(260px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes act2EnterFromLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-520px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes act2EnterFromRight {
+  from {
+    opacity: 0;
+    transform: translateX(640px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes act2PanelEnterLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-520px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes act2PanelEnterRight {
+  from {
+    opacity: 0;
+    transform: translateX(520px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes act2ConveyorMove {
+  from {
+    transform: translateX(0);
+  }
+
+  to {
+    transform: translateX(-50%);
+  }
 }
 
 .cheers-sparkle-layer {

@@ -1,9 +1,9 @@
 {
-  "_note": "Act2 lunch low-fidelity placeholder flow.",
+  "_note": "Act2 lunch low-fidelity conveyor and plate layout.",
   "_todo": [
-    "Adjust lunch option positions and sizes here before replacing placeholders with final art.",
-    "Keep field names close to layouts-act3.json: stage, defaults, states, objects.",
-    "This file is fetched by Act2 only after Act2 is entered."
+    "Adjust conveyor windows, plate slots, and button positions here.",
+    "No image assets are used in this low-fidelity version.",
+    "Keep this file scoped to Act2 lunch."
   ],
   "stage": {
     "width": 1920,
@@ -13,7 +13,104 @@
     "duration": 900,
     "easing": "cubic-bezier(0.65, 0, 0.22, 1)"
   },
+  "conveyors": {
+    "top": {
+      "choiceIds": [
+        "act2_food_qingjiao_larou",
+        "act2_food_koushuiji",
+        "act2_food_zhaxiao_rouwan",
+        "act2_food_huobao_youyu",
+        "act2_food_jiang_niurou"
+      ],
+      "duration": 36000
+    },
+    "bottom": {
+      "choiceIds": [
+        "act2_food_xiaren_caixin",
+        "act2_food_shaguo_zhou",
+        "act2_food_hanbao_zhaji",
+        "act2_food_paocai_niurou_xinlamian",
+        "act2_food_baimifan"
+      ],
+      "duration": 42000
+    }
+  },
+  "introSequence": {
+    "introBubble": {
+      "x": 177,
+      "y": 126,
+      "width": 320,
+      "height": 120
+    },
+    "introConveyorA": {
+      "x": 587.28,
+      "y": 335,
+      "width": 660,
+      "height": 250
+    },
+    "introStaticImage": {
+      "x": 516.19,
+      "y": 339.15,
+      "width": 1003,
+      "height": 460
+    },
+    "choiceConveyorA": {
+      "x": 385,
+      "y": 82,
+      "width": 660,
+      "height": 250
+    },
+    "choiceConveyorB": {
+      "x": 820,
+      "y": 355,
+      "width": 660,
+      "height": 250
+    }
+  },
   "states": {
+    "act2_01_lunch_intro_bubble": {
+      "_note": "Act2 intro bubble only. Advance with downward mouse wheel after typewriter completes.",
+      "objects": {
+        "act2_s01_intro_bubble": {
+          "type": "act2IntroBubble",
+          "x": 177,
+          "y": 126,
+          "width": 320,
+          "height": 120,
+          "opacity": 1,
+          "scale": 1,
+          "zIndex": 9,
+          "content": "又到了午餐时间"
+        }
+      }
+    },
+    "act2_02_lunch_window_intro": {
+      "_note": "Act2 intro bubble plus static preview image. Advance with downward mouse wheel after typewriter completes.",
+      "objects": {
+        "act2_s02_intro_bubble": {
+          "type": "act2IntroBubble",
+          "x": 177,
+          "y": 126,
+          "width": 320,
+          "height": 120,
+          "opacity": 1,
+          "scale": 1,
+          "zIndex": 9,
+          "content": "今天吃点什么呢？"
+        },
+        "act2_s02_intro_static_image": {
+          "type": "act2StaticImagePreview",
+          "x": 516.19,
+          "y": 339.15,
+          "width": 1003,
+          "height": 460,
+          "opacity": 1,
+          "scale": 1,
+          "zIndex": 4,
+          "content": "静态午餐窗口预览"
+        }
+      }
+    },
     "act2_01_lunch_intro": {
       "_note": "Act2 lunch intro placeholder.",
       "nextStateDelay": 1200,
@@ -27,56 +124,497 @@
           "opacity": 1,
           "scale": 1,
           "zIndex": 6,
-          "content": "\u4e2d\u5348\u5230\u4e86\uff0c\u8be5\u5403\u70b9\u4ec0\u4e48\uff1f"
+          "content": "中午到了，该去打饭了。"
         }
       }
     },
-    "act2_02_lunch_choice": {
-      "_note": "Act2 lunch choice placeholder.",
+    "act2_03_lunch_prep_select": {
+      "_note": "Act2 lunch prep selection. Drag foods from conveyor windows into prep area.",
+      "prepArea": {
+        "x": 80,
+        "y": 260,
+        "width": 300,
+        "height": 360
+      },
       "objects": {
-        "act2_s02_lunch_onigiri": {
-          "type": "lunchOption",
-          "x": 210,
-          "y": 210,
-          "width": 330,
-          "height": 260,
+        "act2_s02_window_top": {
+          "type": "act2ConveyorWindow",
+          "laneId": "top",
+          "x": 385,
+          "y": 82,
+          "width": 660,
+          "height": 250,
           "opacity": 1,
           "scale": 1,
-          "zIndex": 8,
-          "choiceId": "act2_s02_lunch_onigiri"
+          "zIndex": 4,
+          "content": "食堂窗口 A"
         },
-        "act2_s02_lunch_malatang": {
-          "type": "lunchOption",
-          "x": 620,
-          "y": 420,
-          "width": 360,
-          "height": 280,
+        "act2_s02_window_bottom": {
+          "type": "act2ConveyorWindow",
+          "laneId": "bottom",
+          "x": 820,
+          "y": 355,
+          "width": 660,
+          "height": 250,
+          "opacity": 1,
+          "scale": 1,
+          "zIndex": 4,
+          "content": "食堂窗口 B"
+        },
+        "act2_s03_prep_area": {
+          "type": "act2PrepArea",
+          "x": 80,
+          "y": 260,
+          "width": 300,
+          "height": 360,
           "opacity": 1,
           "scale": 1,
           "zIndex": 9,
-          "choiceId": "act2_s02_lunch_malatang"
+          "content": "备菜区"
+        }
+      }
+    },
+    "act2_04_lunch_catch_game": {
+      "_note": "Act2 lunch catch game. Move plate horizontally and catch selected prep foods.",
+      "catchGame": {
+        "plate": {
+          "x": 760,
+          "y": 650,
+          "width": 420,
+          "height": 220,
+          "zIndex": 18
         },
-        "act2_s02_lunch_friedChickenBurger": {
-          "type": "lunchOption",
-          "x": 1030,
-          "y": 180,
-          "width": 390,
-          "height": 250,
-          "opacity": 1,
-          "scale": 1,
-          "zIndex": 8,
-          "choiceId": "act2_s02_lunch_friedChickenBurger"
+        "dropArea": {
+          "x": 120,
+          "y": 40,
+          "width": 1680,
+          "height": 520
         },
-        "act2_s02_lunch_canteenSet": {
-          "type": "lunchOption",
-          "x": 1354,
-          "y": 520,
-          "width": 390,
-          "height": 250,
+        "foodSize": {
+          "width": 160,
+          "height": 150
+        },
+        "fallSpeedMin": 3,
+        "fallSpeedMax": 6,
+        "spawnIntervalMin": 350,
+        "spawnIntervalMax": 900,
+        "maxActiveDrops": 3
+      },
+      "objects": {}
+    },
+    "act2_04_lunch_place_select": {
+      "_note": "Act2 comic panel lunch place selection with persistent plate.",
+      "objects": {
+        "act2_s04_comic_grid": {
+          "type": "act2ComicGrid",
+          "x": 220,
+          "y": 76,
+          "width": 1480,
+          "height": 414,
           "opacity": 1,
           "scale": 1,
           "zIndex": 7,
-          "choiceId": "act2_s02_lunch_canteenSet"
+          "panels": [
+            {
+              "placeId": "act2_place_canteen_table",
+              "row": 1,
+              "column": 1,
+              "shot": "table-corner",
+              "caption": "桌角特写"
+            },
+            {
+              "placeId": "act2_place_coworkers",
+              "row": 1,
+              "column": 2,
+              "shot": "chat",
+              "caption": "人物聊天特写"
+            },
+            {
+              "placeId": "act2_place_park_bench",
+              "row": 2,
+              "column": 1,
+              "shot": "bench",
+              "caption": "长椅特写"
+            },
+            {
+              "placeId": "act2_place_office_desk",
+              "row": 2,
+              "column": 2,
+              "shot": "screen",
+              "caption": "一人食特写"
+            }
+          ]
+        },
+        "act2_s04_hands": {
+          "type": "act2Hands",
+          "x": 412,
+          "y": 628,
+          "width": 1096,
+          "height": 196,
+          "opacity": 0,
+          "scale": 1,
+          "zIndex": 3,
+          "content": "手"
+        },
+        "act2_s04_plate": {
+          "type": "act2Plate",
+          "x": 675.86,
+          "y": 580,
+          "width": 550,
+          "height": 300,
+          "opacity": 1,
+          "scale": 1,
+          "zIndex": 6,
+          "content": "餐盘"
+        },
+        "act2_s04_plate_slot_1": {
+          "type": "act2PlateSlot",
+          "slotIndex": 0,
+          "x": 715.86,
+          "y": 615,
+          "width": 225,
+          "height": 110,
+          "opacity": 1,
+          "scale": 1,
+          "zIndex": 8,
+          "content": "格子 1"
+        },
+        "act2_s04_plate_slot_2": {
+          "type": "act2PlateSlot",
+          "slotIndex": 1,
+          "x": 970.86,
+          "y": 615,
+          "width": 225,
+          "height": 110,
+          "opacity": 1,
+          "scale": 1,
+          "zIndex": 8,
+          "content": "格子 2"
+        },
+        "act2_s04_plate_slot_3": {
+          "type": "act2PlateSlot",
+          "slotIndex": 2,
+          "x": 715.86,
+          "y": 750,
+          "width": 225,
+          "height": 110,
+          "opacity": 1,
+          "scale": 1,
+          "zIndex": 8,
+          "content": "格子 3"
+        },
+        "act2_s04_plate_slot_4": {
+          "type": "act2PlateSlot",
+          "slotIndex": 3,
+          "x": 970.86,
+          "y": 750,
+          "width": 225,
+          "height": 110,
+          "opacity": 1,
+          "scale": 1,
+          "zIndex": 8,
+          "content": "格子 4"
+        }
+      }
+    },
+    "act2_05_lunch_place_focus": {
+      "_note": "Act2 focused comic panel lunch place with persistent plate.",
+      "workBubbleRounds": [
+        [
+          {
+            "x": 358,
+            "y": 82,
+            "width": 280,
+            "height": 82,
+            "text": "这个表下午要吗？",
+            "overlapPlate": false
+          },
+          {
+            "x": 1290,
+            "y": 118,
+            "width": 300,
+            "height": 82,
+            "text": "客户又改需求了",
+            "overlapPlate": false
+          },
+          {
+            "x": 720,
+            "y": 210,
+            "width": 300,
+            "height": 82,
+            "text": "开会链接发你了",
+            "overlapPlate": false
+          }
+        ],
+        [
+          {
+            "x": 466,
+            "y": 486,
+            "width": 300,
+            "height": 86,
+            "text": "开会链接发你了",
+            "overlapPlate": false
+          },
+          {
+            "x": 884,
+            "y": 642,
+            "width": 330,
+            "height": 90,
+            "text": "你现在方便看一下吗？",
+            "overlapPlate": true
+          },
+          {
+            "x": 1120,
+            "y": 574,
+            "width": 300,
+            "height": 86,
+            "text": "客户又改需求了",
+            "overlapPlate": true
+          }
+        ],
+        [
+          {
+            "x": 780,
+            "y": 706,
+            "width": 360,
+            "height": 92,
+            "text": "麻烦五分钟内回复一下",
+            "overlapPlate": true
+          },
+          {
+            "x": 520,
+            "y": 672,
+            "width": 310,
+            "height": 88,
+            "text": "这个表下午要吗？",
+            "overlapPlate": true
+          }
+        ]
+      ],
+      "friendMealInteraction": {
+        "toastHand": {
+          "x": 214,
+          "y": 96,
+          "width": 210,
+          "height": 130
+        },
+        "toastBubble": {
+          "x": 412,
+          "y": 96,
+          "width": 160,
+          "height": 70,
+          "text": "干杯！"
+        },
+        "topBubbles": [
+          {
+            "x": 330,
+            "y": 68,
+            "width": 180,
+            "height": 68,
+            "text": "干杯！"
+          },
+          {
+            "x": 760,
+            "y": 86,
+            "width": 320,
+            "height": 72,
+            "text": "今天终于能好好吃一顿了"
+          },
+          {
+            "x": 1210,
+            "y": 130,
+            "width": 210,
+            "height": 68,
+            "text": "这个好吃！"
+          },
+          {
+            "x": 1016,
+            "y": 260,
+            "width": 190,
+            "height": 68,
+            "text": "再来一口！"
+          }
+        ],
+        "bottomBubbles": [
+          {
+            "x": 414,
+            "y": 508,
+            "width": 140,
+            "height": 74,
+            "text": "辣椒"
+          },
+          {
+            "x": 596,
+            "y": 542,
+            "width": 140,
+            "height": 74,
+            "text": "火焰"
+          },
+          {
+            "x": 838,
+            "y": 514,
+            "width": 140,
+            "height": 74,
+            "text": "星星"
+          },
+          {
+            "x": 1086,
+            "y": 544,
+            "width": 140,
+            "height": 74,
+            "text": "饭团"
+          },
+          {
+            "x": 1284,
+            "y": 502,
+            "width": 140,
+            "height": 74,
+            "text": "笑脸"
+          }
+        ]
+      },
+      "parkScene": {
+        "scene": {
+          "x": 339.14,
+          "y": 107.01,
+          "width": 1190,
+          "height": 650,
+          "zIndex": 8
+        },
+        "dog": {
+          "x": 1210,
+          "y": 282,
+          "width": 190,
+          "height": 150,
+          "state1Text": "狗",
+          "state2Text": "狗！",
+          "interval": 600,
+          "zIndex": 13
+        },
+        "cat": {
+          "x": 438,
+          "y": 298,
+          "width": 170,
+          "height": 135,
+          "text": "猫！",
+          "zIndex": 13
+        },
+        "bird": {
+          "x": 850,
+          "y": 506,
+          "width": 120,
+          "height": 90,
+          "text": "鸟",
+          "zIndex": 14
+        }
+      },
+      "soloMealInteraction": {
+        "progressBar": {
+          "x": 420,
+          "y": 78,
+          "width": 1080,
+          "height": 28,
+          "zIndex": 16
+        },
+        "chopsticks": {
+          "x": 910,
+          "y": 492,
+          "width": 190,
+          "height": 126,
+          "zIndex": 28
+        }
+      },
+      "objects": {
+        "act2_s05_comic_focus": {
+          "type": "act2ComicFocus",
+          "x": 339.14,
+          "y": 107.01,
+          "width": 1190,
+          "height": 650,
+          "opacity": 1,
+          "scale": 1,
+          "zIndex": 7
+        },
+        "act2_s05_confirm_button": {
+          "type": "act2LunchEndButton",
+          "x": 1320,
+          "y": 392,
+          "width": 330,
+          "height": 68,
+          "opacity": 1,
+          "scale": 1,
+          "zIndex": 12,
+          "content": "午餐结束"
+        },
+        "act2_s05_hands": {
+          "type": "act2Hands",
+          "x": 412,
+          "y": 628,
+          "width": 1096,
+          "height": 196,
+          "opacity": 0,
+          "scale": 1,
+          "zIndex": 20,
+          "content": "手"
+        },
+        "act2_s05_plate": {
+          "type": "act2Plate",
+          "x": 675.86,
+          "y": 580,
+          "width": 550,
+          "height": 300,
+          "opacity": 1,
+          "scale": 1,
+          "zIndex": 21,
+          "content": "餐盘"
+        },
+        "act2_s05_plate_slot_1": {
+          "type": "act2PlateSlot",
+          "slotIndex": 0,
+          "x": 715.86,
+          "y": 615,
+          "width": 225,
+          "height": 110,
+          "opacity": 1,
+          "scale": 1,
+          "zIndex": 22,
+          "content": "格子 1"
+        },
+        "act2_s05_plate_slot_2": {
+          "type": "act2PlateSlot",
+          "slotIndex": 1,
+          "x": 970.86,
+          "y": 615,
+          "width": 225,
+          "height": 110,
+          "opacity": 1,
+          "scale": 1,
+          "zIndex": 22,
+          "content": "格子 2"
+        },
+        "act2_s05_plate_slot_3": {
+          "type": "act2PlateSlot",
+          "slotIndex": 2,
+          "x": 715.86,
+          "y": 750,
+          "width": 225,
+          "height": 110,
+          "opacity": 1,
+          "scale": 1,
+          "zIndex": 22,
+          "content": "格子 3"
+        },
+        "act2_s05_plate_slot_4": {
+          "type": "act2PlateSlot",
+          "slotIndex": 3,
+          "x": 970.86,
+          "y": 750,
+          "width": 225,
+          "height": 110,
+          "opacity": 1,
+          "scale": 1,
+          "zIndex": 22,
+          "content": "格子 4"
         }
       }
     },
@@ -93,7 +631,7 @@
           "opacity": 1,
           "scale": 1,
           "zIndex": 10,
-          "content": "\u5348\u9910\u9009\u62e9\u5df2\u8bb0\u5f55\u3002"
+          "content": "午餐选择已记录。"
         }
       }
     }

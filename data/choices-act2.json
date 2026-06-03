@@ -1,51 +1,200 @@
 {
-  "_note": "Act2 lunch choice data. Low-fidelity placeholder values for the first lunch selection.",
+  "_note": "Act2 lunch canteen conveyor choices. Low-fidelity values only; real scoring can replace these later.",
   "_todo": [
-    "Replace riskTags and tendencyScores with real values after the scoring table is confirmed.",
-    "Keep each choice id matched with layouts-act2.json object choiceId.",
-    "Do not change current playerChoices structure without a separate migration plan."
+    "Keep ids in English or pinyin.",
+    "riskTags are recorded only; no real risk calculation is done in Act2 yet.",
+    "tendencyScores use object format converted from G+2 / K+2 style notes."
   ],
   "actId": "act2",
   "steps": [
     {
-      "stepId": "act2_lunchChoice",
-      "interactionType": "click_lunch_choice",
+      "stepId": "act2_lunchPlateChoice",
+      "interactionType": "drag_lunch_foods_to_plate",
+      "choiceLimit": 4
+    },
+    {
+      "stepId": "act2_lunchPlaceChoice",
+      "interactionType": "click_lunch_place",
       "choiceLimit": 1
+    },
+    {
+      "stepId": "act2_lunchEatingResult",
+      "interactionType": "click_chopsticks_to_eat_plate",
+      "clicksPerSlot": 3
     }
   ],
   "choices": [
     {
-      "id": "act2_s02_lunch_onigiri",
-      "name": "\u4fbf\u5229\u5e97\u996d\u56e2",
-      "label": "\u4fbf\u5229\u5e97\u996d\u56e2",
-      "riskTags": [],
-      "tendencyScores": {},
-      "hoverText": "\u62ff\u8d77\u6765\u5c31\u80fd\u5403\uff0c\u662f\u6700\u5feb\u7684\u4e2d\u5348\u89e3\u6cd5\u3002"
+      "id": "act2_food_qingjiao_larou",
+      "name": "青椒炒腊肉",
+      "label": "青椒炒腊肉",
+      "category": "腌制饮食",
+      "description": "低保真占位描述，后续再替换正式文案。",
+      "riskTags": ["刺激", "边缘", "硬核"],
+      "tendencyScores": {
+        "G": 2,
+        "K": 2,
+        "V": 1
+      }
     },
     {
-      "id": "act2_s02_lunch_malatang",
-      "name": "\u9ebb\u8fa3\u70eb",
-      "label": "\u9ebb\u8fa3\u70eb",
-      "riskTags": [],
-      "tendencyScores": {},
-      "hoverText": "\u70ed\u6c14\u3001\u6c64\u5e95\u548c\u81ea\u9009\u83dc\u88c5\u5728\u4e00\u7897\u91cc\u3002"
+      "id": "act2_food_koushuiji",
+      "name": "口水鸡",
+      "label": "口水鸡",
+      "category": "辛辣饮食",
+      "description": "低保真占位描述，后续再替换正式文案。",
+      "riskTags": ["刺激", "硬核"],
+      "tendencyScores": {
+        "V": 2,
+        "K": 2
+      }
     },
     {
-      "id": "act2_s02_lunch_friedChickenBurger",
-      "name": "\u70b8\u9e21\u6c49\u5821",
-      "label": "\u70b8\u9e21\u6c49\u5821",
-      "riskTags": [],
-      "tendencyScores": {},
-      "hoverText": "\u9999\u8106\u3001\u9876\u9971\uff0c\u4e5f\u5f88\u96be\u5ffd\u7565\u7684\u4e00\u987f\u3002"
+      "id": "act2_food_zhaxiao_rouwan",
+      "name": "炸小肉丸",
+      "label": "炸小肉丸",
+      "category": "油炸饮食",
+      "description": "低保真占位描述，后续再替换正式文案。",
+      "riskTags": ["硬核", "刺激"],
+      "tendencyScores": {
+        "K": 3,
+        "V": 1
+      }
     },
     {
-      "id": "act2_s02_lunch_canteenSet",
-      "name": "\u516c\u53f8\u98df\u5802\u5957\u9910",
-      "label": "\u516c\u53f8\u98df\u5802\u5957\u9910",
-      "riskTags": [],
-      "tendencyScores": {},
-      "hoverText": "\u4e3b\u98df\u3001\u83dc\u548c\u6c64\u90fd\u5728\u4e00\u4e2a\u76d8\u5b50\u91cc\uff0c\u7a33\u7a33\u5f53\u5f53\u3002"
+      "id": "act2_food_huobao_youyu",
+      "name": "火爆鱿鱼",
+      "label": "火爆鱿鱼",
+      "category": "辛辣饮食 + 高盐饮食",
+      "description": "低保真占位描述，后续再替换正式文案。",
+      "riskTags": ["刺激", "边缘", "硬核"],
+      "tendencyScores": {
+        "V": 2,
+        "G": 2,
+        "K": 2
+      }
+    },
+    {
+      "id": "act2_food_jiang_niurou",
+      "name": "酱牛肉片",
+      "label": "酱牛肉片",
+      "category": "高盐饮食",
+      "description": "低保真占位描述，后续再替换正式文案。",
+      "riskTags": ["刺激", "柔软", "边缘"],
+      "tendencyScores": {
+        "V": 1,
+        "C": 2,
+        "G": 2
+      }
+    },
+    {
+      "id": "act2_food_xiaren_caixin",
+      "name": "虾仁菜心",
+      "label": "虾仁菜心",
+      "category": "无",
+      "description": "低保真占位描述，后续再替换正式文案。",
+      "riskTags": ["温和", "柔软", "新鲜"],
+      "tendencyScores": {
+        "L": 3,
+        "C": 3,
+        "A": 3
+      }
+    },
+    {
+      "id": "act2_food_shaguo_zhou",
+      "name": "砂锅粥",
+      "label": "砂锅粥",
+      "category": "热烫饮食",
+      "description": "低保真占位描述，后续再替换正式文案。",
+      "riskTags": ["刺激", "柔软", "新鲜"],
+      "tendencyScores": {
+        "C": 3,
+        "V": 1,
+        "A": 1
+      }
+    },
+    {
+      "id": "act2_food_hanbao_zhaji",
+      "name": "汉堡炸鸡",
+      "label": "汉堡炸鸡",
+      "category": "油炸饮食",
+      "description": "低保真占位描述，后续再替换正式文案。",
+      "riskTags": ["硬核", "刺激"],
+      "tendencyScores": {
+        "K": 3,
+        "V": 1
+      }
+    },
+    {
+      "id": "act2_food_paocai_niurou_xinlamian",
+      "name": "泡菜牛肉辛拉面",
+      "label": "泡菜牛肉辛拉面",
+      "category": "腌制饮食 + 辛辣饮食",
+      "description": "低保真占位描述，后续再替换正式文案。",
+      "riskTags": ["刺激", "边缘"],
+      "tendencyScores": {
+        "V": 2,
+        "G": 3
+      }
+    },
+    {
+      "id": "act2_food_baimifan",
+      "name": "白米饭",
+      "label": "白米饭",
+      "category": "无",
+      "description": "低保真占位描述，后续再替换正式文案。",
+      "riskTags": ["温和", "柔软", "新鲜"],
+      "tendencyScores": {
+        "L": 2,
+        "C": 2,
+        "A": 1
+      }
     }
   ],
-  "targets": []
+  "lunchPlaces": [
+    {
+      "id": "act2_place_canteen_table",
+      "name": "和朋友一起聚餐",
+      "label": "和朋友一起聚餐",
+      "eatingMode": "无",
+      "description": "低保真占位描述，后续替换正式文案。",
+      "riskTags": ["仪式"],
+      "tendencyScores": {
+        "O": 2
+      }
+    },
+    {
+      "id": "act2_place_coworkers",
+      "name": "食堂和同事吃",
+      "label": "食堂和同事吃",
+      "eatingMode": "无",
+      "description": "低保真占位描述，后续替换正式文案。",
+      "riskTags": ["仪式"],
+      "tendencyScores": {
+        "O": 2
+      }
+    },
+    {
+      "id": "act2_place_park_bench",
+      "name": "公园长椅上",
+      "label": "公园长椅上",
+      "eatingMode": "无",
+      "description": "低保真占位描述，后续替换正式文案。",
+      "riskTags": ["仪式"],
+      "tendencyScores": {
+        "O": 3
+      }
+    },
+    {
+      "id": "act2_place_office_desk",
+      "name": "食堂一人食",
+      "label": "食堂一人食",
+      "eatingMode": "独自进食",
+      "description": "低保真占位描述，后续替换正式文案。",
+      "riskTags": ["仪式"],
+      "tendencyScores": {
+        "O": 1
+      }
+    }
+  ]
 }

@@ -48,6 +48,12 @@
       "width": 660,
       "height": 250
     },
+    "introStaticImage": {
+      "x": 516.19,
+      "y": 339.15,
+      "width": 1003,
+      "height": 460
+    },
     "choiceConveyorA": {
       "x": 385,
       "y": 82,
@@ -79,7 +85,7 @@
       }
     },
     "act2_02_lunch_window_intro": {
-      "_note": "Act2 intro bubble plus conveyor A. Advance with downward mouse wheel after typewriter completes.",
+      "_note": "Act2 intro bubble plus static preview image. Advance with downward mouse wheel after typewriter completes.",
       "objects": {
         "act2_s02_intro_bubble": {
           "type": "act2IntroBubble",
@@ -92,17 +98,16 @@
           "zIndex": 9,
           "content": "今天吃点什么呢？"
         },
-        "act2_s02_intro_window_top": {
-          "type": "act2ConveyorWindow",
-          "laneId": "top",
-          "x": 587.28,
-          "y": 335,
-          "width": 660,
-          "height": 250,
+        "act2_s02_intro_static_image": {
+          "type": "act2StaticImagePreview",
+          "x": 516.19,
+          "y": 339.15,
+          "width": 1003,
+          "height": 460,
           "opacity": 1,
           "scale": 1,
           "zIndex": 4,
-          "content": "食堂窗口 A"
+          "content": "静态午餐窗口预览"
         }
       }
     },

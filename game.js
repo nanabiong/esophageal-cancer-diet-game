@@ -1627,26 +1627,30 @@ function stopAct2Typewriter(options = {}) {
 
 function transitionAct2IntroToChoice() {
   const bubble = objectLayer?.querySelector(".act2-intro-bubble");
+  const staticPreview = objectLayer?.querySelector(".act2-static-image-preview");
 
   cleanupAct2IntroWheel();
   stopAct2Typewriter();
   if (bubble) {
     bubble.classList.add("is-exiting");
   }
+  if (staticPreview) {
+    staticPreview.classList.add("is-exiting");
+  }
 
   window.setTimeout(() => {
     enterAct2LunchChoice();
-  }, 260);
+  }, 320);
 }
 
 function playAct2ChoiceIntroAnimation() {
   const topWindow = objectLayer?.querySelector("#act2_s02_window_top");
   const bottomWindow = objectLayer?.querySelector("#act2_s02_window_bottom");
+  const prepArea = objectLayer?.querySelector("#act2_s03_prep_area");
 
-  topWindow?.classList.add("act2-choice-window-a-enter");
-  bottomWindow?.classList.add("act2-choice-window-b-enter");
-  objectLayer?.querySelectorAll("#act2_s02_plate, #act2_s02_plate_slot_1, #act2_s02_plate_slot_2, #act2_s02_plate_slot_3, #act2_s02_plate_slot_4")
-    .forEach((element) => element.classList.add("act2-choice-plate-enter"));
+  topWindow?.classList.add("act2-enter-from-left");
+  bottomWindow?.classList.add("act2-enter-from-right");
+  prepArea?.classList.add("act2-enter-from-left");
 }
 
 function getAct2StateConfig(stateId) {
@@ -1670,6 +1674,8 @@ function createAct2ObjectElement(objectId, objectConfig) {
 
   if (objectConfig.type === "act2ConveyorWindow") {
     renderAct2ConveyorWindow(element, objectConfig);
+  } else if (objectConfig.type === "act2StaticImagePreview") {
+    renderAct2StaticImagePreview(element, objectConfig);
   } else if (objectConfig.type === "act2IntroBubble") {
     renderAct2IntroBubble(element, objectConfig);
   } else if (objectConfig.type === "act2PrepArea") {
@@ -1708,6 +1714,10 @@ function createAct2ObjectElement(objectId, objectConfig) {
 function getAct2ObjectClassName(type) {
   if (type === "act2ConveyorWindow") {
     return "act2-scene-object act2-conveyor-window";
+  }
+
+  if (type === "act2StaticImagePreview") {
+    return "act2-scene-object act2-static-image-preview";
   }
 
   if (type === "act2IntroBubble") {
@@ -1825,6 +1835,14 @@ function renderAct2IntroBubble(element, objectConfig) {
   text.className = "act2-intro-bubble-text";
   text.textContent = objectConfig.content || "";
   element.appendChild(text);
+}
+
+function renderAct2StaticImagePreview(element, objectConfig) {
+  const label = document.createElement("span");
+
+  label.className = "act2-static-image-preview-label";
+  label.textContent = objectConfig.content || "静态预览图";
+  element.appendChild(label);
 }
 
 function renderAct2PrepArea(element, objectConfig) {

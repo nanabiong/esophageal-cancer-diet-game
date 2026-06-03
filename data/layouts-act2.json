@@ -35,7 +35,77 @@
       "duration": 42000
     }
   },
+  "introSequence": {
+    "introBubble": {
+      "x": 177,
+      "y": 126,
+      "width": 320,
+      "height": 120
+    },
+    "introConveyorA": {
+      "x": 587.28,
+      "y": 335,
+      "width": 660,
+      "height": 250
+    },
+    "choiceConveyorA": {
+      "x": 385,
+      "y": 82,
+      "width": 660,
+      "height": 250
+    },
+    "choiceConveyorB": {
+      "x": 820,
+      "y": 355,
+      "width": 660,
+      "height": 250
+    }
+  },
   "states": {
+    "act2_01_lunch_intro_bubble": {
+      "_note": "Act2 intro bubble only. Advance with downward mouse wheel after typewriter completes.",
+      "objects": {
+        "act2_s01_intro_bubble": {
+          "type": "act2IntroBubble",
+          "x": 177,
+          "y": 126,
+          "width": 320,
+          "height": 120,
+          "opacity": 1,
+          "scale": 1,
+          "zIndex": 9,
+          "content": "又到了午餐时间"
+        }
+      }
+    },
+    "act2_02_lunch_window_intro": {
+      "_note": "Act2 intro bubble plus conveyor A. Advance with downward mouse wheel after typewriter completes.",
+      "objects": {
+        "act2_s02_intro_bubble": {
+          "type": "act2IntroBubble",
+          "x": 177,
+          "y": 126,
+          "width": 320,
+          "height": 120,
+          "opacity": 1,
+          "scale": 1,
+          "zIndex": 9,
+          "content": "今天吃点什么呢？"
+        },
+        "act2_s02_intro_window_top": {
+          "type": "act2ConveyorWindow",
+          "laneId": "top",
+          "x": 587.28,
+          "y": 335,
+          "width": 660,
+          "height": 250,
+          "opacity": 1,
+          "scale": 1,
+          "zIndex": 4,
+          "content": "食堂窗口 A"
+        }
+      }
+    },
     "act2_01_lunch_intro": {
       "_note": "Act2 lunch intro placeholder.",
       "nextStateDelay": 1200,
@@ -53,16 +123,16 @@
         }
       }
     },
-    "act2_02_lunch_choice": {
+    "act2_03_lunch_choice": {
       "_note": "Act2 lunch conveyor and plate choice.",
       "objects": {
         "act2_s02_window_top": {
           "type": "act2ConveyorWindow",
           "laneId": "top",
-          "x": 120,
-          "y": 74,
-          "width": 1680,
-          "height": 160,
+          "x": 385,
+          "y": 82,
+          "width": 660,
+          "height": 250,
           "opacity": 1,
           "scale": 1,
           "zIndex": 4,
@@ -71,10 +141,10 @@
         "act2_s02_window_bottom": {
           "type": "act2ConveyorWindow",
           "laneId": "bottom",
-          "x": 120,
-          "y": 272,
-          "width": 1680,
-          "height": 160,
+          "x": 820,
+          "y": 355,
+          "width": 660,
+          "height": 250,
           "opacity": 1,
           "scale": 1,
           "zIndex": 4,

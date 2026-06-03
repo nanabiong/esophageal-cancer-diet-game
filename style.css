@@ -1395,6 +1395,45 @@ button:disabled {
   text-align: center;
 }
 
+.act2-intro-bubble {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 22px 28px;
+  border: 3px solid #171717;
+  border-radius: 24px;
+  background: #fff8df;
+  color: #171717;
+  font-family: YouYuan, "幼圆", "Microsoft YaHei", sans-serif;
+  font-size: 28px;
+  font-weight: 900;
+  line-height: 1.35;
+  text-align: left;
+  box-shadow: 5px 5px 0 rgba(0, 0, 0, 0.16);
+}
+
+.act2-intro-bubble::after {
+  content: "";
+  position: absolute;
+  left: 42px;
+  bottom: -22px;
+  width: 34px;
+  height: 34px;
+  border-right: 3px solid #171717;
+  border-bottom: 3px solid #171717;
+  background: #fff8df;
+  transform: rotate(45deg);
+}
+
+.act2-intro-bubble-text {
+  position: relative;
+  z-index: 1;
+}
+
+.act2-intro-bubble.is-exiting {
+  animation: act2IntroBubbleFadeOut 260ms ease-out forwards;
+}
+
 .act2-conveyor-window {
   overflow: hidden;
   border: 4px solid #171717;
@@ -1403,6 +1442,18 @@ button:disabled {
     linear-gradient(180deg, rgba(255, 255, 255, 0.55), rgba(255, 255, 255, 0)),
     #cfd8dc;
   box-shadow: 5px 5px 0 rgba(0, 0, 0, 0.16);
+}
+
+.act2-choice-window-a-enter {
+  animation: act2ChoiceWindowAEnter 720ms cubic-bezier(0.65, 0, 0.22, 1) both;
+}
+
+.act2-choice-window-b-enter {
+  animation: act2ChoiceWindowBEnter 760ms cubic-bezier(0.65, 0, 0.22, 1) both;
+}
+
+.act2-choice-plate-enter {
+  animation: act2ChoicePlateEnter 760ms cubic-bezier(0.65, 0, 0.22, 1) both;
 }
 
 .act2-conveyor-label {
@@ -1422,11 +1473,11 @@ button:disabled {
 .act2-conveyor-track {
   position: absolute;
   left: 0;
-  top: 44px;
+  top: 58px;
   display: flex;
-  gap: 28px;
+  gap: 34px;
   width: max-content;
-  padding: 0 28px;
+  padding: 0 34px;
   animation: act2ConveyorMove var(--act2-conveyor-duration, 38000ms) linear infinite;
 }
 
@@ -1435,41 +1486,77 @@ button:disabled {
 }
 
 .act2-lunch-food {
+  width: 280px;
+  height: 180px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #171717;
+  cursor: default;
+  font-family: YouYuan, "幼圆", "Microsoft YaHei", sans-serif;
+  line-height: 1.15;
+  touch-action: none;
+}
+
+.act2-conveyor-food-card {
+  position: relative;
+}
+
+.act2-conveyor-food-card.is-dragging .act2-food-plate {
+  transform: translateX(-50%);
+}
+
+.act2-conveyor-food-card.is-empty .act2-food-item {
+  opacity: 0;
+  pointer-events: none;
+  visibility: hidden;
+}
+
+.act2-food-plate {
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  width: 260px;
+  height: 100px;
+  border: 3px solid #171717;
+  border-radius: 50%;
+  background:
+    radial-gradient(ellipse at 50% 42%, rgba(255, 255, 255, 0.92) 0 40%, transparent 41%),
+    #e8e8e8;
+  box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.16);
+  transform: translateX(-50%);
+}
+
+.act2-food-item {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  z-index: 2;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 7px;
-  width: 188px;
-  height: 104px;
-  padding: 8px 10px;
+  gap: 8px;
+  width: 160px;
+  height: 150px;
+  padding: 10px;
   border: 3px solid #171717;
   border-radius: 8px;
-  background: #f9f0d2;
-  color: #171717;
-  cursor: pointer;
-  font-family: YouYuan, "幼圆", "Microsoft YaHei", sans-serif;
-  line-height: 1.15;
+  background: #fff1b8;
+  cursor: grab;
   box-shadow:
     4px 4px 0 rgba(0, 0, 0, 0.16),
-    inset 0 -7px 0 rgba(0, 0, 0, 0.05);
-  touch-action: none;
+    inset 0 -8px 0 rgba(0, 0, 0, 0.05);
+  transform: translateX(-50%);
 }
 
-.act2-lunch-food:hover:not(:disabled),
-.act2-lunch-food.is-dragging {
-  background: #fff6bf;
-  transform: translateY(-4px);
+.act2-food-item:hover,
+.act2-food-item.is-dragging {
+  transform: translateX(-50%) translateY(-4px);
 }
 
-.act2-lunch-food-mark {
-  width: 42px;
-  height: 28px;
-  border: 3px solid #171717;
-  border-radius: 50%;
-  background:
-    radial-gradient(circle at 36% 38%, #ffffff 0 22%, transparent 23%),
-    #a8d5ba;
+.act2-food-item.is-dragging {
+  cursor: grabbing;
 }
 
 .act2-lunch-food-name {
@@ -1494,6 +1581,10 @@ button:disabled {
   z-index: 9999;
   pointer-events: none;
   opacity: 0.92;
+  transform: rotate(-2deg);
+}
+
+.act2-lunch-drag-ghost.act2-food-item {
   transform: rotate(-2deg);
 }
 
@@ -2157,6 +2248,52 @@ button:disabled {
 
   100% {
     transform: scale(1);
+  }
+}
+
+@keyframes act2IntroBubbleFadeOut {
+  from {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+
+  to {
+    opacity: 0;
+    transform: translateY(-12px) scale(0.96);
+  }
+}
+
+@keyframes act2ChoiceWindowAEnter {
+  from {
+    transform: translate(202.28px, 253px);
+  }
+
+  to {
+    transform: translate(0, 0);
+  }
+}
+
+@keyframes act2ChoiceWindowBEnter {
+  from {
+    opacity: 0;
+    transform: translateX(760px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes act2ChoicePlateEnter {
+  from {
+    opacity: 0;
+    transform: translateY(260px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 

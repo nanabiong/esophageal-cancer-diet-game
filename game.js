@@ -1434,11 +1434,18 @@ let act2DogState = 1;
 let act2DogTimer = null;
 let act2BirdCleared = false;
 let act2ParkTimers = [];
+let act2EatingCurrentSlotIndex = 0;
+let act2EatingClickCount = 0;
+const act2EatingClicksPerSlot = 3;
+let act2EatingCompletedSlots = new Set();
+let act2ChopsticksState = "open";
+let act2SoloMealTimers = [];
 const ACT2_LUNCH_PLACE_SELECT_STATE = "act2_04_lunch_place_select";
 const ACT2_LUNCH_PLACE_FOCUS_STATE = "act2_05_lunch_place_focus";
 const ACT2_WORK_BUBBLE_PLACE_ID = "act2_place_coworkers";
 const ACT2_FRIEND_MEAL_PLACE_ID = "act2_place_canteen_table";
 const ACT2_PARK_SCENE_PLACE_ID = "act2_place_park_bench";
+const ACT2_SOLO_MEAL_PLACE_ID = "act2_place_office_desk";
 
 function enterAct2LunchIntro() {
   renderAct2State(ACT2_STATES.LUNCH_INTRO);
@@ -1477,6 +1484,7 @@ function renderAct2State(stateId) {
   cleanupAct2WorkBubbles();
   cleanupAct2FriendMealInteraction();
   cleanupAct2ParkScene();
+  cleanupAct2SoloMealInteraction();
   currentPhase = PHASES.ACT2_LUNCH;
   currentState = stateId;
   isStateLocked = false;
@@ -1502,6 +1510,9 @@ function renderAct2State(stateId) {
   }
   if (stateId === ACT2_LUNCH_PLACE_FOCUS_STATE && isAct2ParkScenePlaceSelected()) {
     createAct2ParkScene();
+  }
+  if (stateId === ACT2_LUNCH_PLACE_FOCUS_STATE && isAct2SoloMealPlaceSelected()) {
+    startAct2SoloMealInteraction();
   }
   console.log(`Entered ${stateId}`, { playerChoices });
 }
@@ -1540,7 +1551,12 @@ function createAct2ObjectElement(objectId, objectConfig) {
   } else if (objectConfig.type === "act2LunchEndButton") {
     element.type = "button";
     element.textContent = objectConfig.content || "午餐结束";
-    if (isAct2WorkBubblePlaceSelected() || isAct2FriendMealPlaceSelected() || isAct2ParkScenePlaceSelected()) {
+    if (
+      isAct2WorkBubblePlaceSelected() ||
+      isAct2FriendMealPlaceSelected() ||
+      isAct2ParkScenePlaceSelected() ||
+      isAct2SoloMealPlaceSelected()
+    ) {
       element.hidden = true;
       element.disabled = true;
       element.classList.add("is-hidden");
@@ -1655,6 +1671,10 @@ function isAct2ParkScenePlaceSelected() {
   return selectedAct2LunchPlaceId === ACT2_PARK_SCENE_PLACE_ID;
 }
 
+function isAct2SoloMealPlaceSelected() {
+  return selectedAct2LunchPlaceId === ACT2_SOLO_MEAL_PLACE_ID;
+}
+
 function renderAct2ConveyorWindow(element, objectConfig) {
   const lane = act2Layouts?.conveyors?.[objectConfig.laneId] || {};
   const label = document.createElement("div");
@@ -1715,12 +1735,22 @@ function syncAct2PlateSlots() {
     const selectedFood = act2LunchPlateItems.find((food) => food.slotIndex === slotIndex);
 
     if (!selectedFood) {
-      slotElement.classList.remove("is-filled");
+      slotElement.classList.remove("is-filled", "is-eaten");
       slotElement.textContent = `格子 ${slotIndex + 1}`;
       return;
     }
 
     slotElement.classList.add("is-filled");
+    if (act2EatingCompletedSlots.has(slotIndex)) {
+      slotElement.classList.add("is-eaten");
+      slotElement.innerHTML = `
+        <span class="act2-slot-food-name">已吃完</span>
+        <span class="act2-slot-food-category">${selectedFood.label || selectedFood.foodName}</span>
+      `;
+      return;
+    }
+
+    slotElement.classList.remove("is-eaten");
     slotElement.innerHTML = `
       <span class="act2-slot-food-name">${selectedFood.label || selectedFood.foodName}</span>
       <span class="act2-slot-food-category">${selectedFood.category || "无"}</span>
@@ -1779,7 +1809,12 @@ function expandAct2ComicPanel(placeId) {
   }
 
   selectedAct2LunchPlaceId = place.id;
-  if (!isAct2WorkBubblePlaceSelected() && !isAct2FriendMealPlaceSelected() && !isAct2ParkScenePlaceSelected()) {
+  if (
+    !isAct2WorkBubblePlaceSelected() &&
+    !isAct2FriendMealPlaceSelected() &&
+    !isAct2ParkScenePlaceSelected() &&
+    !isAct2SoloMealPlaceSelected()
+  ) {
     recordAct2LunchPlaceChoice(place);
   }
   enterAct2LunchPlaceFocus();
@@ -2318,6 +2353,178 @@ function cleanupAct2ParkScene() {
   act2DogState = 1;
   act2BirdCleared = false;
   objectLayer?.querySelectorAll(".act2-park-scene, .act2-dog, .act2-cat, .act2-bird").forEach((element) => element.remove());
+}
+
+function startAct2SoloMealInteraction() {
+  cleanupAct2SoloMealInteraction();
+  const filledSlots = getAct2EatingFilledSlotIndexes();
+
+  act2EatingCompletedSlots = new Set();
+  act2EatingClickCount = 0;
+  act2EatingCurrentSlotIndex = filledSlots[0] ?? 0;
+  act2ChopsticksState = "open";
+  renderAct2EatingProgress();
+  renderAct2Chopsticks();
+  syncAct2PlateSlots();
+
+  if (!filledSlots.length) {
+    completeAct2SoloMealInteraction();
+  }
+}
+
+function getAct2EatingFilledSlotIndexes() {
+  return act2LunchPlateItems
+    .map((food) => food.slotIndex)
+    .filter((slotIndex) => Number.isFinite(slotIndex))
+    .sort((a, b) => a - b);
+}
+
+function renderAct2EatingProgress() {
+  const config = getAct2StateConfig(ACT2_LUNCH_PLACE_FOCUS_STATE).soloMealInteraction?.progressBar || {};
+  const progress = document.createElement("div");
+  const fill = document.createElement("div");
+
+  progress.className = "act2-scene-object act2-eating-progress";
+  fill.className = "act2-eating-progress-fill";
+  progress.appendChild(fill);
+  updateAct2ObjectLayout(progress, {
+    ...config,
+    opacity: 1,
+    scale: 1,
+    zIndex: config.zIndex || 16
+  });
+  objectLayer.appendChild(progress);
+  updateAct2EatingProgress();
+}
+
+function renderAct2Chopsticks() {
+  const config = getAct2StateConfig(ACT2_LUNCH_PLACE_FOCUS_STATE).soloMealInteraction?.chopsticks || {};
+  const chopsticks = document.createElement("button");
+  const stickA = document.createElement("span");
+  const stickB = document.createElement("span");
+
+  chopsticks.type = "button";
+  chopsticks.className = "act2-scene-object act2-chopsticks";
+  chopsticks.dataset.state = act2ChopsticksState;
+  stickA.className = "act2-chopstick-line";
+  stickB.className = "act2-chopstick-line";
+  chopsticks.appendChild(stickA);
+  chopsticks.appendChild(stickB);
+  updateAct2ObjectLayout(chopsticks, {
+    ...config,
+    opacity: 1,
+    scale: 1,
+    zIndex: config.zIndex || 28
+  });
+  chopsticks.addEventListener("click", handleAct2ChopsticksClick);
+  objectLayer.appendChild(chopsticks);
+}
+
+function handleAct2ChopsticksClick(event) {
+  if (currentState !== ACT2_LUNCH_PLACE_FOCUS_STATE || !isAct2SoloMealPlaceSelected()) {
+    return;
+  }
+
+  const chopsticks = event.currentTarget;
+
+  act2ChopsticksState = act2ChopsticksState === "open" ? "close" : "open";
+  chopsticks.dataset.state = act2ChopsticksState;
+  chopsticks.classList.add("is-clicking");
+  window.setTimeout(() => {
+    chopsticks.classList.remove("is-clicking");
+  }, 180);
+
+  act2EatingClickCount += 1;
+  if (act2EatingClickCount >= act2EatingClicksPerSlot) {
+    consumeAct2CurrentPlateSlot();
+    return;
+  }
+
+  updateAct2EatingProgress();
+}
+
+function consumeAct2CurrentPlateSlot() {
+  act2EatingCompletedSlots.add(act2EatingCurrentSlotIndex);
+  act2EatingClickCount = 0;
+  syncAct2PlateSlots();
+  updateAct2EatingProgress();
+
+  const nextSlot = getAct2EatingFilledSlotIndexes().find((slotIndex) => !act2EatingCompletedSlots.has(slotIndex));
+
+  if (nextSlot == null) {
+    const timer = window.setTimeout(() => {
+      completeAct2SoloMealInteraction();
+    }, 420);
+
+    act2SoloMealTimers.push(timer);
+    return;
+  }
+
+  act2EatingCurrentSlotIndex = nextSlot;
+}
+
+function updateAct2EatingProgress() {
+  const filledSlots = getAct2EatingFilledSlotIndexes();
+  const totalClicks = filledSlots.length * act2EatingClicksPerSlot;
+  const completedClicks = (act2EatingCompletedSlots.size * act2EatingClicksPerSlot) + act2EatingClickCount;
+  const percent = totalClicks > 0 ? Math.min(100, (completedClicks / totalClicks) * 100) : 100;
+  const fill = objectLayer?.querySelector(".act2-eating-progress-fill");
+
+  if (fill) {
+    fill.style.width = `${percent}%`;
+  }
+}
+
+function completeAct2SoloMealInteraction() {
+  const place = getAct2LunchPlaceChoice(selectedAct2LunchPlaceId);
+
+  if (place) {
+    recordAct2LunchEatingResult(place);
+  }
+
+  cleanupAct2SoloMealInteraction();
+  enterAct2LunchDone();
+}
+
+function recordAct2LunchEatingResult(place) {
+  const eatenSlots = getAct2EatingFilledSlotIndexes().map((slotIndex) => {
+    const food = act2LunchPlateItems.find((item) => item.slotIndex === slotIndex);
+
+    return {
+      slotIndex,
+      foodId: food?.foodId || "",
+      foodName: food?.foodName || "",
+      label: food?.label || food?.foodName || "",
+      eatingClickCount: act2EatingClicksPerSlot,
+      eaten: act2EatingCompletedSlots.has(slotIndex)
+    };
+  });
+  const record = {
+    sceneId: "act2",
+    stepId: "act2_lunchEatingResult",
+    interactionType: "click_chopsticks_to_eat_plate",
+    placeId: place.id,
+    placeName: place.name,
+    label: place.label,
+    clicksPerSlot: act2EatingClicksPerSlot,
+    totalRequiredClicks: eatenSlots.length * act2EatingClicksPerSlot,
+    completedSlotCount: act2EatingCompletedSlots.size,
+    eatenSlots
+  };
+
+  playerChoices.push(record);
+  console.log("Act 2 lunch eating result:", record);
+  console.log("Act 2 playerChoices:", playerChoices);
+}
+
+function cleanupAct2SoloMealInteraction() {
+  act2SoloMealTimers.forEach((timer) => window.clearTimeout(timer));
+  act2SoloMealTimers = [];
+  act2EatingCurrentSlotIndex = 0;
+  act2EatingClickCount = 0;
+  act2EatingCompletedSlots = new Set();
+  act2ChopsticksState = "open";
+  objectLayer?.querySelectorAll(".act2-eating-progress, .act2-chopsticks").forEach((element) => element.remove());
 }
 
 function recordAct2LunchPlaceChoice(place, extraFields = {}) {

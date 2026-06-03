@@ -1564,6 +1564,15 @@ button:disabled {
   color: #171717;
 }
 
+.act2-plate-slot.is-eaten {
+  opacity: 0.58;
+  background: #e2e2e2;
+}
+
+.act2-plate-slot.is-eaten .act2-slot-food-name {
+  color: #555;
+}
+
 .act2-slot-food-name {
   max-width: 100%;
   font-size: 20px;
@@ -1945,6 +1954,66 @@ button:disabled {
   animation: act2BirdFlyAway 620ms ease-in forwards;
 }
 
+.act2-eating-progress {
+  overflow: hidden;
+  border: 3px solid #171717;
+  border-radius: 999px;
+  background: #f4f4f4;
+  box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.16);
+  pointer-events: none;
+}
+
+.act2-eating-progress-fill {
+  width: 0;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #9ed6bd, #f2d264);
+  transition: width 180ms ease-out;
+}
+
+.act2-chopsticks {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.act2-chopstick-line {
+  position: absolute;
+  left: 50%;
+  top: 16%;
+  width: 16px;
+  height: 92%;
+  border: 3px solid #171717;
+  border-radius: 999px;
+  background: #d7b27b;
+  box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.14);
+  transform-origin: center 12%;
+  transition: transform 120ms ease-out;
+}
+
+.act2-chopstick-line:first-child {
+  transform: translateX(-22px) rotate(-16deg);
+}
+
+.act2-chopstick-line:last-child {
+  transform: translateX(12px) rotate(16deg);
+}
+
+.act2-chopsticks[data-state="close"] .act2-chopstick-line:first-child {
+  transform: translateX(-13px) rotate(-5deg);
+}
+
+.act2-chopsticks[data-state="close"] .act2-chopstick-line:last-child {
+  transform: translateX(4px) rotate(5deg);
+}
+
+.act2-chopsticks.is-clicking {
+  animation: act2ChopsticksTap 180ms ease-out;
+}
+
 @keyframes act2FriendTopBubbleIn {
   from {
     opacity: 0;
@@ -2074,6 +2143,20 @@ button:disabled {
   100% {
     opacity: 0;
     transform: translate(132px, -168px) scale(0.54);
+  }
+}
+
+@keyframes act2ChopsticksTap {
+  0% {
+    transform: scale(1);
+  }
+
+  50% {
+    transform: scale(1.08) rotate(3deg);
+  }
+
+  100% {
+    transform: scale(1);
   }
 }
 

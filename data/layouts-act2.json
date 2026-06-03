@@ -202,7 +202,7 @@
               "row": 2,
               "column": 2,
               "shot": "screen",
-              "caption": "电脑屏幕特写"
+              "caption": "一人食特写"
             }
           ]
         },
@@ -467,6 +467,22 @@
           "height": 90,
           "text": "鸟",
           "zIndex": 14
+        }
+      },
+      "soloMealInteraction": {
+        "progressBar": {
+          "x": 420,
+          "y": 78,
+          "width": 1080,
+          "height": 28,
+          "zIndex": 16
+        },
+        "chopsticks": {
+          "x": 910,
+          "y": 492,
+          "width": 190,
+          "height": 126,
+          "zIndex": 28
         }
       },
       "objects": {

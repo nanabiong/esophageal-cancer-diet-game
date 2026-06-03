@@ -16,6 +16,11 @@
       "stepId": "act2_lunchPlaceChoice",
       "interactionType": "click_lunch_place",
       "choiceLimit": 1
+    },
+    {
+      "stepId": "act2_lunchEatingResult",
+      "interactionType": "click_chopsticks_to_eat_plate",
+      "clicksPerSlot": 3
     }
   ],
   "choices": [
@@ -182,13 +187,13 @@
     },
     {
       "id": "act2_place_office_desk",
-      "name": "办公桌前",
-      "label": "办公桌前",
-      "eatingMode": "不规律进食",
+      "name": "食堂一人食",
+      "label": "食堂一人食",
+      "eatingMode": "独自进食",
       "description": "低保真占位描述，后续替换正式文案。",
-      "riskTags": ["冲刺"],
+      "riskTags": ["仪式"],
       "tendencyScores": {
-        "D": 3
+        "O": 1
       }
     }
   ]

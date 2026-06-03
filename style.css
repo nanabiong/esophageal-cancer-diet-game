@@ -1466,6 +1466,11 @@ button:disabled {
   animation: act2IntroBubbleFadeOut 260ms ease-out forwards;
 }
 
+.act2-conveyor-window.is-exiting,
+.act2-prep-area.is-exiting {
+  animation: act2IntroBubbleFadeOut 260ms ease-out forwards;
+}
+
 .act2-static-image-preview-label {
   padding: 10px 18px;
   border: 3px solid #171717;
@@ -1478,6 +1483,27 @@ button:disabled {
 
 .act2-enter-from-right {
   animation: act2EnterFromRight 760ms cubic-bezier(0.65, 0, 0.22, 1) both;
+}
+
+.act2-cannot-go-back-hint {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 20px;
+  border: 3px solid #171717;
+  border-radius: 20px;
+  background: #fff8df;
+  color: #171717;
+  font-family: YouYuan, "幼圆", "Microsoft YaHei", sans-serif;
+  font-size: 22px;
+  font-weight: 900;
+  line-height: 1.25;
+  text-align: center;
+  box-shadow: 5px 5px 0 rgba(0, 0, 0, 0.16);
+}
+
+.act2-cannot-go-back-hint.is-exiting {
+  animation: act2IntroBubbleFadeOut 260ms ease-out forwards;
 }
 
 .act2-choice-window-a-enter {

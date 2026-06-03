@@ -1448,6 +1448,8 @@ let act2IntroTypewriterTimer = null;
 let act2IntroTypewriterDone = false;
 let act2IntroWheelLocked = false;
 let act2LunchChoiceWheelLocked = false;
+let isAct2WheelLocked = false;
+let act2CannotGoBackHintTimer = null;
 let selectedAct2PrepFoods = [];
 let act2CatchRemainingFoods = [];
 let act2CatchActiveDrops = [];
@@ -1469,13 +1471,13 @@ function enterAct2LunchIntro() {
 function enterAct2LunchIntroBubble() {
   renderAct2State(ACT2_STATES.LUNCH_INTRO_BUBBLE);
   startAct2Typewriter("又到了午餐时间");
-  bindAct2IntroWheel();
+  bindAct2WheelNavigation();
 }
 
 function enterAct2LunchWindowIntro() {
   renderAct2State(ACT2_STATES.LUNCH_WINDOW_INTRO);
   startAct2Typewriter("今天吃点什么呢？");
-  bindAct2IntroWheel();
+  bindAct2WheelNavigation();
 }
 
 function enterAct2LunchChoice() {
@@ -1489,6 +1491,7 @@ function enterAct2LunchChoice() {
   isAct2LunchLocked = false;
   renderAct2State(ACT2_STATES.LUNCH_PREP_SELECT);
   playAct2ChoiceIntroAnimation();
+  bindAct2WheelNavigation();
 }
 
 function enterAct2LunchCatchGame() {
@@ -1517,6 +1520,7 @@ function enterAct2LunchDone() {
 function renderAct2State(stateId) {
   const state = getAct2StateConfig(stateId);
 
+  cleanupAct2CannotGoBackHint();
   cleanupAct2WorkBubbles();
   cleanupAct2FriendMealInteraction();
   cleanupAct2ParkScene();
@@ -1561,38 +1565,153 @@ function renderAct2State(stateId) {
 }
 
 function bindAct2IntroWheel() {
-  cleanupAct2IntroWheel();
-  window.addEventListener("wheel", handleAct2IntroWheel, { passive: false });
+  bindAct2WheelNavigation();
 }
 
 function cleanupAct2IntroWheel() {
   window.removeEventListener("wheel", handleAct2IntroWheel);
+  window.removeEventListener("wheel", handleAct2WheelNavigation);
   act2IntroWheelLocked = false;
+  isAct2WheelLocked = false;
 }
 
 function handleAct2IntroWheel(event) {
+  handleAct2WheelNavigation(event);
+}
+
+function bindAct2WheelNavigation() {
+  window.removeEventListener("wheel", handleAct2WheelNavigation);
+  window.addEventListener("wheel", handleAct2WheelNavigation, { passive: false });
+}
+
+function handleAct2WheelNavigation(event) {
   if (
     currentPhase !== PHASES.ACT2_LUNCH ||
-    (currentState !== ACT2_STATES.LUNCH_INTRO_BUBBLE && currentState !== ACT2_STATES.LUNCH_WINDOW_INTRO) ||
-    event.deltaY <= 0 ||
-    act2IntroWheelLocked ||
-    !act2IntroTypewriterDone
+    !isAct2WheelNavigationState(currentState) ||
+    event.deltaY === 0 ||
+    isAct2WheelLocked ||
+    ((currentState === ACT2_STATES.LUNCH_INTRO_BUBBLE || currentState === ACT2_STATES.LUNCH_WINDOW_INTRO) && !act2IntroTypewriterDone)
   ) {
     return;
   }
 
   event.preventDefault();
+  isAct2WheelLocked = true;
   act2IntroWheelLocked = true;
   window.setTimeout(() => {
+    isAct2WheelLocked = false;
     act2IntroWheelLocked = false;
-  }, 520);
+  }, 780);
 
+  if (event.deltaY > 0) {
+    goToNextAct2Step();
+    return;
+  }
+
+  goToPreviousAct2Step();
+}
+
+function isAct2WheelNavigationState(stateId) {
+  return stateId === ACT2_STATES.LUNCH_INTRO_BUBBLE ||
+    stateId === ACT2_STATES.LUNCH_WINDOW_INTRO ||
+    stateId === ACT2_STATES.LUNCH_PREP_SELECT;
+}
+
+function goToNextAct2Step() {
   if (currentState === ACT2_STATES.LUNCH_INTRO_BUBBLE) {
     enterAct2LunchWindowIntro();
     return;
   }
 
-  transitionAct2IntroToChoice();
+  if (currentState === ACT2_STATES.LUNCH_WINDOW_INTRO) {
+    transitionAct2IntroToChoice();
+  }
+}
+
+function goToPreviousAct2Step() {
+  if (!canAct2GoPrevious()) {
+    return;
+  }
+
+  if (currentState === ACT2_STATES.LUNCH_WINDOW_INTRO) {
+    resetAct2IntroStepView(ACT2_STATES.LUNCH_INTRO_BUBBLE);
+    return;
+  }
+
+  if (currentState === ACT2_STATES.LUNCH_PREP_SELECT) {
+    stopAct2ConveyorForIntroReturn();
+    resetAct2IntroStepView(ACT2_STATES.LUNCH_WINDOW_INTRO);
+  }
+}
+
+function canAct2GoPrevious() {
+  if (currentState === ACT2_STATES.LUNCH_INTRO_BUBBLE) {
+    return false;
+  }
+
+  if (currentState === ACT2_STATES.LUNCH_PREP_SELECT && selectedAct2PrepFoods.length > 0) {
+    showAct2CannotGoBackHint();
+    return false;
+  }
+
+  return currentState === ACT2_STATES.LUNCH_WINDOW_INTRO || currentState === ACT2_STATES.LUNCH_PREP_SELECT;
+}
+
+function resetAct2IntroStepView(targetState) {
+  objectLayer?.querySelectorAll(".act2-intro-bubble, .act2-static-image-preview, .act2-conveyor-window, .act2-prep-area").forEach((element) => {
+    element.classList.add("is-exiting");
+  });
+
+  window.setTimeout(() => {
+    if (targetState === ACT2_STATES.LUNCH_INTRO_BUBBLE) {
+      enterAct2LunchIntroBubble();
+      return;
+    }
+
+    if (targetState === ACT2_STATES.LUNCH_WINDOW_INTRO) {
+      enterAct2LunchWindowIntro();
+    }
+  }, 260);
+}
+
+function stopAct2ConveyorForIntroReturn() {
+  objectLayer?.querySelectorAll(".act2-conveyor-track").forEach((track) => {
+    track.style.animationPlayState = "paused";
+  });
+}
+
+function showAct2CannotGoBackHint() {
+  cleanupAct2CannotGoBackHint();
+  const hint = document.createElement("div");
+
+  hint.className = "act2-scene-object act2-cannot-go-back-hint";
+  hint.textContent = "已开始选菜，不能返回上一幕。";
+  updateAct2ObjectLayout(hint, {
+    x: 177,
+    y: 126,
+    width: 460,
+    height: 86,
+    opacity: 1,
+    scale: 1,
+    zIndex: 20
+  });
+  objectLayer.appendChild(hint);
+  act2CannotGoBackHintTimer = window.setTimeout(() => {
+    hint.classList.add("is-exiting");
+    act2CannotGoBackHintTimer = window.setTimeout(() => {
+      hint.remove();
+      act2CannotGoBackHintTimer = null;
+    }, 260);
+  }, 1100);
+}
+
+function cleanupAct2CannotGoBackHint() {
+  if (act2CannotGoBackHintTimer) {
+    window.clearTimeout(act2CannotGoBackHintTimer);
+    act2CannotGoBackHintTimer = null;
+  }
+
+  objectLayer?.querySelectorAll(".act2-cannot-go-back-hint").forEach((hint) => hint.remove());
 }
 
 function startAct2Typewriter(text) {

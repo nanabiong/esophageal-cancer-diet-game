@@ -31,7 +31,9 @@ const ACT2_STATES = {
   LUNCH_INTRO_BUBBLE: "act2_01_lunch_intro_bubble",
   LUNCH_WINDOW_INTRO: "act2_02_lunch_window_intro",
   LUNCH_INTRO: "act2_01_lunch_intro",
-  LUNCH_CHOICE: "act2_03_lunch_choice",
+  LUNCH_PREP_SELECT: "act2_03_lunch_prep_select",
+  LUNCH_CATCH_GAME: "act2_04_lunch_catch_game",
+  LUNCH_CHOICE: "act2_03_lunch_prep_select",
   LUNCH_DONE: "act2_03_lunch_done"
 };
 
@@ -1445,6 +1447,14 @@ let act2SoloMealTimers = [];
 let act2IntroTypewriterTimer = null;
 let act2IntroTypewriterDone = false;
 let act2IntroWheelLocked = false;
+let act2LunchChoiceWheelLocked = false;
+let selectedAct2PrepFoods = [];
+let act2CatchRemainingFoods = [];
+let act2CatchActiveDrops = [];
+let act2CaughtFoods = [];
+let act2CatchSpawnTimer = null;
+let act2CatchAnimationFrame = null;
+let act2CatchPlateX = 0;
 const ACT2_LUNCH_PLACE_SELECT_STATE = "act2_04_lunch_place_select";
 const ACT2_LUNCH_PLACE_FOCUS_STATE = "act2_05_lunch_place_focus";
 const ACT2_WORK_BUBBLE_PLACE_ID = "act2_place_coworkers";
@@ -1471,16 +1481,25 @@ function enterAct2LunchWindowIntro() {
 function enterAct2LunchChoice() {
   cleanupAct2IntroWheel();
   stopAct2Typewriter();
+  cleanupAct2LunchChoiceWheel();
+  cleanupAct2CatchGame();
   act2LunchPlateItems = [];
+  selectedAct2PrepFoods = [];
   selectedAct2LunchPlaceId = null;
   isAct2LunchLocked = false;
-  renderAct2State(ACT2_STATES.LUNCH_CHOICE);
+  renderAct2State(ACT2_STATES.LUNCH_PREP_SELECT);
   playAct2ChoiceIntroAnimation();
-  syncAct2FinishButton();
+}
+
+function enterAct2LunchCatchGame() {
+  cleanupAct2LunchChoiceWheel();
+  hideAct2LunchSceneHint();
+  renderAct2State(ACT2_STATES.LUNCH_CATCH_GAME);
 }
 
 function enterAct2LunchPlaceSelect() {
   renderAct2State(ACT2_LUNCH_PLACE_SELECT_STATE);
+  animateAct2PlacePanelsEnter();
 }
 
 function enterAct2LunchPlaceFocus() {
@@ -1502,7 +1521,9 @@ function renderAct2State(stateId) {
   cleanupAct2FriendMealInteraction();
   cleanupAct2ParkScene();
   cleanupAct2SoloMealInteraction();
+  cleanupAct2CatchGame();
   cleanupAct2IntroWheel();
+  cleanupAct2LunchChoiceWheel();
   stopAct2Typewriter();
   currentPhase = PHASES.ACT2_LUNCH;
   currentState = stateId;
@@ -1532,6 +1553,9 @@ function renderAct2State(stateId) {
   }
   if (stateId === ACT2_LUNCH_PLACE_FOCUS_STATE && isAct2SoloMealPlaceSelected()) {
     startAct2SoloMealInteraction();
+  }
+  if (stateId === ACT2_STATES.LUNCH_CATCH_GAME) {
+    startAct2CatchGame();
   }
   console.log(`Entered ${stateId}`, { playerChoices });
 }
@@ -1648,6 +1672,8 @@ function createAct2ObjectElement(objectId, objectConfig) {
     renderAct2ConveyorWindow(element, objectConfig);
   } else if (objectConfig.type === "act2IntroBubble") {
     renderAct2IntroBubble(element, objectConfig);
+  } else if (objectConfig.type === "act2PrepArea") {
+    renderAct2PrepArea(element, objectConfig);
   } else if (objectConfig.type === "act2PlateSlot") {
     renderAct2PlateSlot(element, objectConfig);
   } else if (objectConfig.type === "act2ComicGrid") {
@@ -1686,6 +1712,10 @@ function getAct2ObjectClassName(type) {
 
   if (type === "act2IntroBubble") {
     return "act2-scene-object act2-intro-bubble";
+  }
+
+  if (type === "act2PrepArea") {
+    return "act2-scene-object act2-prep-area";
   }
 
   if (type === "act2Plate") {
@@ -1797,6 +1827,41 @@ function renderAct2IntroBubble(element, objectConfig) {
   element.appendChild(text);
 }
 
+function renderAct2PrepArea(element, objectConfig) {
+  const title = document.createElement("div");
+  const list = document.createElement("div");
+
+  title.className = "act2-prep-area-title";
+  title.textContent = objectConfig.content || "备菜区";
+  list.className = "act2-prep-area-list";
+  element.appendChild(title);
+  element.appendChild(list);
+  renderAct2PrepAreaList(list);
+}
+
+function syncAct2PrepArea() {
+  const list = objectLayer?.querySelector(".act2-prep-area-list");
+
+  if (!list) {
+    return;
+  }
+
+  renderAct2PrepAreaList(list);
+}
+
+function renderAct2PrepAreaList(list) {
+  list.innerHTML = "";
+  for (let index = 0; index < getAct2LunchChoiceLimit(); index += 1) {
+    const food = selectedAct2PrepFoods[index];
+    const item = document.createElement("div");
+
+    item.className = "act2-prep-food";
+    item.textContent = food ? food.label || food.foodName : `空位 ${index + 1}`;
+    item.classList.toggle("is-empty", !food);
+    list.appendChild(item);
+  }
+}
+
 function renderAct2ConveyorWindow(element, objectConfig) {
   const lane = act2Layouts?.conveyors?.[objectConfig.laneId] || {};
   const label = document.createElement("div");
@@ -1900,6 +1965,7 @@ function renderAct2ComicPanelSelector(element, objectConfig) {
     panel.setAttribute("aria-label", place.label || place.name);
     panel.className = "act2-comic-panel";
     panel.dataset.placeId = place.id;
+    panel.dataset.column = String(panelConfig.column || 1);
     panel.style.gridColumn = String(panelConfig.column || 1);
     panel.style.gridRow = String(panelConfig.row || 1);
     shot.className = "act2-comic-panel-shot";
@@ -1956,8 +2022,10 @@ function bindAct2LunchDragSource(element, choiceId, sourceCard = element) {
 function startAct2LunchDrag(event, sourceElement, choiceId, sourceCard = sourceElement) {
   if (
     isAct2LunchLocked ||
-    currentState !== ACT2_STATES.LUNCH_CHOICE ||
-    act2LunchPlateItems.length >= getAct2LunchChoiceLimit() ||
+    currentState !== ACT2_STATES.LUNCH_PREP_SELECT ||
+    selectedAct2PrepFoods.length >= getAct2LunchChoiceLimit() ||
+    isAct2FoodAlreadyPicked(choiceId) ||
+    sourceCard.classList.contains("is-picked") ||
     sourceCard.classList.contains("is-empty")
   ) {
     return;
@@ -2013,19 +2081,68 @@ function finishAct2LunchDrag(event) {
   objectLayer.querySelectorAll(".act2-lunch-food.is-dragging, .act2-food-item.is-dragging").forEach((element) => {
     element.classList.remove("is-dragging");
   });
-  const targetSlot = getAct2PlateSlotAtPoint(event.clientX, event.clientY);
+  const targetPrepArea = getAct2PrepAreaAtPoint(event.clientX, event.clientY);
   let didDrop = false;
 
-  if (targetSlot) {
-    didDrop = handleAct2PlateDrop(targetSlot, act2LunchDrag.choice);
+  if (targetPrepArea) {
+    didDrop = handleAct2PrepDrop(targetPrepArea, act2LunchDrag.choice);
   }
 
   if (didDrop) {
-    markAct2ConveyorFoodCardEmpty(act2LunchDrag.sourceCard);
+    markAct2FoodAsPicked(act2LunchDrag.choice.id);
   }
 
   act2LunchDrag.ghost.remove();
   act2LunchDrag = null;
+}
+
+function getAct2PrepAreaAtPoint(x, y) {
+  const prepArea = objectLayer?.querySelector(".act2-prep-area");
+
+  if (!prepArea) {
+    return null;
+  }
+
+  const rect = prepArea.getBoundingClientRect();
+  return x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom ? prepArea : null;
+}
+
+function handleAct2PrepDrop(prepArea, choice) {
+  if (
+    !prepArea ||
+    isAct2LunchLocked ||
+    currentState !== ACT2_STATES.LUNCH_PREP_SELECT ||
+    selectedAct2PrepFoods.length >= getAct2LunchChoiceLimit() ||
+    isAct2FoodAlreadyPicked(choice.id)
+  ) {
+    return false;
+  }
+
+  const prepFood = {
+    foodId: choice.id,
+    foodName: choice.name,
+    label: choice.label,
+    category: choice.category || "无",
+    description: choice.description || "",
+    riskTags: choice.riskTags || [],
+    tendencyScores: choice.tendencyScores || {},
+    prepIndex: selectedAct2PrepFoods.length
+  };
+
+  selectedAct2PrepFoods.push(prepFood);
+  syncAct2PrepArea();
+  if (selectedAct2PrepFoods.length >= getAct2LunchChoiceLimit()) {
+    isAct2LunchLocked = true;
+    window.setTimeout(() => {
+      enterAct2LunchCatchGame();
+    }, 520);
+  }
+
+  return true;
+}
+
+function isAct2FoodAlreadyPicked(choiceId) {
+  return selectedAct2PrepFoods.some((food) => food.foodId === choiceId);
 }
 
 function getAct2PlateSlotAtPoint(x, y) {
@@ -2084,16 +2201,31 @@ function markAct2ConveyorFoodCardEmpty(cardElement) {
   }
 }
 
+function markAct2FoodAsPicked(choiceId) {
+  objectLayer?.querySelectorAll(`.act2-conveyor-food-card[data-choice-id="${choiceId}"]`).forEach((cardElement) => {
+    cardElement.classList.add("is-picked");
+    markAct2ConveyorFoodCardEmpty(cardElement);
+  });
+}
+
 function syncAct2FinishButton() {
   const button = objectLayer?.querySelector(".act2-finish-button");
+  const canFinish = act2LunchPlateItems.length >= 1 && !isAct2LunchLocked;
 
-  if (!button) {
+  if (button) {
+    button.classList.remove("is-visible");
+    button.hidden = true;
+    button.disabled = true;
+  }
+
+  if (canFinish && currentState === ACT2_STATES.LUNCH_CHOICE) {
+    showAct2LunchSceneHint();
+    bindAct2LunchChoiceWheel();
     return;
   }
 
-  const canFinish = act2LunchPlateItems.length >= 1 && !isAct2LunchLocked;
-  button.classList.toggle("is-visible", canFinish);
-  button.disabled = !canFinish;
+  hideAct2LunchSceneHint();
+  cleanupAct2LunchChoiceWheel();
 }
 
 function finishAct2LunchChoice() {
@@ -2110,6 +2242,98 @@ function finishAct2LunchChoice() {
   window.setTimeout(() => {
     enterAct2LunchPlaceSelect();
   }, 520);
+}
+
+function showAct2LunchSceneHint() {
+  if (objectLayer?.querySelector(".act2-lunch-scene-hint")) {
+    return;
+  }
+
+  const config = getAct2StateConfig(ACT2_STATES.LUNCH_CHOICE).lunchSceneHint || {};
+  const hint = document.createElement("div");
+  const text = document.createElement("span");
+
+  hint.className = "act2-scene-object act2-intro-bubble act2-lunch-scene-hint";
+  text.className = "act2-intro-bubble-text";
+  hint.appendChild(text);
+  updateAct2ObjectLayout(hint, {
+    x: config.x ?? 177,
+    y: config.y ?? 126,
+    width: config.width ?? 520,
+    height: config.height ?? 120,
+    opacity: 1,
+    scale: 1,
+    zIndex: config.zIndex || 14
+  });
+  objectLayer.appendChild(hint);
+  startAct2Typewriter(config.content || "继续滚动鼠标选择你的用餐场景");
+}
+
+function hideAct2LunchSceneHint() {
+  if (objectLayer?.querySelector(".act2-lunch-scene-hint")) {
+    stopAct2Typewriter();
+  }
+
+  objectLayer?.querySelectorAll(".act2-lunch-scene-hint").forEach((hint) => hint.remove());
+}
+
+function bindAct2LunchChoiceWheel() {
+  window.removeEventListener("wheel", handleAct2LunchChoiceWheel);
+  window.addEventListener("wheel", handleAct2LunchChoiceWheel, { passive: false });
+}
+
+function cleanupAct2LunchChoiceWheel() {
+  window.removeEventListener("wheel", handleAct2LunchChoiceWheel);
+  act2LunchChoiceWheelLocked = false;
+}
+
+function handleAct2LunchChoiceWheel(event) {
+  if (
+    currentPhase !== PHASES.ACT2_LUNCH ||
+    currentState !== ACT2_STATES.LUNCH_CHOICE ||
+    event.deltaY <= 0 ||
+    act2LunchChoiceWheelLocked ||
+    act2LunchPlateItems.length < 1 ||
+    isAct2LunchLocked ||
+    !act2IntroTypewriterDone
+  ) {
+    return;
+  }
+
+  event.preventDefault();
+  act2LunchChoiceWheelLocked = true;
+  transitionAct2LunchToPlaceSelect();
+}
+
+function transitionAct2LunchToPlaceSelect() {
+  if (isAct2LunchLocked || act2LunchPlateItems.length < 1) {
+    return;
+  }
+
+  isAct2LunchLocked = true;
+  cleanupAct2LunchChoiceWheel();
+  const hint = objectLayer?.querySelector(".act2-lunch-scene-hint");
+
+  if (hint) {
+    hint.classList.add("is-exiting");
+  }
+
+  stopAct2Typewriter();
+  recordAct2LunchPlateChoice();
+  objectLayer.querySelectorAll(".act2-lunch-food").forEach((element) => {
+    element.disabled = true;
+  });
+  window.setTimeout(() => {
+    hideAct2LunchSceneHint();
+    enterAct2LunchPlaceSelect();
+  }, 360);
+}
+
+function animateAct2PlacePanelsEnter() {
+  objectLayer?.querySelectorAll(".act2-comic-panel").forEach((panel) => {
+    const column = Number(panel.dataset.column || 1);
+    panel.classList.add(column === 1 ? "act2-panel-enter-left" : "act2-panel-enter-right");
+  });
 }
 
 function getAct2LunchChoiceLimit() {
@@ -2131,6 +2355,341 @@ function recordAct2LunchPlateChoice() {
   playerChoices.push(record);
   console.log("Act 2 lunch plate choice:", record);
   console.log("Act 2 playerChoices:", playerChoices);
+}
+
+function startAct2CatchGame() {
+  cleanupAct2CatchGame({ keepState: true });
+  act2LunchPlateItems = [];
+  act2CaughtFoods = [];
+  act2CatchRemainingFoods = selectedAct2PrepFoods.map((food) => ({ ...food }));
+  act2CatchActiveDrops = [];
+  createAct2CatchGameStage();
+  createAct2CatchPlate();
+  window.addEventListener("pointermove", handleAct2PlateMouseMove);
+  scheduleAct2CatchSpawn(120);
+  updateAct2CatchGameLoop();
+}
+
+function getAct2CatchGameConfig() {
+  return getAct2StateConfig(ACT2_STATES.LUNCH_CATCH_GAME).catchGame || {};
+}
+
+function createAct2CatchGameStage() {
+  const config = getAct2CatchGameConfig();
+  const dropArea = config.dropArea || {};
+  const stage = document.createElement("div");
+
+  stage.className = "act2-scene-object act2-catch-game";
+  updateAct2ObjectLayout(stage, {
+    x: dropArea.x ?? 120,
+    y: dropArea.y ?? 40,
+    width: dropArea.width ?? 1680,
+    height: dropArea.height ?? 520,
+    opacity: 1,
+    scale: 1,
+    zIndex: 2
+  });
+  objectLayer.appendChild(stage);
+}
+
+function createAct2CatchPlate() {
+  const config = getAct2CatchGameConfig();
+  const plateConfig = config.plate || {};
+  const plate = document.createElement("div");
+
+  plate.id = "act2_catch_plate";
+  plate.className = "act2-scene-object act2-plate act2-catch-plate";
+  plate.textContent = "餐盘";
+  objectLayer.appendChild(plate);
+  act2CatchPlateX = plateConfig.x ?? 760;
+  updateAct2CatchPlatePosition(act2CatchPlateX);
+
+  for (let slotIndex = 0; slotIndex < getAct2LunchChoiceLimit(); slotIndex += 1) {
+    const slot = document.createElement("div");
+
+    slot.className = "act2-scene-object act2-plate-slot act2-catch-plate-slot";
+    slot.dataset.slotIndex = String(slotIndex);
+    slot.textContent = `格子 ${slotIndex + 1}`;
+    objectLayer.appendChild(slot);
+  }
+
+  updateAct2CatchPlatePosition(act2CatchPlateX);
+}
+
+function updateAct2CatchPlatePosition(x) {
+  const config = getAct2CatchGameConfig();
+  const stage = act2Layouts?.stage || { width: DESIGN_WIDTH, height: DESIGN_HEIGHT };
+  const plateConfig = config.plate || {};
+  const plateWidth = plateConfig.width ?? 420;
+  const plateHeight = plateConfig.height ?? 220;
+  const plateY = plateConfig.y ?? 650;
+  const clampedX = Math.max(0, Math.min(stage.width - plateWidth, x));
+  const plate = objectLayer?.querySelector(".act2-catch-plate");
+
+  act2CatchPlateX = clampedX;
+  if (plate) {
+    updateAct2ObjectLayout(plate, {
+      x: clampedX,
+      y: plateY,
+      width: plateWidth,
+      height: plateHeight,
+      opacity: 1,
+      scale: 1,
+      zIndex: plateConfig.zIndex || 18
+    });
+  }
+
+  const slotPaddingX = 34;
+  const slotPaddingY = 30;
+  const slotGapX = 18;
+  const slotGapY = 16;
+  const slotWidth = (plateWidth - slotPaddingX * 2 - slotGapX) / 2;
+  const slotHeight = (plateHeight - slotPaddingY * 2 - slotGapY) / 2;
+
+  objectLayer?.querySelectorAll(".act2-catch-plate-slot").forEach((slot) => {
+    const slotIndex = Number(slot.dataset.slotIndex);
+    const col = slotIndex % 2;
+    const row = Math.floor(slotIndex / 2);
+
+    updateAct2ObjectLayout(slot, {
+      x: clampedX + slotPaddingX + col * (slotWidth + slotGapX),
+      y: plateY + slotPaddingY + row * (slotHeight + slotGapY),
+      width: slotWidth,
+      height: slotHeight,
+      opacity: 1,
+      scale: 1,
+      zIndex: (plateConfig.zIndex || 18) + 1
+    });
+  });
+  syncAct2PlateSlots();
+}
+
+function handleAct2PlateMouseMove(event) {
+  if (currentState !== ACT2_STATES.LUNCH_CATCH_GAME) {
+    return;
+  }
+
+  const stage = act2Layouts?.stage || { width: DESIGN_WIDTH, height: DESIGN_HEIGHT };
+  const stageRect = objectLayer?.getBoundingClientRect();
+  const plateConfig = getAct2CatchGameConfig().plate || {};
+  const plateWidth = plateConfig.width ?? 420;
+
+  if (!stageRect) {
+    return;
+  }
+
+  const designX = ((event.clientX - stageRect.left) / stageRect.width) * stage.width;
+  updateAct2CatchPlatePosition(designX - plateWidth / 2);
+}
+
+function scheduleAct2CatchSpawn(delay = null) {
+  if (currentState !== ACT2_STATES.LUNCH_CATCH_GAME) {
+    return;
+  }
+
+  const config = getAct2CatchGameConfig();
+  const spawnDelay = delay ?? randomBetween(
+    config.spawnIntervalMin ?? 350,
+    config.spawnIntervalMax ?? 900
+  );
+
+  if (act2CatchSpawnTimer) {
+    window.clearTimeout(act2CatchSpawnTimer);
+  }
+
+  act2CatchSpawnTimer = window.setTimeout(() => {
+    act2CatchSpawnTimer = null;
+    spawnAct2FallingFood();
+    if (act2CaughtFoods.length < selectedAct2PrepFoods.length) {
+      scheduleAct2CatchSpawn();
+    }
+  }, spawnDelay);
+}
+
+function spawnAct2FallingFood() {
+  if (currentState !== ACT2_STATES.LUNCH_CATCH_GAME) {
+    return;
+  }
+
+  const config = getAct2CatchGameConfig();
+  const maxActiveDrops = config.maxActiveDrops ?? 3;
+
+  if (act2CatchActiveDrops.length >= maxActiveDrops) {
+    return;
+  }
+
+  const activeFoodIds = new Set(act2CatchActiveDrops.map((drop) => drop.food.foodId));
+  const spawnableFoods = act2CatchRemainingFoods.filter((food) => !activeFoodIds.has(food.foodId));
+
+  if (!spawnableFoods.length) {
+    if (!act2CatchActiveDrops.length && act2CaughtFoods.length >= selectedAct2PrepFoods.length) {
+      completeAct2CatchGame();
+    }
+    return;
+  }
+
+  const nextFood = spawnableFoods[Math.floor(Math.random() * spawnableFoods.length)];
+
+  if (!nextFood) {
+    completeAct2CatchGame();
+    return;
+  }
+
+  const dropArea = config.dropArea || {};
+  const foodSize = config.foodSize || {};
+  const width = foodSize.width ?? 160;
+  const height = foodSize.height ?? 150;
+  const minX = dropArea.x ?? 120;
+  const maxX = minX + (dropArea.width ?? 1680) - width;
+  const falling = document.createElement("div");
+  const name = document.createElement("span");
+  const drop = {
+    id: `act2_drop_${Date.now()}_${Math.random().toString(16).slice(2)}`,
+    food: nextFood,
+    element: falling,
+    x: minX + Math.random() * Math.max(1, maxX - minX),
+    y: (dropArea.y ?? 40) - height,
+    width,
+    height,
+    speed: randomBetween(config.fallSpeedMin ?? 3, config.fallSpeedMax ?? 6)
+  };
+
+  falling.className = "act2-scene-object act2-falling-food";
+  falling.dataset.dropId = drop.id;
+  name.className = "act2-falling-food-name";
+  name.textContent = nextFood.label || nextFood.foodName;
+  falling.appendChild(name);
+  objectLayer.appendChild(falling);
+  act2CatchActiveDrops.push(drop);
+  updateAct2FallingFoodElement(drop);
+}
+
+function updateAct2FallingFoodElement(drop) {
+  if (!drop?.element) {
+    return;
+  }
+
+  updateAct2ObjectLayout(drop.element, {
+    x: drop.x,
+    y: drop.y,
+    width: drop.width,
+    height: drop.height,
+    opacity: 1,
+    scale: 1,
+    zIndex: 24
+  });
+}
+
+function updateAct2CatchGameLoop() {
+  if (currentState !== ACT2_STATES.LUNCH_CATCH_GAME) {
+    return;
+  }
+
+  const config = getAct2CatchGameConfig();
+  const dropArea = config.dropArea || {};
+  const missY = (dropArea.y ?? 40) + (dropArea.height ?? 520) + 260;
+
+  [...act2CatchActiveDrops].forEach((drop) => {
+    drop.y += drop.speed;
+    updateAct2FallingFoodElement(drop);
+    if (checkAct2FoodCaught(drop)) {
+      placeCaughtFoodOnPlate(drop);
+    } else if (drop.y > missY) {
+      removeAct2ActiveDrop(drop);
+    }
+  });
+
+  if (act2CaughtFoods.length >= selectedAct2PrepFoods.length) {
+    completeAct2CatchGame();
+    return;
+  }
+
+  act2CatchAnimationFrame = window.requestAnimationFrame(updateAct2CatchGameLoop);
+}
+
+function checkAct2FoodCaught(drop) {
+  if (!drop) {
+    return false;
+  }
+
+  const config = getAct2CatchGameConfig();
+  const plateConfig = config.plate || {};
+  const plateRect = {
+    left: act2CatchPlateX,
+    top: plateConfig.y ?? 650,
+    right: act2CatchPlateX + (plateConfig.width ?? 420),
+    bottom: (plateConfig.y ?? 650) + (plateConfig.height ?? 220)
+  };
+  const foodCenter = {
+    x: drop.x + drop.width / 2,
+    y: drop.y + drop.height / 2
+  };
+
+  return foodCenter.x >= plateRect.left &&
+    foodCenter.x <= plateRect.right &&
+    foodCenter.y >= plateRect.top &&
+    foodCenter.y <= plateRect.bottom;
+}
+
+function placeCaughtFoodOnPlate(drop) {
+  if (!drop) {
+    return;
+  }
+
+  const slotIndex = act2CaughtFoods.length;
+  const food = {
+    foodId: drop.food.foodId,
+    foodName: drop.food.foodName,
+    label: drop.food.label,
+    category: drop.food.category || "无",
+    description: drop.food.description || "",
+    riskTags: drop.food.riskTags || [],
+    tendencyScores: drop.food.tendencyScores || {},
+    slotIndex
+  };
+
+  act2CaughtFoods.push(food);
+  act2LunchPlateItems.push(food);
+  act2CatchRemainingFoods = act2CatchRemainingFoods.filter((item) => item.foodId !== drop.food.foodId);
+  removeAct2ActiveDrop(drop);
+  syncAct2PlateSlots();
+}
+
+function removeAct2ActiveDrop(drop) {
+  drop?.element?.remove();
+  act2CatchActiveDrops = act2CatchActiveDrops.filter((activeDrop) => activeDrop !== drop);
+}
+
+function completeAct2CatchGame() {
+  if (act2CaughtFoods.length < selectedAct2PrepFoods.length) {
+    return;
+  }
+
+  recordAct2LunchPlateChoice();
+  cleanupAct2CatchGame();
+  enterAct2LunchPlaceSelect();
+}
+
+function cleanupAct2CatchGame(options = {}) {
+  if (act2CatchAnimationFrame) {
+    window.cancelAnimationFrame(act2CatchAnimationFrame);
+    act2CatchAnimationFrame = null;
+  }
+
+  window.removeEventListener("pointermove", handleAct2PlateMouseMove);
+  if (act2CatchSpawnTimer) {
+    window.clearTimeout(act2CatchSpawnTimer);
+    act2CatchSpawnTimer = null;
+  }
+
+  act2CatchActiveDrops.forEach((drop) => drop.element?.remove());
+  act2CatchActiveDrops = [];
+  act2CatchRemainingFoods = [];
+  act2CaughtFoods = [];
+  act2CatchPlateX = 0;
+  if (!options.keepState) {
+    objectLayer?.querySelectorAll(".act2-catch-game, .act2-catch-plate, .act2-catch-plate-slot, .act2-falling-food").forEach((element) => element.remove());
+  }
 }
 
 function finishAct2LunchScene() {

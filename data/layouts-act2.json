@@ -123,8 +123,14 @@
         }
       }
     },
-    "act2_03_lunch_choice": {
-      "_note": "Act2 lunch conveyor and plate choice.",
+    "act2_03_lunch_prep_select": {
+      "_note": "Act2 lunch prep selection. Drag foods from conveyor windows into prep area.",
+      "prepArea": {
+        "x": 80,
+        "y": 260,
+        "width": 300,
+        "height": 360
+      },
       "objects": {
         "act2_s02_window_top": {
           "type": "act2ConveyorWindow",
@@ -150,88 +156,46 @@
           "zIndex": 4,
           "content": "食堂窗口 B"
         },
-        "act2_s02_hands": {
-          "type": "act2Hands",
-          "x": 412,
-          "y": 628,
-          "width": 1096,
-          "height": 196,
-          "opacity": 0,
-          "scale": 1,
-          "zIndex": 3,
-          "content": "手"
-        },
-        "act2_s02_plate": {
-          "type": "act2Plate",
-          "x": 675.86,
-          "y": 580,
-          "width": 550,
-          "height": 300,
-          "opacity": 1,
-          "scale": 1,
-          "zIndex": 6,
-          "content": "餐盘"
-        },
-        "act2_s02_plate_slot_1": {
-          "type": "act2PlateSlot",
-          "slotIndex": 0,
-          "x": 715.86,
-          "y": 615,
-          "width": 225,
-          "height": 110,
-          "opacity": 1,
-          "scale": 1,
-          "zIndex": 8,
-          "content": "格子 1"
-        },
-        "act2_s02_plate_slot_2": {
-          "type": "act2PlateSlot",
-          "slotIndex": 1,
-          "x": 970.86,
-          "y": 615,
-          "width": 225,
-          "height": 110,
-          "opacity": 1,
-          "scale": 1,
-          "zIndex": 8,
-          "content": "格子 2"
-        },
-        "act2_s02_plate_slot_3": {
-          "type": "act2PlateSlot",
-          "slotIndex": 2,
-          "x": 715.86,
-          "y": 750,
-          "width": 225,
-          "height": 110,
-          "opacity": 1,
-          "scale": 1,
-          "zIndex": 8,
-          "content": "格子 3"
-        },
-        "act2_s02_plate_slot_4": {
-          "type": "act2PlateSlot",
-          "slotIndex": 3,
-          "x": 970.86,
-          "y": 750,
-          "width": 225,
-          "height": 110,
-          "opacity": 1,
-          "scale": 1,
-          "zIndex": 8,
-          "content": "格子 4"
-        },
-        "act2_s02_finish_button": {
-          "type": "act2FinishButton",
-          "x": 1420,
-          "y": 684,
+        "act2_s03_prep_area": {
+          "type": "act2PrepArea",
+          "x": 80,
+          "y": 260,
           "width": 300,
-          "height": 72,
+          "height": 360,
           "opacity": 1,
           "scale": 1,
-          "zIndex": 12,
-          "content": "完成午餐选择"
+          "zIndex": 9,
+          "content": "备菜区"
         }
       }
+    },
+    "act2_04_lunch_catch_game": {
+      "_note": "Act2 lunch catch game. Move plate horizontally and catch selected prep foods.",
+      "catchGame": {
+        "plate": {
+          "x": 760,
+          "y": 650,
+          "width": 420,
+          "height": 220,
+          "zIndex": 18
+        },
+        "dropArea": {
+          "x": 120,
+          "y": 40,
+          "width": 1680,
+          "height": 520
+        },
+        "foodSize": {
+          "width": 160,
+          "height": 150
+        },
+        "fallSpeedMin": 3,
+        "fallSpeedMax": 6,
+        "spawnIntervalMin": 350,
+        "spawnIntervalMax": 900,
+        "maxActiveDrops": 3
+      },
+      "objects": {}
     },
     "act2_04_lunch_place_select": {
       "_note": "Act2 comic panel lunch place selection with persistent plate.",

@@ -1512,6 +1512,19 @@ button:disabled {
   visibility: hidden;
 }
 
+.act2-conveyor-food-card.is-picked .act2-food-item {
+  opacity: 0;
+  pointer-events: none;
+  visibility: hidden;
+}
+
+.act2-conveyor-food-card.is-picked .act2-food-plate,
+.act2-food-plate-empty {
+  background:
+    radial-gradient(ellipse at 50% 42%, rgba(255, 255, 255, 0.96) 0 48%, transparent 49%),
+    #efefef;
+}
+
 .act2-food-plate {
   position: absolute;
   left: 50%;
@@ -1586,6 +1599,90 @@ button:disabled {
 
 .act2-lunch-drag-ghost.act2-food-item {
   transform: rotate(-2deg);
+}
+
+.act2-prep-area {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 18px;
+  border: 4px dashed #171717;
+  border-radius: 10px;
+  background: rgba(255, 248, 223, 0.88);
+  color: #171717;
+  font-family: YouYuan, "幼圆", "Microsoft YaHei", sans-serif;
+  box-shadow: 5px 5px 0 rgba(0, 0, 0, 0.14);
+}
+
+.act2-prep-area-title {
+  font-size: 24px;
+  font-weight: 900;
+}
+
+.act2-prep-area-list {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+}
+
+.act2-prep-food {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 54px;
+  padding: 8px 10px;
+  border: 3px solid #171717;
+  border-radius: 8px;
+  background: #fff1b8;
+  font-size: 18px;
+  font-weight: 900;
+  text-align: center;
+}
+
+.act2-prep-food.is-empty {
+  border-style: dashed;
+  background: rgba(255, 255, 255, 0.45);
+  color: rgba(23, 23, 23, 0.42);
+}
+
+.act2-catch-game {
+  border: 4px dashed rgba(23, 23, 23, 0.45);
+  border-radius: 12px;
+  background:
+    linear-gradient(to bottom, rgba(207, 216, 220, 0.72), rgba(255, 248, 223, 0.24)),
+    rgba(255, 255, 255, 0.42);
+  pointer-events: none;
+}
+
+.act2-catch-plate {
+  pointer-events: none;
+}
+
+.act2-catch-plate-slot {
+  pointer-events: none;
+}
+
+.act2-falling-food {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px;
+  border: 3px solid #171717;
+  border-radius: 8px;
+  background: #fff1b8;
+  color: #171717;
+  font-family: YouYuan, "幼圆", "Microsoft YaHei", sans-serif;
+  font-size: 20px;
+  font-weight: 900;
+  text-align: center;
+  box-shadow:
+    4px 4px 0 rgba(0, 0, 0, 0.16),
+    inset 0 -8px 0 rgba(0, 0, 0, 0.05);
+  pointer-events: none;
+}
+
+.act2-falling-food-name {
+  max-width: 100%;
 }
 
 .act2-hands {
@@ -1734,6 +1831,14 @@ button:disabled {
 .act2-comic-panel:hover {
   transform: translateY(-4px);
   background: #e4e4e0;
+}
+
+.act2-comic-panel.act2-panel-enter-left {
+  animation: act2PanelEnterLeft 620ms cubic-bezier(0.65, 0, 0.22, 1) both;
+}
+
+.act2-comic-panel.act2-panel-enter-right {
+  animation: act2PanelEnterRight 620ms cubic-bezier(0.65, 0, 0.22, 1) both;
 }
 
 .act2-comic-panel-shot {
@@ -2294,6 +2399,30 @@ button:disabled {
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+@keyframes act2PanelEnterLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-520px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes act2PanelEnterRight {
+  from {
+    opacity: 0;
+    transform: translateX(520px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
   }
 }
 

@@ -3811,39 +3811,25 @@ button:disabled {
   background: #bdbdbd;
 }
 
-.result-orbit-planet--largest:hover {
-  transform: translate(-50%, -50%) scale(1.04);
-}
-
 .result-orbit-planet--selected {
   background: #b8b8b8;
   box-shadow:
     inset 0 0 0 4px rgba(120, 120, 120, 0.55),
     0 24px 60px rgba(90, 70, 50, 0.18);
-  transform:
-    translate(
-      calc(-50% + var(--result-planet-move-x, 0px)),
-      calc(-50% + var(--result-planet-move-y, 0px))
-    )
-    scale(1.18);
+  transform: translate(-50%, -50%);
+}
+
+.result-orbit-planet--layer-2-active {
+  background: transparent;
+  box-shadow: none;
 }
 
 .result-orbit-planet.result-orbit-planet--moving {
-  transform:
-    translate(
-      calc(-50% + var(--result-planet-move-x, 120px)),
-      calc(-50% + var(--result-planet-move-y, 80px))
-    )
-    scale(1.08);
+  transform: translate(-50%, -50%);
 }
 
 .result-orbit-planet.result-orbit-planet--moving:hover {
-  transform:
-    translate(
-      calc(-50% + var(--result-planet-move-x, 120px)),
-      calc(-50% + var(--result-planet-move-y, 80px))
-    )
-    scale(1.08);
+  transform: translate(-50%, -50%);
 }
 
 .result-planet-node {
@@ -3853,17 +3839,110 @@ button:disabled {
   width: var(--result-node-size, 90px);
   height: var(--result-node-size, 90px);
   border-radius: 999px;
-  background: #eeeeee;
+  background: #8f8f8f;
+  box-shadow: inset 0 0 0 3px rgba(90, 90, 90, 0.45);
+  opacity: 1;
+  transform: translate(-50%, -50%) scale(1);
+  animation: resultPlanetNodeIn 420ms ease-out;
+  transition:
+    left var(--result-node-zoom-duration, 1000ms) cubic-bezier(0.22, 0.9, 0.28, 1),
+    top var(--result-node-zoom-duration, 1000ms) cubic-bezier(0.22, 0.9, 0.28, 1),
+    width var(--result-node-zoom-duration, 1000ms) cubic-bezier(0.22, 0.9, 0.28, 1),
+    height var(--result-node-zoom-duration, 1000ms) cubic-bezier(0.22, 0.9, 0.28, 1),
+    transform var(--result-node-zoom-duration, 1000ms) cubic-bezier(0.22, 0.9, 0.28, 1),
+    opacity 220ms ease,
+    background 360ms ease,
+    box-shadow 360ms ease;
+}
+
+.result-planet-node--clickable {
+  cursor: pointer;
+  background: #ffffff;
   box-shadow: inset 0 0 0 3px rgba(150, 150, 150, 0.55);
+}
+
+.result-planet-node--hidden {
   opacity: 0;
-  transform: translate(-50%, -50%) scale(0.6);
-  animation: resultPlanetNodeIn 420ms ease-out forwards;
+  transform: translate(-50%, -50%) scale(0.55);
+  pointer-events: none;
+}
+
+.result-planet-node--zooming,
+.result-planet-node--layer-2-source,
+.result-planet-node--zooming:hover,
+.result-planet-node--layer-2-source:hover {
+  z-index: 6;
+  cursor: default;
+  left: 50%;
+  top: 50%;
+  width: 100%;
+  height: 100%;
+  background: #ffffff;
+  box-shadow:
+    inset 0 0 0 4px rgba(170, 170, 170, 0.5),
+    0 20px 50px rgba(60, 60, 60, 0.2);
+  transform: translate(-50%, -50%) scale(1);
+}
+
+.result-planet-layer-2 {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: #ffffff;
+  box-shadow:
+    inset 0 0 0 4px rgba(170, 170, 170, 0.5),
+    0 20px 50px rgba(60, 60, 60, 0.2);
+  pointer-events: none;
+  animation: resultPlanetLayer2In 360ms ease-out;
+}
+
+.result-planet-subnode {
+  position: absolute;
+  left: var(--result-subnode-x, 50%);
+  top: var(--result-subnode-y, 50%);
+  width: var(--result-subnode-size, 18px);
+  height: var(--result-subnode-size, 18px);
+  border-radius: 999px;
+  background: #dddddd;
+  box-shadow: inset 0 0 0 2px rgba(170, 170, 170, 0.6);
+  opacity: 1;
+  transform: translate(-50%, -50%) scale(1);
+  animation: resultPlanetSubnodeIn 360ms ease-out;
 }
 
 @keyframes resultPlanetNodeIn {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.6);
+  }
+
   to {
     opacity: 1;
     transform: translate(-50%, -50%) scale(1);
+  }
+}
+
+@keyframes resultPlanetSubnodeIn {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.55);
+  }
+
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
+
+@keyframes resultPlanetLayer2In {
+  from {
+    opacity: 0;
+    transform: scale(0.98);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
   }
 }
 

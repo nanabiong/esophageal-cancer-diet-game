@@ -9,7 +9,7 @@
     {
       "id": "act3_s01_food_sausage",
       "name": "小腊肠",
-      "baseRiskTags": ["加工肉类"],
+      "baseRiskTags": ["腌制饮食"],
       "tendencyScores": {}
     },
     {
@@ -27,7 +27,7 @@
     {
       "id": "act3_s01_food_maodu",
       "name": "毛肚",
-      "baseRiskTags": ["热烫饮食"],
+      "baseRiskTags": [],
       "tendencyScores": {}
     },
     {

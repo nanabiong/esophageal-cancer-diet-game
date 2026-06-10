@@ -30,7 +30,7 @@
       "label": "青椒炒腊肉",
       "category": "腌制饮食",
       "description": "低保真占位描述，后续再替换正式文案。",
-      "riskTags": ["刺激", "边缘", "硬核"],
+      "riskTags": ["腌制饮食"],
       "tendencyScores": {
         "G": 2,
         "K": 2,
@@ -43,7 +43,7 @@
       "label": "口水鸡",
       "category": "辛辣饮食",
       "description": "低保真占位描述，后续再替换正式文案。",
-      "riskTags": ["刺激", "硬核"],
+      "riskTags": ["辛辣饮食"],
       "tendencyScores": {
         "V": 2,
         "K": 2
@@ -55,7 +55,7 @@
       "label": "炸小肉丸",
       "category": "油炸饮食",
       "description": "低保真占位描述，后续再替换正式文案。",
-      "riskTags": ["硬核", "刺激"],
+      "riskTags": ["油炸饮食"],
       "tendencyScores": {
         "K": 3,
         "V": 1
@@ -67,7 +67,7 @@
       "label": "火爆鱿鱼",
       "category": "辛辣饮食 + 高盐饮食",
       "description": "低保真占位描述，后续再替换正式文案。",
-      "riskTags": ["刺激", "边缘", "硬核"],
+      "riskTags": ["辛辣饮食", "高盐饮食"],
       "tendencyScores": {
         "V": 2,
         "G": 2,
@@ -80,7 +80,7 @@
       "label": "酱牛肉片",
       "category": "高盐饮食",
       "description": "低保真占位描述，后续再替换正式文案。",
-      "riskTags": ["刺激", "柔软", "边缘"],
+      "riskTags": ["高盐饮食"],
       "tendencyScores": {
         "V": 1,
         "C": 2,
@@ -93,7 +93,7 @@
       "label": "虾仁菜心",
       "category": "无",
       "description": "低保真占位描述，后续再替换正式文案。",
-      "riskTags": ["温和", "柔软", "新鲜"],
+      "riskTags": [],
       "tendencyScores": {
         "L": 3,
         "C": 3,
@@ -106,7 +106,7 @@
       "label": "砂锅粥",
       "category": "热烫饮食",
       "description": "低保真占位描述，后续再替换正式文案。",
-      "riskTags": ["刺激", "柔软", "新鲜"],
+      "riskTags": ["热烫饮食"],
       "tendencyScores": {
         "C": 3,
         "V": 1,
@@ -119,7 +119,7 @@
       "label": "汉堡炸鸡",
       "category": "油炸饮食",
       "description": "低保真占位描述，后续再替换正式文案。",
-      "riskTags": ["硬核", "刺激"],
+      "riskTags": ["油炸饮食"],
       "tendencyScores": {
         "K": 3,
         "V": 1
@@ -131,7 +131,7 @@
       "label": "泡菜牛肉辛拉面",
       "category": "腌制饮食 + 辛辣饮食",
       "description": "低保真占位描述，后续再替换正式文案。",
-      "riskTags": ["刺激", "边缘"],
+      "riskTags": ["腌制饮食", "辛辣饮食"],
       "tendencyScores": {
         "V": 2,
         "G": 3
@@ -143,7 +143,7 @@
       "label": "白米饭",
       "category": "无",
       "description": "低保真占位描述，后续再替换正式文案。",
-      "riskTags": ["温和", "柔软", "新鲜"],
+      "riskTags": [],
       "tendencyScores": {
         "L": 2,
         "C": 2,
@@ -158,7 +158,7 @@
       "label": "和朋友一起聚餐",
       "eatingMode": "无",
       "description": "低保真占位描述，后续替换正式文案。",
-      "riskTags": ["仪式"],
+      "riskTags": ["快速进食"],
       "tendencyScores": {
         "O": 2
       }
@@ -169,7 +169,7 @@
       "label": "食堂和同事吃",
       "eatingMode": "无",
       "description": "低保真占位描述，后续替换正式文案。",
-      "riskTags": ["仪式"],
+      "riskTags": [],
       "tendencyScores": {
         "O": 2
       }
@@ -180,7 +180,7 @@
       "label": "公园长椅上",
       "eatingMode": "无",
       "description": "低保真占位描述，后续替换正式文案。",
-      "riskTags": ["仪式"],
+      "riskTags": [],
       "tendencyScores": {
         "O": 3
       }
@@ -191,7 +191,7 @@
       "label": "食堂一人食",
       "eatingMode": "独自进食",
       "description": "低保真占位描述，后续替换正式文案。",
-      "riskTags": ["仪式"],
+      "riskTags": ["不规律进食"],
       "tendencyScores": {
         "O": 1
       }

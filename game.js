@@ -552,6 +552,7 @@ let isAct1EatingComplete = false;
 let selectedAct2LunchId = null;
 let isAct2LunchLocked = false;
 let playerChoices = [];
+let playerRiskResult = null;
 let bubbleTimers = [];
 let guidanceTimers = [];
 let guidanceTypewriterTimers = [];
@@ -908,6 +909,305 @@ function startAct3Intro() {
   currentState = "act3_intro_00_bubble_1";
   showIntroBubble("act3_intro_bubble_1");
 }
+
+// ---------------------------------------------------------------------------
+// Result risk calculation
+// ---------------------------------------------------------------------------
+
+const RISK_DIMENSION_KEYS = ["sensory", "rhythm", "specificity", "danger"];
+const ACT1_BREAKFAST_RISK_OPTION_KEYS = {
+  act1_s01_breakfast_overnightPizza: "breakfast_overnightPizza",
+  act1_s01_breakfast_baguetteCheese: "breakfast_baguetteCheese",
+  act1_s01_breakfast_hotPorridge: "breakfast_hotPorridge",
+  act1_s01_breakfast_eggHamSandwich: "breakfast_eggHamSandwich",
+  act1_s01_breakfast_cornEggMilk: "breakfast_cornEggMilk"
+};
+const ACT1_EATING_SPEED_RISK_OPTION_KEYS = {
+  fast: "breakfast_speed_fast",
+  medium: "breakfast_speed_medium",
+  slow: "breakfast_speed_slow"
+};
+const ACT2_LUNCH_FOOD_RISK_OPTION_KEYS = {
+  act2_food_qingjiao_larou: "lunch_qingjiao_larou",
+  act2_food_koushuiji: "lunch_koushuiji",
+  act2_food_zhaxiao_rouwan: "lunch_zhaxiao_rouwan",
+  act2_food_huobao_youyu: "lunch_huobao_youyu",
+  act2_food_jiang_niurou: "lunch_jiang_niurou",
+  act2_food_xiaren_caixin: "lunch_xiaren_caixin",
+  act2_food_shaguo_zhou: "lunch_shaguo_zhou",
+  act2_food_hanbao_zhaji: "lunch_hanbao_zhaji",
+  act2_food_paocai_niurou_xinlamian: "lunch_paocai_niurou_xinlamian",
+  act2_food_baimifan: "lunch_baimifan"
+};
+const ACT2_LUNCH_PLACE_RISK_OPTION_KEYS = {
+  act2_place_canteen_table: "lunch_place_canteen_table",
+  act2_place_coworkers: "lunch_place_coworkers",
+  act2_place_park_bench: "lunch_place_park_bench",
+  act2_place_office_desk: "lunch_place_office_desk"
+};
+const ACT3_HOTPOT_FOOD_RISK_OPTION_KEYS = {
+  act3_s01_food_maodu: "hotpot_maodu",
+  act3_s01_food_sausage: "hotpot_sausage",
+  act3_s01_food_vegetable: "hotpot_vegetable",
+  act3_s01_food_luncheonMeat: "hotpot_luncheonMeat",
+  act3_s01_food_youtiao: "hotpot_youtiao",
+  act3_s01_food_daiRouCuiGu: "hotpot_daiRouCuiGu",
+  act3_s01_food_beefSlices: "hotpot_beefSlices"
+};
+const ACT3_HOTPOT_TARGET_RISK_OPTION_KEYS = {
+  act3_s01_target_clearPot: "hotpot_target_clear",
+  act3_s01_target_spicyPot: "hotpot_target_spicy"
+};
+const ACT3_DRINK_RISK_OPTION_KEYS = {
+  act3_s02_drink_softDrink: "drink_softDrink",
+  act3_s02_drink_lowAlcohol: "drink_lowAlcohol",
+  act3_s02_drink_highAlcohol: "drink_highAlcohol",
+  act3_s02_drink_lemonWater: "drink_lemonWater",
+  act3_s02_drink_beer: "drink_lowAlcohol"
+};
+
+function getRiskConfig() {
+  return window.RISK_CONFIG || {};
+}
+
+function getOptionRiskTags(optionKey) {
+  return [...(getRiskConfig().OPTION_RISK_TAGS?.[optionKey] || [])];
+}
+
+function calculatePlayerRisk(input = playerChoices) {
+  const normalizedChoices = Array.isArray(input)
+    ? normalizePlayerChoicesForRisk(input)
+    : normalizeRiskInput(input || {});
+  const riskConfig = getRiskConfig();
+  const riskTags = riskConfig.RISK_TAGS || {};
+  const riskMax = riskConfig.RISK_MAX || {};
+  const tagCounts = {};
+  const unknownRiskTags = [];
+
+  collectSelectedRiskTags(normalizedChoices).forEach((tag) => {
+    if (!tag || tag === "无") {
+      return;
+    }
+
+    if (!riskTags[tag]) {
+      unknownRiskTags.push(tag);
+      return;
+    }
+
+    tagCounts[tag] = (tagCounts[tag] || 0) + 1;
+  });
+
+  const riskTagCounts = {};
+  const dimensionScores = RISK_DIMENSION_KEYS.reduce((scores, dimension) => {
+    scores[dimension] = 0;
+    return scores;
+  }, {});
+
+  Object.entries(tagCounts).forEach(([tag, rawChosen]) => {
+    const config = riskTags[tag];
+    const appear = Math.max(1, config.appear || 1);
+    const effectiveChosen = Math.min(rawChosen, appear);
+    const exposure = Math.sqrt(effectiveChosen / appear);
+    const score = exposure * (config.logOR || 0);
+
+    riskTagCounts[tag] = {
+      rawChosen,
+      effectiveChosen,
+      exposure: roundRiskValue(exposure, 4),
+      score: roundRiskValue(score, 4),
+      dimension: config.dimension
+    };
+
+    if (dimensionScores[config.dimension] !== undefined) {
+      dimensionScores[config.dimension] += score;
+    }
+  });
+
+  const totalScore = Object.values(dimensionScores).reduce((sum, score) => sum + score, 0);
+  const totalRiskIndex = normalizeRiskIndex(totalScore, riskMax.total);
+  const riskLevel = getRiskLevel(totalRiskIndex);
+  const dimensions = RISK_DIMENSION_KEYS.reduce((result, dimension) => {
+    const score = dimensionScores[dimension] || 0;
+    const riskIndex = normalizeRiskIndex(score, riskMax[dimension]);
+
+    result[dimension] = {
+      score: roundRiskValue(score, 4),
+      riskIndex,
+      endpoint: getDimensionEndpoint(dimension, riskIndex)
+    };
+
+    return result;
+  }, {});
+
+  return {
+    province: normalizedChoices.province || null,
+    selectedItems: normalizedChoices.selectedItems,
+    riskTagCounts,
+    totalScore: roundRiskValue(totalScore, 4),
+    totalRiskIndex,
+    riskLevel,
+    riskLevelLabel: getRiskConfig().RISK_LEVEL_LABELS?.[riskLevel] || riskLevel,
+    dimensions,
+    behavior: normalizedChoices.behavior,
+    unknownRiskTags: [...new Set(unknownRiskTags)]
+  };
+}
+
+function normalizeRiskInput(input) {
+  const selectedItems = {
+    breakfast: input.breakfast || null,
+    breakfastSpeed: input.breakfastSpeed || null,
+    lunchFoods: [...(input.lunchFoods || [])].slice(0, 4),
+    lunchPlace: input.lunchPlace || null,
+    hotpotFoods: [...(input.hotpotFoods || [])].slice(0, 3).map((food) => ({
+      id: food.id || null,
+      target: food.target || null
+    })),
+    drink: input.drink || null
+  };
+  const behavior = normalizeRiskBehavior(input.behavior || {}, selectedItems);
+
+  return {
+    province: input.province || null,
+    selectedItems,
+    behavior
+  };
+}
+
+function normalizePlayerChoicesForRisk(choices) {
+  const breakfastChoice = choices.find((choice) => choice.stepId === "act1_breakfastChoice");
+  const breakfastSpeedChoice = choices.find((choice) => choice.stepId === "act1_eatingSpeed");
+  const lunchPlateChoice = choices.find((choice) => choice.stepId === "act2_lunchPlateChoice");
+  const lunchPlaceChoice = choices.find((choice) => choice.stepId === "act2_lunchPlaceChoice");
+  const hotpotChoice = choices.find((choice) => choice.stepId === "act3_s01_foodChoice");
+  const drinkChoice = choices.find((choice) => choice.stepId === "act3_s02_drinkChoice");
+  const provinceChoice = choices.find((choice) => choice.province || choice.provinceName);
+  const selectedItems = {
+    breakfast: ACT1_BREAKFAST_RISK_OPTION_KEYS[breakfastChoice?.breakfastId] || null,
+    breakfastSpeed: ACT1_EATING_SPEED_RISK_OPTION_KEYS[breakfastSpeedChoice?.eatingSpeed] || null,
+    lunchFoods: (lunchPlateChoice?.selectedFoods || [])
+      .slice(0, 4)
+      .map((food) => ACT2_LUNCH_FOOD_RISK_OPTION_KEYS[food.foodId])
+      .filter(Boolean),
+    lunchPlace: ACT2_LUNCH_PLACE_RISK_OPTION_KEYS[lunchPlaceChoice?.placeId] || null,
+    hotpotFoods: (hotpotChoice?.selectedFoods || [])
+      .slice(0, 3)
+      .map((food) => ({
+        id: ACT3_HOTPOT_FOOD_RISK_OPTION_KEYS[food.foodId] || null,
+        target: ACT3_HOTPOT_TARGET_RISK_OPTION_KEYS[food.targetId] || null
+      }))
+      .filter((food) => food.id),
+    drink: ACT3_DRINK_RISK_OPTION_KEYS[drinkChoice?.drinkId] || null
+  };
+  const behavior = normalizeRiskBehavior(
+    {
+      eatingDurationMs: breakfastSpeedChoice?.elapsedMs,
+      clickCount: breakfastSpeedChoice?.clickCount,
+      eatingSpeedLevel: breakfastSpeedChoice?.eatingSpeed
+    },
+    selectedItems
+  );
+
+  return {
+    province: provinceChoice?.province || provinceChoice?.provinceName || null,
+    selectedItems,
+    behavior
+  };
+}
+
+function normalizeRiskBehavior(behavior, selectedItems) {
+  const eatingDurationMs = Number(behavior.eatingDurationMs || behavior.elapsedMs || 0);
+  const clickCount = Number(behavior.clickCount || 0);
+  const clickSpeed = Number.isFinite(Number(behavior.clickSpeed))
+    ? Number(behavior.clickSpeed)
+    : eatingDurationMs > 0
+      ? clickCount / (eatingDurationMs / 1000)
+      : 0;
+  const eatingSpeedLevel =
+    behavior.eatingSpeedLevel ||
+    behavior.eatingSpeed ||
+    selectedItems.breakfastSpeed?.replace("breakfast_speed_", "") ||
+    null;
+  const regularity =
+    selectedItems.lunchPlace === "lunch_place_office_desk"
+      ? "irregular"
+      : selectedItems.lunchPlace
+        ? "regular"
+        : behavior.regularity || null;
+
+  return {
+    eatingDurationMs,
+    clickCount,
+    clickSpeed: roundRiskValue(clickSpeed, 2),
+    eatingSpeedLevel,
+    regularity
+  };
+}
+
+function collectSelectedRiskTags(normalizedChoices) {
+  const { selectedItems } = normalizedChoices;
+
+  return [
+    ...getOptionRiskTags(selectedItems.breakfast),
+    ...getOptionRiskTags(selectedItems.breakfastSpeed),
+    ...selectedItems.lunchFoods.flatMap((foodKey) => getOptionRiskTags(foodKey)),
+    ...getOptionRiskTags(selectedItems.lunchPlace),
+    ...selectedItems.hotpotFoods.flatMap((food) => [
+      ...getOptionRiskTags(food.id),
+      ...getOptionRiskTags(food.target)
+    ]),
+    ...getOptionRiskTags(selectedItems.drink)
+  ].filter(Boolean);
+}
+
+function normalizeRiskIndex(score, maxScore) {
+  if (!maxScore) {
+    return 0;
+  }
+
+  return roundRiskValue(Math.max(0, Math.min(100, (score / maxScore) * 100)), 2);
+}
+
+function getRiskLevel(totalRiskIndex) {
+  const thresholds = getRiskConfig().RISK_LEVEL_THRESHOLDS || {};
+
+  if (totalRiskIndex < (thresholds.lowMax ?? 33)) {
+    return "low";
+  }
+
+  if (totalRiskIndex < (thresholds.highMin ?? 42)) {
+    return "medium";
+  }
+
+  return "high";
+}
+
+function getDimensionEndpoint(dimension, riskIndex) {
+  const threshold = getRiskConfig().DIMENSION_ENDPOINT_THRESHOLDS?.[dimension] ?? 50;
+  const endpoints = getRiskConfig().DIMENSION_ENDPOINTS?.[dimension] || { high: "", low: "" };
+
+  return riskIndex >= threshold ? endpoints.high : endpoints.low;
+}
+
+function roundRiskValue(value, digits = 2) {
+  const factor = 10 ** digits;
+
+  return Math.round((Number(value) || 0) * factor) / factor;
+}
+
+function updatePlayerRiskResult() {
+  playerRiskResult = calculatePlayerRisk(playerChoices);
+  window.playerRiskResult = playerRiskResult;
+
+  return playerRiskResult;
+}
+
+function getPlayerRiskResult() {
+  return playerRiskResult || updatePlayerRiskResult();
+}
+
+window.calculatePlayerRisk = calculatePlayerRisk;
+window.getPlayerRiskResult = getPlayerRiskResult;
 
 // ---------------------------------------------------------------------------
 // Act1 Breakfast Module
@@ -1398,6 +1698,7 @@ function getAct1EatingSpeed(elapsedMs, config) {
 }
 
 function recordAct1EatingSpeed(elapsedMs, eatingSpeed) {
+  const speedRiskKey = ACT1_EATING_SPEED_RISK_OPTION_KEYS[eatingSpeed];
   const record = {
     sceneId: "act1",
     stepId: "act1_eatingSpeed",
@@ -1407,7 +1708,7 @@ function recordAct1EatingSpeed(elapsedMs, eatingSpeed) {
     requiredClicks: act1EatingRequiredClicks,
     elapsedMs,
     eatingSpeed,
-    riskTags: [],
+    riskTags: getOptionRiskTags(speedRiskKey),
     tendencyScores: {}
   };
 
@@ -4452,6 +4753,8 @@ function renderResultRiskIntroLayout(layer) {
   const prompt = config.prompt || {};
   const centerExplanation = config.centerExplanation || {};
   const riskIndex = config.riskIndex || {};
+  const riskResult = getPlayerRiskResult();
+  const riskIndexValue = `${Math.round(riskResult.totalRiskIndex)}/100`;
   const shapeMarkup = shapes
     .map((shape, index) => `
       <div
@@ -4508,7 +4811,7 @@ function renderResultRiskIntroLayout(layer) {
     <div class="result-risk-transition-layer"></div>
     <div class="result-risk-score-block">
       <p class="result-risk-score-title">${riskIndex.title || ""}</p>
-      <p class="result-risk-score-value">${riskIndex.value || ""}</p>
+      <p class="result-risk-score-value">${riskIndexValue}</p>
       <p class="result-risk-score-note">${(riskIndex.note || "").replace(/\n/g, "<br>")}</p>
     </div>
   `;
@@ -4670,6 +4973,8 @@ function getRiskTransitionEdgePoint() {
 
 function renderResultDietGalaxyLayout(layer) {
   const config = RESULT_GALAXY_LOCATING_CONFIG.resultDietGalaxy;
+  const riskResult = getPlayerRiskResult();
+  const traitDimensionOrder = ["sensory", "danger", "specificity", "rhythm"];
   const paragraphs = config.panel.paragraphs
     .map((paragraph) => `<p>${paragraph.replace(/\n/g, "<br>")}</p>`)
     .join("");
@@ -4682,8 +4987,13 @@ function renderResultDietGalaxyLayout(layer) {
       pointerShape: "square"
     }));
   const traitBars = traitBarItems
-    .map((item) => `
-      <div class="result-trait-bar" style="--trait-position: ${item.value}%">
+    .map((item, index) => {
+      const dimension = traitDimensionOrder[index];
+      const dynamicValue = riskResult.dimensions?.[dimension]?.riskIndex;
+      const value = dynamicValue ?? item.value;
+
+      return `
+      <div class="result-trait-bar" style="--trait-position: ${value}%">
         <div class="result-trait-track-wrap">
           <div class="result-trait-track"></div>
           <div class="result-trait-endpoint result-trait-endpoint-left"></div>
@@ -4695,7 +5005,8 @@ function renderResultDietGalaxyLayout(layer) {
           <span class="result-trait-label result-trait-label-right">${item.rightLabel || ""}</span>
         </div>
       </div>
-    `)
+    `;
+    })
     .join("");
 
   layer.style.setProperty("--result-label-x", `${config.galaxyLabel.x}px`);
@@ -4765,6 +5076,7 @@ function enterGalaxyLocatingState() {
     return;
   }
 
+  updatePlayerRiskResult();
   act3ExitProgress = ACT3_EXIT_SCROLL_CONFIG.maxProgress;
   isAct3ScrollExitEnabled = false;
   isAct3ExitAnimating = false;
@@ -4773,6 +5085,7 @@ function enterGalaxyLocatingState() {
   createGalaxyLocatingLayer();
   console.log("Entered result_state_00_galaxy_locating", {
     playerChoices,
+    playerRiskResult,
     act3ExitProgress
   });
 }
@@ -4788,6 +5101,7 @@ function enterResultGalaxyState() {
   isAct3ExitAnimating = false;
   currentPhase = PHASES.RESULT_GALAXY;
   currentState = RESULT_STATES.DIET_GALAXY;
+  updatePlayerRiskResult();
   hasResultRiskIntroStarted = false;
   resultRiskIntroStep = 0;
   resultRiskIntroWheelLocked = false;
@@ -4797,9 +5111,13 @@ function enterResultGalaxyState() {
   }
   resultRiskLayer?.classList.remove("is-visible");
   resultGalaxyLayer?.classList.remove("is-hidden");
+  if (resultGalaxyLayer) {
+    renderResultDietGalaxyLayout(resultGalaxyLayer);
+  }
   updateResultGalaxyProgress(1);
   console.log("Entered result_state_01_diet_galaxy", {
     playerChoices,
+    playerRiskResult,
     act3ExitProgress
   });
 }
@@ -4973,6 +5291,7 @@ function startResultGalaxyEnterTransition() {
 function completeResultGalaxyEnterTransition() {
   currentPhase = PHASES.RESULT_GALAXY;
   currentState = RESULT_STATES.DIET_GALAXY;
+  updatePlayerRiskResult();
   isAct3ScrollExitEnabled = false;
   isAct3ExitAnimating = false;
   act3ExitProgress = ACT3_EXIT_SCROLL_CONFIG.maxProgress;
@@ -4985,9 +5304,13 @@ function completeResultGalaxyEnterTransition() {
   }
   resultRiskLayer?.classList.remove("is-visible");
   resultGalaxyLayer?.classList.remove("is-hidden");
+  if (resultGalaxyLayer) {
+    renderResultDietGalaxyLayout(resultGalaxyLayer);
+  }
   updateResultGalaxyProgress(1);
   console.log("Entered result_state_01_diet_galaxy", {
     playerChoices,
+    playerRiskResult,
     act3ExitProgress,
     preservedGalaxyLocatingLayer: Boolean(galaxyLocatingLayer)
   });
@@ -5007,11 +5330,13 @@ function enterResultRiskIntroState() {
   }
   currentPhase = PHASES.RESULT_RISK_INTRO;
   currentState = RESULT_STATES.RISK_INTRO;
+  updatePlayerRiskResult();
   renderResultRiskIntroLayout(ensureResultRiskLayer());
   ensureResultRiskLayer().classList.add("is-visible");
   resultGalaxyLayer?.classList.add("is-hidden");
   console.log("Entered result_state_02_risk_intro", {
     playerChoices,
+    playerRiskResult,
     preservedResultGalaxyLayer: Boolean(resultGalaxyLayer)
   });
 }

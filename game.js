@@ -995,9 +995,6 @@ function createAct1ObjectElement(objectId, objectConfig) {
     element.addEventListener("pointerdown", startAct1HeatingPress);
   } else if (objectConfig.type === "heatPlate") {
     element.innerHTML = `<span class="act1-heat-plate-label">${objectConfig.content || ""}</span>`;
-  } else if (objectConfig.type === "heatFood") {
-    const selectedChoice = getAct1BreakfastChoice(selectedAct1BreakfastId);
-    element.innerHTML = `<span class="act1-heat-food-label">${selectedChoice?.label || objectConfig.content || ""}</span>`;
   } else if (isTemperatureGauge) {
     element.innerHTML = `
       <div class="act1-gauge-guide">${getAct1HeatingConfig().guideText}</div>
@@ -1041,7 +1038,29 @@ function createAct1ObjectElement(objectId, objectConfig) {
   element.dataset.objectId = objectId;
   element.dataset.objectType = objectConfig.type;
   element.className = getAct1ObjectClassName(objectConfig.type);
+  syncAct1PlaceholderImage(element, objectConfig, objectConfig.label || objectConfig.content || objectId);
   return element;
+}
+
+function syncAct1PlaceholderImage(element, objectConfig, fallbackLabel) {
+  if (!objectConfig.image) {
+    return;
+  }
+
+  const image = document.createElement("img");
+
+  image.className = "act1-placeholder-image";
+  image.alt = fallbackLabel || "";
+  image.draggable = false;
+  image.src = objectConfig.image;
+  image.onload = () => {
+    element.classList.add("has-act1-image");
+  };
+  image.onerror = () => {
+    element.classList.remove("has-act1-image");
+    image.remove();
+  };
+  element.prepend(image);
 }
 
 function getAct1ObjectClassName(type) {
@@ -1061,10 +1080,6 @@ function getAct1ObjectClassName(type) {
     return "act1-scene-object act1-heat-plate";
   }
 
-  if (type === "heatFood") {
-    return "act1-scene-object act1-heat-food";
-  }
-
   if (type === "temperatureGauge") {
     return "act1-scene-object act1-temperature-gauge";
   }
@@ -1073,8 +1088,20 @@ function getAct1ObjectClassName(type) {
     return "act1-scene-object act1-atmosphere-frame";
   }
 
+  if (type === "eatingSceneBg") {
+    return "act1-scene-object act1-eating-scene-bg";
+  }
+
+  if (type === "eatingAtmosphereAsset") {
+    return "act1-scene-object act1-eating-atmosphere";
+  }
+
   if (type === "eatingTable") {
     return "act1-scene-object act1-eating-table";
+  }
+
+  if (type === "eatingPlate") {
+    return "act1-scene-object act1-eating-plate";
   }
 
   if (type === "eatingFood") {
@@ -1186,8 +1213,10 @@ function playAct1BreakfastToHeatTransition(selectedElement) {
   }
 
   const stage = act1Layouts?.stage || { width: DESIGN_WIDTH, height: DESIGN_HEIGHT };
-  const targetLeft = config.targetCenterX - selectedConfig.width / 2;
-  const targetTop = config.targetCenterY - selectedConfig.height / 2;
+  const targetWidth = selectedConfig.width * config.targetScale;
+  const targetHeight = selectedConfig.height * config.targetScale;
+  const targetLeft = config.targetCenterX - targetWidth / 2;
+  const targetTop = config.targetCenterY - targetHeight / 2;
 
   selectedElement.classList.add("is-travelling-to-microwave");
   selectedElement.style.zIndex = "30";
@@ -1206,6 +1235,7 @@ function playAct1BreakfastToHeatTransition(selectedElement) {
 
 function enterAct1MicrowaveHeat() {
   const state = getAct1StateConfig(ACT1_STATES.MICROWAVE_HEAT);
+  const carriedFood = objectLayer.querySelector(".act1-breakfast-option.is-travelling-to-microwave");
 
   currentPhase = PHASES.ACT1_HEATING;
   currentState = ACT1_STATES.MICROWAVE_HEAT;
@@ -1217,7 +1247,19 @@ function enterAct1MicrowaveHeat() {
   stopAct1HeatLoop();
   hideHoverInfoTooltip();
   updateStageHeader("\u7b2c\u4e00\u5e55\u4f4e\u4fdd\u771f\u539f\u578b", "\u65e9\u6668\u2014\u2014\u5fae\u6ce2\u52a0\u70ed");
-  objectLayer.querySelectorAll(".act1-scene-object").forEach((element) => element.remove());
+  objectLayer.querySelectorAll(".act1-scene-object").forEach((element) => {
+    if (element === carriedFood) {
+      return;
+    }
+
+    element.remove();
+  });
+
+  if (carriedFood) {
+    carriedFood.classList.add("act1-carried-heat-food");
+    carriedFood.classList.remove("is-selected");
+    carriedFood.disabled = true;
+  }
 
   Object.entries(state.objects || {}).forEach(([objectId, objectConfig]) => {
     const element = createAct1ObjectElement(objectId, objectConfig);
@@ -1439,6 +1481,7 @@ function recordAct1HeatingResult() {
 function enterAct1EatingSpeed() {
   const state = getAct1StateConfig(ACT1_STATES.EATING_SPEED);
   const config = getAct1EatingConfig();
+  const carriedFood = objectLayer.querySelector(".act1-carried-heat-food");
 
   currentPhase = PHASES.ACT1_EATING;
   currentState = ACT1_STATES.EATING_SPEED;
@@ -1449,7 +1492,13 @@ function enterAct1EatingSpeed() {
   isAct1EatingComplete = false;
   hideHoverInfoTooltip();
   updateStageHeader("\u7b2c\u4e00\u5e55\u4f4e\u4fdd\u771f\u539f\u578b", "\u65e9\u6668\u2014\u2014\u5403\u65e9\u996d");
-  objectLayer.querySelectorAll(".act1-scene-object").forEach((element) => element.remove());
+  objectLayer.querySelectorAll(".act1-scene-object").forEach((element) => {
+    if (element === carriedFood) {
+      return;
+    }
+
+    element.remove();
+  });
 
   Object.entries(state.objects || {}).forEach(([objectId, objectConfig]) => {
     const element = createAct1ObjectElement(objectId, objectConfig);
@@ -1457,6 +1506,10 @@ function enterAct1EatingSpeed() {
     updateAct1ObjectLayout(element, objectConfig);
     objectLayer.appendChild(element);
   });
+
+  if (carriedFood) {
+    prepareAct1CarriedFoodForEating(carriedFood, config);
+  }
 
   updateAct1EatingVisuals();
   console.log("Entered act1_03_eating_speed", { selectedAct1BreakfastId });
@@ -1469,8 +1522,37 @@ function getAct1EatingConfig() {
     requiredClicks: Math.max(1, config.requiredClicks ?? 6),
     fastMaxMs: config.fastMaxMs ?? 3500,
     mediumMaxMs: config.mediumMaxMs ?? 7000,
-    nextStateDelay: config.nextStateDelay ?? 1200
+    nextStateDelay: config.nextStateDelay ?? 1200,
+    targetCenterX: config.targetCenterX ?? 964,
+    targetCenterY: config.targetCenterY ?? 654,
+    targetScale: config.targetScale ?? 1.3,
+    assetPattern: config.assetPattern || "assets/images/act1/eating/{slug}-{state}.png"
   };
+}
+
+function prepareAct1CarriedFoodForEating(foodElement, config = getAct1EatingConfig()) {
+  const sourceConfig = getAct1StateConfig(ACT1_STATES.BREAKFAST_CHOICE)
+    .objects?.[foodElement.dataset.objectId];
+  const stage = act1Layouts?.stage || { width: DESIGN_WIDTH, height: DESIGN_HEIGHT };
+
+  if (!sourceConfig) {
+    return;
+  }
+
+  const visualWidth = sourceConfig.width * config.targetScale;
+  const visualHeight = sourceConfig.height * config.targetScale;
+  const targetLeft = config.targetCenterX - visualWidth / 2;
+  const targetTop = config.targetCenterY - visualHeight / 2;
+
+  foodElement.classList.add("act1-carried-eating-food");
+  foodElement.classList.remove("act1-carried-heat-food");
+  foodElement.style.left = `${(targetLeft / stage.width) * 100}%`;
+  foodElement.style.top = `${(targetTop / stage.height) * 100}%`;
+  foodElement.style.transform = `scale(${config.targetScale})`;
+  foodElement.style.zIndex = "30";
+  foodElement.disabled = false;
+  foodElement.addEventListener("click", handleAct1EatingFoodClick);
+  updateAct1CarriedFoodEatingAsset(foodElement, 0);
 }
 
 function handleAct1EatingFoodClick() {
@@ -1483,6 +1565,10 @@ function handleAct1EatingFoodClick() {
   }
 
   act1EatingClickCount = Math.min(act1EatingRequiredClicks, act1EatingClickCount + 1);
+  updateAct1CarriedFoodEatingAsset(
+    objectLayer.querySelector(".act1-carried-eating-food"),
+    act1EatingClickCount
+  );
   updateAct1EatingVisuals();
 
   if (act1EatingClickCount >= act1EatingRequiredClicks) {
@@ -1490,9 +1576,61 @@ function handleAct1EatingFoodClick() {
   }
 }
 
+function getAct1BreakfastAssetSlug(choiceId = selectedAct1BreakfastId) {
+  const slugMap = {
+    act1_s01_breakfast_overnightPizza: "overnight-pizza",
+    act1_s01_breakfast_baguetteCheese: "baguette-cheese",
+    act1_s01_breakfast_hotPorridge: "hot-porridge",
+    act1_s01_breakfast_eggHamSandwich: "egg-ham-sandwich",
+    act1_s01_breakfast_cornEggMilk: "corn-egg-milk"
+  };
+
+  return slugMap[choiceId] || "breakfast";
+}
+
+function updateAct1CarriedFoodEatingAsset(foodElement, stateIndex) {
+  if (!foodElement) {
+    return;
+  }
+
+  const config = getAct1EatingConfig();
+  const slug = getAct1BreakfastAssetSlug();
+  const existingImage = foodElement.querySelector(":scope > .act1-placeholder-image");
+
+  foodElement.dataset.eatingAssetState = String(stateIndex);
+
+  if (stateIndex <= 0) {
+    return;
+  }
+
+  const imagePath = config.assetPattern
+    .replace("{slug}", slug)
+    .replace("{state}", String(stateIndex));
+  const image = existingImage || document.createElement("img");
+
+  image.className = "act1-placeholder-image";
+  image.alt = "";
+  image.draggable = false;
+  image.src = imagePath;
+  image.onload = () => {
+    foodElement.classList.add("has-act1-image");
+    foodElement.classList.remove("is-eating-asset-missing");
+  };
+  image.onerror = () => {
+    foodElement.classList.remove("has-act1-image");
+    foodElement.classList.add("is-eating-asset-missing");
+    image.remove();
+  };
+
+  if (!existingImage) {
+    foodElement.prepend(image);
+  }
+}
+
 function updateAct1EatingVisuals() {
   const progress = Math.max(0, Math.min(1, act1EatingClickCount / act1EatingRequiredClicks));
   const remaining = Math.max(0, 1 - progress);
+  const carriedFood = objectLayer?.querySelector(".act1-carried-eating-food");
 
   objectLayer?.querySelectorAll(".act1-eating-food").forEach((element) => {
     element.style.setProperty("--act1-food-remaining", remaining.toFixed(3));
@@ -1504,9 +1642,23 @@ function updateAct1EatingVisuals() {
     if (label) {
       label.textContent = progress >= 1
         ? "\u53ea\u5269\u76d8\u5b50"
-        : `${act1EatingClickCount}/${act1EatingRequiredClicks}`;
+      : `${act1EatingClickCount}/${act1EatingRequiredClicks}`;
     }
   });
+
+  if (carriedFood) {
+    carriedFood.style.setProperty("--act1-food-remaining", remaining.toFixed(3));
+    carriedFood.style.setProperty("--act1-bite-size", `${Math.round(progress * 90)}px`);
+    carriedFood.dataset.eatenClicks = String(act1EatingClickCount);
+    carriedFood.dataset.requiredClicks = String(act1EatingRequiredClicks);
+    const label = carriedFood.querySelector(".act1-breakfast-label");
+
+    if (label) {
+      label.textContent = progress >= 1
+        ? "\u53ea\u5269\u76d8\u5b50"
+        : `${act1EatingClickCount}/${act1EatingRequiredClicks}`;
+    }
+  }
 }
 
 function completeAct1Eating() {
@@ -1522,6 +1674,7 @@ function completeAct1Eating() {
   objectLayer.querySelectorAll(".act1-eating-food").forEach((element) => {
     element.classList.add("is-complete");
   });
+  objectLayer.querySelector(".act1-carried-eating-food")?.classList.add("is-complete");
   recordAct1EatingSpeed(elapsedMs, eatingSpeed);
 
   window.setTimeout(() => {

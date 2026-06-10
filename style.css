@@ -2853,6 +2853,10 @@ button:disabled {
   display: block;
   opacity: 0;
   pointer-events: none;
+  background:
+    radial-gradient(circle at 50% 42%, rgba(255, 255, 255, 0.65) 0%, rgba(255, 255, 255, 0) 34%),
+    linear-gradient(180deg, rgba(255, 250, 242, 0.55) 0%, rgba(246, 238, 220, 0.92) 100%),
+    #f6eedc;
   transform: translateX(80px);
 }
 
@@ -3139,6 +3143,16 @@ button:disabled {
   font-family: YouYuan, "幼圆", "Microsoft YaHei", sans-serif;
   text-align: center;
   transform: translate(-50%, -50%);
+}
+
+.result-galaxy-visual-placeholder {
+  position: absolute;
+  left: var(--result-visual-x, 117px);
+  top: var(--result-visual-y, 80px);
+  width: var(--result-visual-width, 790px);
+  height: var(--result-visual-height, 790px);
+  border-radius: 999px;
+  background: var(--result-visual-color, #d9d9d9);
 }
 
 .result-galaxy-label p {

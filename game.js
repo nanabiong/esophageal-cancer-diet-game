@@ -285,6 +285,13 @@ const RESULT_GALAXY_LOCATING_DEFAULT_CONFIG = {
       eyebrow: "\u4f60\u7684\u996e\u98df\u661f\u7cfb\u662f...",
       title: "\u9ad8\u538b\u7099\u70ed\u661f\u73af!"
     },
+    visualPlaceholder: {
+      x: 117,
+      y: 80,
+      width: 790,
+      height: 790,
+      color: "#d9d9d9"
+    },
     panel: {
       x: 1040,
       y: 130,
@@ -772,6 +779,10 @@ function mergeResultGalaxyLocatingConfig(config) {
       galaxyLabel: {
         ...RESULT_GALAXY_LOCATING_DEFAULT_CONFIG.resultDietGalaxy.galaxyLabel,
         ...(config.resultDietGalaxy?.galaxyLabel || {})
+      },
+      visualPlaceholder: {
+        ...RESULT_GALAXY_LOCATING_DEFAULT_CONFIG.resultDietGalaxy.visualPlaceholder,
+        ...(config.resultDietGalaxy?.visualPlaceholder || {})
       },
       panel: {
         ...RESULT_GALAXY_LOCATING_DEFAULT_CONFIG.resultDietGalaxy.panel,
@@ -3419,12 +3430,17 @@ function renderDebugEntryControls() {
 
   const controls = document.createElement("div");
   const jumpAct2Button = document.createElement("button");
+  const jumpAct3FinalButton = document.createElement("button");
 
   controls.className = "debug-entry-controls";
   jumpAct2Button.type = "button";
   jumpAct2Button.textContent = "跳到 Act2 开始测试";
   jumpAct2Button.addEventListener("click", startDebugAct2Entry);
+  jumpAct3FinalButton.type = "button";
+  jumpAct3FinalButton.textContent = "\u8df3\u5230 Act3 \u6700\u540e\u4e00\u5e55";
+  jumpAct3FinalButton.addEventListener("click", startDebugAct3FinalEntry);
   controls.appendChild(jumpAct2Button);
+  controls.appendChild(jumpAct3FinalButton);
   document.querySelector("#app")?.appendChild(controls);
 }
 
@@ -3461,6 +3477,57 @@ function startDebugAct2Entry() {
   resultRiskIntroWheelLocked = false;
   currentState = null;
   enterAct2LunchIntro();
+}
+
+function startDebugAct3FinalEntry() {
+  removeDebugEntryControls();
+  isIntroActive = false;
+  introStep = 0;
+  isWheelLocked = false;
+  isIntroAnimating = false;
+  isTransitioning = false;
+  isStateLocked = false;
+  hideIntroBubble();
+  hideGuidanceBubbles();
+  hideHoverInfoTooltip();
+  stopHotpotFloatingBubbles();
+  cleanupAct0Layer();
+  cleanupAct2WorkBubbles();
+  cleanupAct2FriendMealInteraction();
+  cleanupAct2ParkScene();
+  cleanupAct2SoloMealInteraction();
+  cleanupAct2CatchGame();
+  cleanupAct2IntroWheel();
+  cleanupAct2LunchChoiceWheel();
+  cleanupAct2CannotGoBackHint();
+  cleanupGalaxyLocatingLayer();
+  resultGalaxyLayer?.remove();
+  resultGalaxyLayer = null;
+  resultRiskLayer?.remove();
+  resultRiskLayer = null;
+  objectLayer?.querySelectorAll(".act1-scene-object, .act2-scene-object").forEach((element) => element.remove());
+  objectLayer?.classList.remove("act3-exit-sequence");
+  hasAct3ExitStarted = false;
+  isAct3ExitAnimating = false;
+  isAct3ScrollExitEnabled = false;
+  isAct3Complete = false;
+  isFoodChoiceLocked = true;
+  isDrinkChoiceLocked = true;
+  selectedFoods = [];
+  selectedDrinkId = null;
+  act3ExitProgress = 0;
+  hasResultRiskIntroStarted = false;
+  resultRiskIntroStep = 0;
+  resultRiskIntroWheelLocked = false;
+  if (resultRiskIntroWheelLockTimer) {
+    window.clearTimeout(resultRiskIntroWheelLockTimer);
+    resultRiskIntroWheelLockTimer = null;
+  }
+  currentState = null;
+  applyState(ACT3_STATES.DRINK_CHOICE, { animate: false });
+  window.setTimeout(() => {
+    enableAct3ScrollExit();
+  }, 0);
 }
 // DEBUG ACT2 END
 
@@ -4701,6 +4768,11 @@ function renderResultDietGalaxyLayout(layer) {
   layer.style.setProperty("--result-label-x", `${config.galaxyLabel.x}px`);
   layer.style.setProperty("--result-label-y", `${config.galaxyLabel.y}px`);
   layer.style.setProperty("--result-label-width", `${config.galaxyLabel.width}px`);
+  layer.style.setProperty("--result-visual-x", `${config.visualPlaceholder.x}px`);
+  layer.style.setProperty("--result-visual-y", `${config.visualPlaceholder.y}px`);
+  layer.style.setProperty("--result-visual-width", `${config.visualPlaceholder.width}px`);
+  layer.style.setProperty("--result-visual-height", `${config.visualPlaceholder.height}px`);
+  layer.style.setProperty("--result-visual-color", config.visualPlaceholder.color || "#d9d9d9");
   layer.style.setProperty("--result-panel-x", `${config.panel.x}px`);
   layer.style.setProperty("--result-panel-y", `${config.panel.y}px`);
   layer.style.setProperty("--result-panel-width", `${config.panel.width}px`);
@@ -4715,6 +4787,7 @@ function renderResultDietGalaxyLayout(layer) {
   layer.style.setProperty("--result-trait-label-gap", `${config.traitBars.labelGap || 16}px`);
   layer.style.setProperty("--result-trait-label-font-size", `${config.traitBars.labelFontSize || 16}px`);
   layer.innerHTML = `
+    <div class="result-galaxy-visual-placeholder" aria-hidden="true"></div>
     <div class="result-galaxy-label">
       <p class="result-galaxy-label-eyebrow">${config.galaxyLabel.eyebrow}</p>
       <p class="result-galaxy-label-title">${config.galaxyLabel.title}</p>
@@ -4756,7 +4829,7 @@ function startAct3ExitSequence() {
   objectLayer.classList.add("act3-exit-sequence");
 
   window.setTimeout(() => {
-    enterGalaxyLocatingState();
+    enterResultGalaxyState();
   }, ACT3_EXIT_SCROLL_CONFIG.completeDelay);
 }
 

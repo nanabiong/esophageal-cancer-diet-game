@@ -110,6 +110,13 @@
         "eyebrow": "\u4f60\u7684\u996e\u98df\u661f\u7cfb\u662f...",
         "title": "\u9ad8\u538b\u7099\u70ed\u661f\u73af!"
       },
+      "visualPlaceholder": {
+        "x": 117,
+        "y": 80,
+        "width": 790,
+        "height": 790,
+        "color": "#d9d9d9"
+      },
       "panel": {
         "x": 1057,
         "y": 118,

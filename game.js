@@ -568,6 +568,7 @@ let hasAct3ExitStarted = false;
 let act3ExitProgress = 0;
 let resultGalaxyLayer = null;
 let resultRiskLayer = null;
+let resultStatsOverlayLayer = null;
 let act0AlarmLayer = null;
 let act0Clock = null;
 let act0MinuteHand = null;
@@ -603,12 +604,15 @@ let resultRiskIntroWheelLockTimer = null;
 let hoverInfoTooltip = null;
 let hoverInfoShowTimer = null;
 let hoverInfoHideTimer = null;
+let resultStatsShortcutBound = false;
 let objectLayer = null;
 let transitionDuration = 900;
 let isFoodChoiceLocked = false;
 
 document.addEventListener("DOMContentLoaded", async () => {
   try {
+    bindResultStatsDebugShortcut();
+    createResultStatsDebugButton();
     await loadAct3Data();
     setupStageScale();
     updateStageHeader("第三幕低保真原型", "夜晚——聚会与火锅");
@@ -868,6 +872,25 @@ function initializeStage() {
   frameTrack.innerHTML = "";
   frameTrack.appendChild(frame);
   updateStageScale();
+}
+
+function createResultStatsDebugButton() {
+  if (document.querySelector(".result-stats-debug-button")) {
+    return;
+  }
+
+  const button = document.createElement("button");
+
+  button.type = "button";
+  button.className = "result-stats-debug-button";
+  button.textContent = "数据";
+  button.title = "查看玩家实时记录（R）";
+  button.addEventListener("click", (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    showResultStatsOverlay();
+  });
+  document.body.appendChild(button);
 }
 
 function showLoadError(error) {
@@ -4747,6 +4770,251 @@ function ensureResultRiskLayer() {
   return resultRiskLayer;
 }
 
+function formatRegularityForStats(regularity) {
+  if (regularity === "irregular") {
+    return "不规律进食";
+  }
+
+  if (regularity === "regular") {
+    return "规律进食";
+  }
+
+  return "未记录";
+}
+
+function bindResultStatsDebugShortcut() {
+  if (resultStatsShortcutBound) {
+    return;
+  }
+
+  resultStatsShortcutBound = true;
+  window.addEventListener("keydown", (event) => {
+    if (!isResultStatsShortcutEvent(event) || event.repeat || shouldIgnoreResultStatsShortcut(event)) {
+      return;
+    }
+
+    event.preventDefault();
+    event.stopPropagation();
+    toggleResultStatsOverlay();
+  }, true);
+}
+
+function isResultStatsShortcutEvent(event) {
+  return event.code === "KeyR" || event.key === "r" || event.key === "R";
+}
+
+function shouldIgnoreResultStatsShortcut(event) {
+  const target = event.target;
+
+  return Boolean(
+    target?.closest?.("input, textarea, select, [contenteditable='true']")
+  );
+}
+
+function toggleResultStatsOverlay() {
+  const layer = ensureResultStatsOverlayLayer();
+
+  if (layer.classList.contains("is-visible")) {
+    hideResultStatsOverlay();
+    return;
+  }
+
+  showResultStatsOverlay();
+}
+
+function showResultStatsOverlay() {
+  const layer = ensureResultStatsOverlayLayer();
+
+  updatePlayerRiskResult();
+  renderResultStatsOverlay(layer);
+  layer.classList.add("is-visible");
+}
+
+function hideResultStatsOverlay() {
+  resultStatsOverlayLayer?.classList.remove("is-visible");
+}
+
+function ensureResultStatsOverlayLayer() {
+  if (resultStatsOverlayLayer) {
+    return resultStatsOverlayLayer;
+  }
+
+  resultStatsOverlayLayer = document.createElement("section");
+  resultStatsOverlayLayer.className = "result-stats-overlay";
+  resultStatsOverlayLayer.setAttribute("aria-label", "玩家数据统计弹窗");
+  resultStatsOverlayLayer.innerHTML = "";
+  document.body.appendChild(resultStatsOverlayLayer);
+  resultStatsOverlayLayer.addEventListener("click", (event) => {
+    if (
+      event.target === resultStatsOverlayLayer ||
+      event.target.closest(".result-stats-overlay-close")
+    ) {
+      hideResultStatsOverlay();
+    }
+  });
+
+  return resultStatsOverlayLayer;
+}
+
+function renderResultStatsOverlay(layer) {
+  const riskResult = getPlayerRiskResult();
+  const selectedItems = riskResult.selectedItems || {};
+  const behavior = riskResult.behavior || {};
+
+  layer.innerHTML = `
+    <div class="result-stats-overlay-panel" role="dialog" aria-modal="true">
+      <button class="result-stats-overlay-close" type="button" aria-label="关闭统计弹窗">×</button>
+      <div class="result-stats-overlay-header">
+        <div>
+          <p class="result-stats-overlay-kicker">实时数据检测</p>
+          <h2>玩家记录统计</h2>
+        </div>
+        <div class="result-stats-overlay-summary">
+          <span>总风险 ${riskResult.totalRiskIndex}/100</span>
+          <span>${riskResult.riskLevelLabel || riskResult.riskLevel}</span>
+        </div>
+      </div>
+
+      <div class="result-stats-debug-grid">
+        <section class="result-stats-debug-card result-stats-debug-card-wide">
+          <h3>玩家选择</h3>
+          ${renderStatsKeyValueList([
+            ["省份", riskResult.province || "未记录"],
+            ["早餐", selectedItems.breakfast || "未记录"],
+            ["早餐速度", selectedItems.breakfastSpeed || "未记录"],
+            ["午餐菜品", (selectedItems.lunchFoods || []).join("、") || "未记录"],
+            ["午餐地点", selectedItems.lunchPlace || "未记录"],
+            ["火锅食材", formatHotpotFoodsForStats(selectedItems.hotpotFoods)],
+            ["饮品", selectedItems.drink || "未记录"]
+          ])}
+        </section>
+
+        <section class="result-stats-debug-card">
+          <h3>风险标签统计</h3>
+          ${renderRiskTagCountsTable(riskResult.riskTagCounts)}
+        </section>
+
+        <section class="result-stats-debug-card">
+          <h3>四维风险</h3>
+          ${renderDimensionStats(riskResult.dimensions)}
+        </section>
+
+        <section class="result-stats-debug-card">
+          <h3>行为判定</h3>
+          ${renderStatsKeyValueList([
+            ["快速进食等级", behavior.eatingSpeedLevel || "未记录"],
+            ["进食时长", `${behavior.eatingDurationMs || 0} ms`],
+            ["点击次数", behavior.clickCount || 0],
+            ["点击速度", `${behavior.clickSpeed || 0} 次/秒`],
+            ["规律性", formatRegularityForStats(behavior.regularity)]
+          ])}
+        </section>
+
+        <section class="result-stats-debug-card">
+          <h3>记录数量</h3>
+          ${renderStatsKeyValueList([
+            ["playerChoices", `${playerChoices.length} 条`],
+            ["未知风险标签", riskResult.unknownRiskTags?.join("、") || "无"],
+            ["当前阶段", currentState || "未记录"]
+          ])}
+        </section>
+
+        <section class="result-stats-debug-card result-stats-debug-card-full">
+          <h3>原始 playerChoices</h3>
+          <pre class="result-stats-debug-json">${escapeHtml(JSON.stringify(playerChoices, null, 2))}</pre>
+        </section>
+      </div>
+    </div>
+  `;
+}
+
+function renderStatsKeyValueList(items) {
+  return `
+    <dl class="result-stats-debug-kv">
+      ${items.map(([label, value]) => `
+        <div>
+          <dt>${escapeHtml(label)}</dt>
+          <dd>${escapeHtml(value)}</dd>
+        </div>
+      `).join("")}
+    </dl>
+  `;
+}
+
+function renderRiskTagCountsTable(riskTagCounts = {}) {
+  const entries = Object.entries(riskTagCounts);
+
+  if (!entries.length) {
+    return `<p class="result-stats-debug-empty">暂无风险标签</p>`;
+  }
+
+  return `
+    <div class="result-stats-tag-table">
+      <div class="result-stats-tag-row result-stats-tag-head">
+        <span>标签</span><span>原始</span><span>有效</span><span>分数</span>
+      </div>
+      ${entries.map(([tag, count]) => `
+        <div class="result-stats-tag-row">
+          <span>${escapeHtml(tag)}</span>
+          <span>${count.rawChosen}</span>
+          <span>${count.effectiveChosen}</span>
+          <span>${count.score}</span>
+        </div>
+      `).join("")}
+    </div>
+  `;
+}
+
+function renderDimensionStats(dimensions = {}) {
+  return `
+    <div class="result-stats-dimensions">
+      ${RISK_DIMENSION_KEYS.map((dimension) => {
+        const item = dimensions[dimension] || {};
+        return `
+          <div class="result-stats-dimension">
+            <div class="result-stats-dimension-label">
+              <span>${escapeHtml(getDimensionDisplayName(dimension))}</span>
+              <strong>${escapeHtml(item.endpoint || "-")}</strong>
+            </div>
+            <div class="result-stats-dimension-track">
+              <span style="width:${Math.max(0, Math.min(100, item.riskIndex || 0))}%"></span>
+            </div>
+            <div class="result-stats-dimension-meta">${item.riskIndex || 0}/100 · ${item.score || 0}</div>
+          </div>
+        `;
+      }).join("")}
+    </div>
+  `;
+}
+
+function getDimensionDisplayName(dimension) {
+  const names = {
+    sensory: "感官刺激",
+    rhythm: "节律",
+    specificity: "特异",
+    danger: "危险"
+  };
+
+  return names[dimension] || dimension;
+}
+
+function formatHotpotFoodsForStats(hotpotFoods = []) {
+  if (!hotpotFoods.length) {
+    return "未记录";
+  }
+
+  return hotpotFoods.map((food) => `${food.id || "unknown"} -> ${food.target || "unknown"}`).join("；");
+}
+
+function escapeHtml(value) {
+  return String(value ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
 function renderResultRiskIntroLayout(layer) {
   const config = RESULT_GALAXY_LOCATING_CONFIG.resultDietGalaxy.riskIntro;
   const shapes = config.shapes || [];
@@ -5244,14 +5512,14 @@ function handleResultGalaxyLocatingWheel(event) {
 function handleResultGalaxyWheel(event) {
   if (
     currentPhase !== PHASES.RESULT_GALAXY ||
-    hasResultRiskIntroStarted ||
     event.deltaY <= 0
   ) {
     return;
   }
 
+  // The diet galaxy screen is the final in-flow result screen.
+  // Further result details stay available only through the debug overlay.
   event.preventDefault();
-  enterResultRiskIntroState();
 }
 
 function handleResultRiskIntroWheel(event) {

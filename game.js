@@ -545,6 +545,7 @@ let isAct1HeatingPressed = false;
 let isAct1HeatingComplete = false;
 let act1HeatAnimationFrame = 0;
 let act1HeatLastTimestamp = 0;
+let act1ClearedHeatZoneIds = new Set();
 let act1EatingClickCount = 0;
 let act1EatingStartedAt = 0;
 let act1EatingRequiredClicks = 1;
@@ -937,6 +938,9 @@ function enterAct1BreakfastChoice() {
     const element = createAct1ObjectElement(objectId, objectConfig);
 
     updateAct1ObjectLayout(element, objectConfig);
+    if (objectConfig.type === "microwavePanel") {
+      element.classList.add("act1-microwave-drop-in");
+    }
     objectLayer.appendChild(element);
   });
 
@@ -989,15 +993,25 @@ function createAct1ObjectElement(objectId, objectConfig) {
       <div class="act1-microwave-hint">按住鼠标加热</div>
     `;
     element.addEventListener("pointerdown", startAct1HeatingPress);
+  } else if (objectConfig.type === "heatPlate") {
+    element.innerHTML = `<span class="act1-heat-plate-label">${objectConfig.content || ""}</span>`;
+  } else if (objectConfig.type === "heatFood") {
+    const selectedChoice = getAct1BreakfastChoice(selectedAct1BreakfastId);
+    element.innerHTML = `<span class="act1-heat-food-label">${selectedChoice?.label || objectConfig.content || ""}</span>`;
   } else if (isTemperatureGauge) {
     element.innerHTML = `
+      <div class="act1-gauge-guide">${getAct1HeatingConfig().guideText}</div>
       <div class="act1-gauge-ring">
-        <span class="act1-gauge-needle"></span>
+        <span class="act1-gauge-progress"></span>
+        <span class="act1-gauge-zone act1-gauge-zone-1"></span>
+        <span class="act1-gauge-zone act1-gauge-zone-2"></span>
+        <span class="act1-gauge-pointer"></span>
+        <button class="act1-gauge-center-button" type="button" aria-label="Hold to heat"></button>
       </div>
       <div class="act1-gauge-readout">0%</div>
       <div class="act1-gauge-label">${objectConfig.content || ""}</div>
     `;
-    element.addEventListener("pointerdown", startAct1HeatingPress);
+    element.querySelector(".act1-gauge-center-button").addEventListener("pointerdown", startAct1HeatingPress);
   } else if (objectConfig.type === "atmosphereFrame") {
     element.innerHTML = `
       <div class="act1-window-tree"></div>
@@ -1035,8 +1049,20 @@ function getAct1ObjectClassName(type) {
     return "act1-scene-object act1-breakfast-option";
   }
 
+  if (type === "breakfastFrame") {
+    return "act1-scene-object act1-breakfast-frame";
+  }
+
   if (type === "microwavePanel") {
     return "act1-scene-object act1-microwave-panel";
+  }
+
+  if (type === "heatPlate") {
+    return "act1-scene-object act1-heat-plate";
+  }
+
+  if (type === "heatFood") {
+    return "act1-scene-object act1-heat-food";
   }
 
   if (type === "temperatureGauge") {
@@ -1111,9 +1137,7 @@ function handleAct1BreakfastChoice(optionElement) {
     }, exitDuration + 80);
   });
 
-  window.setTimeout(() => {
-    enterAct1MicrowaveHeat();
-  }, getAct1StateConfig(ACT1_STATES.BREAKFAST_CHOICE).nextStateDelay || 1300);
+  playAct1BreakfastToHeatTransition(optionElement);
 }
 
 function recordAct1BreakfastChoice(choice) {
@@ -1134,6 +1158,52 @@ function recordAct1BreakfastChoice(choice) {
   console.log("Act 1 playerChoices:", playerChoices);
 }
 
+function getAct1MicrowaveEntryConfig() {
+  const state = getAct1StateConfig(ACT1_STATES.MICROWAVE_HEAT);
+  const config = state.entryTransition || {};
+
+  return {
+    duration: config.duration ?? 1500,
+    orthogonalStepDelay: config.orthogonalStepDelay ?? 520,
+    targetCenterX: config.targetCenterX ?? 768,
+    targetCenterY: config.targetCenterY ?? 469,
+    targetScale: config.targetScale ?? 1.3
+  };
+}
+
+function playAct1BreakfastToHeatTransition(selectedElement) {
+  const config = getAct1MicrowaveEntryConfig();
+  const selectedConfig = getAct1StateConfig(ACT1_STATES.BREAKFAST_CHOICE)
+    .objects?.[selectedElement.dataset.objectId];
+
+  objectLayer.querySelectorAll(".act1-breakfast-frame").forEach((element) => {
+    element.classList.add("is-leaving-up");
+  });
+
+  if (!selectedConfig) {
+    window.setTimeout(enterAct1MicrowaveHeat, config.duration);
+    return;
+  }
+
+  const stage = act1Layouts?.stage || { width: DESIGN_WIDTH, height: DESIGN_HEIGHT };
+  const targetLeft = config.targetCenterX - selectedConfig.width / 2;
+  const targetTop = config.targetCenterY - selectedConfig.height / 2;
+
+  selectedElement.classList.add("is-travelling-to-microwave");
+  selectedElement.style.zIndex = "30";
+  selectedElement.style.transitionDuration = `${config.orthogonalStepDelay}ms`;
+  selectedElement.style.left = `${(targetLeft / stage.width) * 100}%`;
+  selectedElement.style.transform = `scale(${config.targetScale})`;
+
+  window.setTimeout(() => {
+    selectedElement.style.top = `${(targetTop / stage.height) * 100}%`;
+  }, config.orthogonalStepDelay);
+
+  window.setTimeout(() => {
+    enterAct1MicrowaveHeat();
+  }, config.duration);
+}
+
 function enterAct1MicrowaveHeat() {
   const state = getAct1StateConfig(ACT1_STATES.MICROWAVE_HEAT);
 
@@ -1143,6 +1213,7 @@ function enterAct1MicrowaveHeat() {
   isAct1HeatingPressed = false;
   isAct1HeatingComplete = false;
   act1HeatValue = getAct1HeatingConfig().minTemperature;
+  act1ClearedHeatZoneIds = new Set();
   stopAct1HeatLoop();
   hideHoverInfoTooltip();
   updateStageHeader("\u7b2c\u4e00\u5e55\u4f4e\u4fdd\u771f\u539f\u578b", "\u65e9\u6668\u2014\u2014\u5fae\u6ce2\u52a0\u70ed");
@@ -1168,7 +1239,10 @@ function getAct1HeatingConfig() {
     maxTemperature: config.maxTemperature ?? 100,
     completionTemperature: config.completionTemperature ?? config.maxTemperature ?? 100,
     heatUpPerSecond: config.heatUpPerSecond ?? 42,
-    coolDownPerSecond: config.coolDownPerSecond ?? 24
+    coolDownPerSecond: config.coolDownPerSecond ?? 0,
+    resetTemperature: config.resetTemperature ?? config.minTemperature ?? 0,
+    cautionZones: config.cautionZones || [],
+    guideText: config.guideText || "Hold to heat. Release inside orange zones."
   };
 }
 
@@ -1185,10 +1259,19 @@ function startAct1HeatingPress(event) {
 }
 
 function stopAct1HeatingPress() {
+  if (currentPhase === PHASES.ACT1_HEATING && !isAct1HeatingComplete) {
+    const activeZone = getAct1ActiveHeatZone();
+
+    if (activeZone) {
+      act1ClearedHeatZoneIds.add(activeZone.id);
+    }
+  }
+
   isAct1HeatingPressed = false;
   objectLayer?.querySelectorAll(".act1-microwave-panel, .act1-temperature-gauge").forEach((element) => {
     element.classList.remove("is-heating");
   });
+  updateAct1HeatVisuals();
 }
 
 function startAct1HeatLoop() {
@@ -1211,6 +1294,7 @@ function stopAct1HeatLoop() {
 function updateAct1HeatLoop(timestamp) {
   const config = getAct1HeatingConfig();
   const elapsedSeconds = Math.max(0, (timestamp - act1HeatLastTimestamp) / 1000);
+  const previousValue = act1HeatValue;
   const delta = isAct1HeatingPressed
     ? config.heatUpPerSecond * elapsedSeconds
     : -config.coolDownPerSecond * elapsedSeconds;
@@ -1220,6 +1304,11 @@ function updateAct1HeatLoop(timestamp) {
     config.minTemperature,
     Math.min(config.maxTemperature, act1HeatValue + delta)
   );
+
+  if (isAct1HeatingPressed && hasAct1MissedHeatZone(previousValue, act1HeatValue, config)) {
+    resetAct1HeatingProgress(config);
+  }
+
   updateAct1HeatVisuals();
 
   if (act1HeatValue >= config.completionTemperature) {
@@ -1230,11 +1319,54 @@ function updateAct1HeatLoop(timestamp) {
   act1HeatAnimationFrame = window.requestAnimationFrame(updateAct1HeatLoop);
 }
 
+function getAct1HeatPercent(value = act1HeatValue) {
+  const config = getAct1HeatingConfig();
+  const range = Math.max(1, config.maxTemperature - config.minTemperature);
+
+  return Math.max(0, Math.min(100, ((value - config.minTemperature) / range) * 100));
+}
+
+function getAct1ActiveHeatZone() {
+  const percent = getAct1HeatPercent();
+  const config = getAct1HeatingConfig();
+
+  return config.cautionZones.find((zone) => (
+    !act1ClearedHeatZoneIds.has(zone.id) &&
+    percent >= zone.start &&
+    percent <= zone.end
+  )) || null;
+}
+
+function hasAct1MissedHeatZone(previousValue, nextValue, config) {
+  const previousPercent = getAct1HeatPercent(previousValue);
+  const nextPercent = getAct1HeatPercent(nextValue);
+
+  return config.cautionZones.some((zone) => (
+    !act1ClearedHeatZoneIds.has(zone.id) &&
+    previousPercent <= zone.end &&
+    nextPercent > zone.end
+  ));
+}
+
+function resetAct1HeatingProgress(config = getAct1HeatingConfig()) {
+  act1HeatValue = config.resetTemperature;
+  act1ClearedHeatZoneIds = new Set();
+  isAct1HeatingPressed = false;
+  objectLayer?.querySelectorAll(".act1-microwave-panel, .act1-temperature-gauge").forEach((element) => {
+    element.classList.remove("is-heating");
+    element.classList.add("is-resetting");
+    window.setTimeout(() => {
+      element.classList.remove("is-resetting");
+    }, 420);
+  });
+}
+
 function updateAct1HeatVisuals() {
   const config = getAct1HeatingConfig();
   const range = Math.max(1, config.maxTemperature - config.minTemperature);
   const progress = Math.max(0, Math.min(1, (act1HeatValue - config.minTemperature) / range));
   const percent = Math.round(progress * 100);
+  const activeZone = getAct1ActiveHeatZone();
 
   objectLayer?.querySelectorAll(".act1-temperature-gauge").forEach((element) => {
     element.style.setProperty("--act1-heat-progress", `${percent}%`);
@@ -1242,6 +1374,19 @@ function updateAct1HeatVisuals() {
     element.style.setProperty("--act1-gauge-fill", `${(progress * 75).toFixed(2)}%`);
     element.style.setProperty("--act1-heat-deg", `${-135 + progress * 270}deg`);
     element.dataset.temperature = String(percent);
+    element.classList.toggle("is-in-caution", Boolean(activeZone));
+    element.classList.toggle("is-zone-1-cleared", act1ClearedHeatZoneIds.has("act1_heat_zone_1"));
+    element.classList.toggle("is-zone-2-cleared", act1ClearedHeatZoneIds.has("act1_heat_zone_2"));
+    const guide = element.querySelector(".act1-gauge-guide");
+
+    if (guide) {
+      guide.textContent = activeZone
+        ? "\u677e\u624b\uff01\u8ba9\u6a59\u8272\u533a\u95f4\u6d88\u5931\uff0c\u518d\u7ee7\u7eed\u52a0\u70ed\u3002"
+        : act1ClearedHeatZoneIds.size >= config.cautionZones.length
+          ? "\u6a59\u8272\u533a\u95f4\u5df2\u5904\u7406\u5b8c\uff0c\u6309\u4f4f\u52a0\u70ed\u5230\u6ee1\u683c\uff01"
+          : config.guideText;
+    }
+
     element.querySelector(".act1-gauge-readout").textContent = `${percent}%`;
   });
   objectLayer?.querySelectorAll(".act1-microwave-panel").forEach((element) => {

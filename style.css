@@ -868,21 +868,42 @@ button:disabled {
   text-align: center;
 }
 
+.act1-breakfast-frame {
+  border: 2px solid rgba(23, 23, 23, 0.34);
+  background:
+    linear-gradient(135deg, rgba(255, 247, 199, 0.82), rgba(255, 196, 214, 0.62)),
+    #d7d7d7;
+  box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.1);
+  pointer-events: none;
+}
+
+.act1-breakfast-frame::after {
+  content: "";
+  position: absolute;
+  inset: 12px;
+  border: 1px dashed rgba(23, 23, 23, 0.24);
+  pointer-events: none;
+}
+
+.act1-breakfast-frame.is-leaving-up {
+  animation: act1BreakfastFrameLeaveUp 760ms cubic-bezier(0.42, 0, 0.22, 1) forwards;
+}
+
 .act1-breakfast-option {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 14px;
-  padding: 18px;
-  border: 3px solid #171717;
-  background: #d7d7d7;
+  gap: 8px;
+  padding: 10px;
+  border: 3px solid rgba(23, 23, 23, 0.86);
+  background: rgba(255, 255, 255, 0.2);
   color: #171717;
   cursor: pointer;
   font-family: YouYuan, "幼圆", "Microsoft YaHei", sans-serif;
   box-shadow:
-    5px 5px 0 rgba(0, 0, 0, 0.14),
-    -1px -1px 0 rgba(0, 0, 0, 0.22);
+    3px 3px 0 rgba(0, 0, 0, 0.12),
+    -1px -1px 0 rgba(0, 0, 0, 0.18);
 }
 
 .act1-breakfast-option::after {
@@ -914,6 +935,13 @@ button:disabled {
   opacity: 1;
 }
 
+.act1-breakfast-option.is-travelling-to-microwave {
+  pointer-events: none;
+  box-shadow:
+    7px 7px 0 rgba(0, 0, 0, 0.18),
+    0 0 0 5px rgba(242, 228, 189, 0.65);
+}
+
 .act1-breakfast-option.is-leaving {
   pointer-events: none;
   animation: act1BreakfastLeave var(--act1-exit-duration, 900ms) cubic-bezier(0.24, 0.74, 0.28, 1) forwards;
@@ -921,12 +949,12 @@ button:disabled {
 
 .act1-breakfast-sketch {
   position: relative;
-  width: min(72%, 220px);
-  height: min(58%, 170px);
+  width: min(78%, 220px);
+  height: min(62%, 170px);
   border: 4px solid #171717;
   background:
     linear-gradient(135deg, transparent 46%, #171717 47% 49%, transparent 50%),
-    rgba(255, 255, 255, 0.22);
+    rgba(255, 247, 199, 0.54);
   transform: rotate(1.2deg);
 }
 
@@ -1002,7 +1030,7 @@ button:disabled {
 .act1-breakfast-label {
   position: relative;
   z-index: 2;
-  font-size: 26px;
+  font-size: 20px;
   font-weight: 800;
   line-height: 1.2;
   text-align: center;
@@ -1022,6 +1050,10 @@ button:disabled {
   cursor: pointer;
   box-shadow: 6px 6px 0 rgba(0, 0, 0, 0.14);
   user-select: none;
+}
+
+.act1-microwave-panel.act1-microwave-drop-in {
+  animation: act1MicrowaveDropIn 980ms cubic-bezier(0.24, 0.82, 0.2, 1.05) both;
 }
 
 .act1-microwave-title {
@@ -1105,63 +1137,218 @@ button:disabled {
   background: #f2e4bd;
 }
 
+.act1-heat-plate {
+  display: grid;
+  place-items: center;
+  border: 4px solid #171717;
+  border-radius: 50%;
+  background:
+    radial-gradient(ellipse at center, rgba(255, 255, 255, 0.34), rgba(255, 255, 255, 0) 62%),
+    #ffd737;
+  box-shadow:
+    5px 5px 0 rgba(139, 28, 18, 0.18),
+    inset 0 -12px 0 rgba(139, 28, 18, 0.12);
+  pointer-events: none;
+}
+
+.act1-heat-plate-label,
+.act1-heat-food-label {
+  font-family: YouYuan, "幼圆", "Microsoft YaHei", sans-serif;
+  font-size: 24px;
+  font-weight: 900;
+}
+
+.act1-heat-food {
+  display: grid;
+  place-items: center;
+  border: 4px solid #8b1c12;
+  border-radius: 999px;
+  background:
+    linear-gradient(135deg, rgba(255, 247, 199, 0.88), rgba(255, 163, 93, 0.72)),
+    #f2e4bd;
+  box-shadow: 5px 5px 0 rgba(139, 28, 18, 0.18);
+  pointer-events: none;
+  animation: act1HeatFoodIdle 760ms ease-in-out infinite alternate;
+}
+
 .act1-temperature-gauge {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 18px;
+  gap: 14px;
+  overflow: visible;
   color: #171717;
-  cursor: pointer;
   user-select: none;
+}
+
+.act1-gauge-guide {
+  width: 470px;
+  min-height: 76px;
+  padding: 12px 16px;
+  border: 3px solid #171717;
+  border-radius: 18px;
+  background: #fff7c7;
+  color: #7a2a12;
+  font-family: YouYuan, "幼圆", "Microsoft YaHei", sans-serif;
+  font-size: 18px;
+  font-weight: 800;
+  line-height: 1.45;
+  text-align: center;
+  box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.12);
 }
 
 .act1-gauge-ring {
   position: relative;
-  width: 280px;
-  height: 280px;
+  width: min(430px, 100%);
+  aspect-ratio: 1 / 1;
+  height: auto;
+  flex: 0 0 auto;
   border-radius: 50%;
   background:
-    conic-gradient(
-      from 225deg,
-      #f2e4bd 0 var(--act1-gauge-fill, 0%),
-      #d7d7d7 var(--act1-gauge-fill, 0%) 75%,
-      transparent 75% 100%
-    );
+    radial-gradient(circle at 50% 50%, #ffffff 0 39%, transparent 40%),
+    conic-gradient(from 225deg, #fff68a 0 24%, #ffa35d 24% 33%, #fff68a 33% 50%, #ffa35d 50% 59%, #fff68a 59% 75%, transparent 75% 100%);
+  border: 5px solid #8b1c12;
+  box-shadow:
+    0 0 0 8px #91cdf7,
+    5px 5px 0 rgba(139, 28, 18, 0.28);
 }
 
 .act1-gauge-ring::before {
   content: "";
   position: absolute;
-  inset: 36px;
+  inset: 88px;
   border-radius: 50%;
-  background: #f7f3ea;
-  box-shadow: inset 0 0 0 3px #171717;
+  z-index: 3;
+  background: #ffffff;
+  box-shadow: inset 0 0 0 4px #8b1c12;
 }
 
 .act1-gauge-ring::after {
   content: "";
   position: absolute;
-  left: 50%;
-  top: 50%;
-  width: 26px;
-  height: 26px;
+  inset: 20px;
   border-radius: 50%;
-  background: #171717;
-  transform: translate(-50%, -50%);
+  z-index: 1;
+  background:
+    conic-gradient(from 225deg, rgba(255, 255, 255, 0) 0 var(--act1-gauge-fill, 0%), rgba(255, 255, 255, 0.72) var(--act1-gauge-fill, 0%) 75%, transparent 75% 100%);
+}
+
+.act1-gauge-progress {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  border-radius: 50%;
+  background:
+    conic-gradient(from 225deg, rgba(244, 82, 18, 0.4) 0 var(--act1-gauge-fill, 0%), transparent var(--act1-gauge-fill, 0%) 100%);
+  clip-path: circle(50% at 50% 50%);
+}
+
+.act1-gauge-zone {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  border-radius: 50%;
+  pointer-events: none;
+  opacity: 1;
+  transition: opacity 240ms ease, transform 240ms ease;
+}
+
+.act1-gauge-zone-1 {
+  background: conic-gradient(from 225deg, transparent 0 24%, rgba(244, 82, 18, 0.92) 24% 33%, transparent 33% 100%);
+}
+
+.act1-gauge-zone-2 {
+  background: conic-gradient(from 225deg, transparent 0 50%, rgba(244, 82, 18, 0.92) 50% 59%, transparent 59% 100%);
+}
+
+.act1-temperature-gauge.is-zone-1-cleared .act1-gauge-zone-1,
+.act1-temperature-gauge.is-zone-2-cleared .act1-gauge-zone-2 {
+  opacity: 0;
+  transform: scale(0.96);
+}
+
+.act1-gauge-pointer {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: -44px;
+  z-index: 8;
+  width: 92px;
+  height: 118px;
+  border: 4px solid #2498ff;
+  transform: translateX(-50%);
+}
+
+.act1-gauge-pointer::before {
+  content: "";
+  position: absolute;
+  left: 10px;
+  right: 10px;
+  top: 8px;
+  height: 68px;
+  background: #f45212;
+  clip-path: polygon(0 0, 100% 0, 72% 100%, 28% 100%);
+}
+
+.act1-gauge-pointer::after {
+  content: "";
+  position: absolute;
+  left: 31px;
+  top: 70px;
+  width: 30px;
+  height: 42px;
+  background: #f45212;
+  clip-path: polygon(50% 100%, 0 0, 100% 0);
 }
 
 .act1-gauge-needle {
   position: absolute;
   left: 50%;
   top: 50%;
-  z-index: 2;
-  width: 6px;
-  height: 108px;
-  background: #171717;
+  z-index: 7;
+  width: 8px;
+  height: 160px;
+  background: #8b1c12;
   transform: translate(-50%, -100%) rotate(var(--act1-heat-deg, -135deg));
   transform-origin: 50% 100%;
   transition: transform 80ms linear;
+}
+
+.act1-gauge-center-button {
+  position: absolute;
+  left: 50%;
+  top: 52%;
+  z-index: 5;
+  width: 150px;
+  height: 150px;
+  border: 5px solid #8b1c12;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 38% 34%, rgba(255, 255, 255, 0.72), rgba(255, 255, 255, 0) 24%),
+    #f45212;
+  box-shadow:
+    inset -12px -14px 0 rgba(139, 28, 18, 0.16),
+    5px 5px 0 rgba(139, 28, 18, 0.22);
+  cursor: pointer;
+  transform: translate(-50%, -50%);
+}
+
+.act1-gauge-center-button::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 78px;
+  height: 78px;
+  border: 4px solid rgba(139, 28, 18, 0.9);
+  border-radius: 50%;
+  background: #fff68a;
+  transform: translate(-50%, -50%);
+}
+
+.act1-gauge-center-button:active {
+  transform: translate(-50%, -50%) scale(0.96);
 }
 
 .act1-gauge-readout {
@@ -1179,6 +1366,44 @@ button:disabled {
 .act1-temperature-gauge.is-complete .act1-gauge-readout::after {
   content: " \5b8c\6210";
   font-size: 22px;
+}
+
+.act1-temperature-gauge.is-in-caution .act1-gauge-guide {
+  background: #ffd3a6;
+  color: #f45212;
+  animation: act1GaugeWarning 360ms ease-in-out infinite alternate;
+}
+
+.act1-temperature-gauge.is-resetting .act1-gauge-ring {
+  animation: act1GaugeReset 420ms ease;
+}
+
+@keyframes act1GaugeWarning {
+  from {
+    transform: translateY(0) scale(1);
+  }
+
+  to {
+    transform: translateY(-3px) scale(1.02);
+  }
+}
+
+@keyframes act1GaugeReset {
+  0% {
+    transform: translateX(0) rotate(0deg);
+  }
+
+  25% {
+    transform: translateX(-10px) rotate(-2deg);
+  }
+
+  55% {
+    transform: translateX(10px) rotate(2deg);
+  }
+
+  100% {
+    transform: translateX(0) rotate(0deg);
+  }
 }
 
 .act1-atmosphere-frame {
@@ -3671,6 +3896,53 @@ button:disabled {
       translate3d(var(--act1-exit-x, 0), var(--act1-exit-y, -300px), 0)
       scale(0.88)
       rotate(-3deg);
+  }
+}
+
+@keyframes act1BreakfastFrameLeaveUp {
+  0% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  100% {
+    opacity: 0;
+    transform: translateY(-260px);
+  }
+}
+
+@keyframes act1MicrowaveDropIn {
+  0% {
+    opacity: 0;
+    transform: translateY(-760px) scale(0.98);
+  }
+
+  62% {
+    opacity: 1;
+    transform: translateY(18px) scale(1.01);
+  }
+
+  76% {
+    transform: translateY(-10px) scale(0.995);
+  }
+
+  88% {
+    transform: translateY(6px) scale(1.004);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes act1HeatFoodIdle {
+  from {
+    transform: translateY(0);
+  }
+
+  to {
+    transform: translateY(-8px);
   }
 }
 

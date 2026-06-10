@@ -613,6 +613,7 @@ let act3ExitProgress = 0;
 let resultGalaxyLayer = null;
 let resultOrbitLayer = null;
 let resultRiskLayer = null;
+let resultStatsOverlayLayer = null;
 let isResultOrbitPlanetSelected = false;
 let resultOrbitNodeTimer = null;
 let act0AlarmLayer = null;

@@ -588,6 +588,7 @@ let isAct1HeatingPressed = false;
 let isAct1HeatingComplete = false;
 let act1HeatAnimationFrame = 0;
 let act1HeatLastTimestamp = 0;
+let act1ClearedHeatZoneIds = new Set();
 let act1EatingClickCount = 0;
 let act1EatingStartedAt = 0;
 let act1EatingRequiredClicks = 1;
@@ -595,6 +596,7 @@ let isAct1EatingComplete = false;
 let selectedAct2LunchId = null;
 let isAct2LunchLocked = false;
 let playerChoices = [];
+let playerRiskResult = null;
 let bubbleTimers = [];
 let guidanceTimers = [];
 let guidanceTypewriterTimers = [];
@@ -648,12 +650,15 @@ let resultRiskIntroWheelLockTimer = null;
 let hoverInfoTooltip = null;
 let hoverInfoShowTimer = null;
 let hoverInfoHideTimer = null;
+let resultStatsShortcutBound = false;
 let objectLayer = null;
 let transitionDuration = 900;
 let isFoodChoiceLocked = false;
 
 document.addEventListener("DOMContentLoaded", async () => {
   try {
+    bindResultStatsDebugShortcut();
+    createResultStatsDebugButton();
     await loadAct3Data();
     setupStageScale();
     updateStageHeader("第三幕低保真原型", "夜晚——聚会与火锅");
@@ -939,6 +944,25 @@ function initializeStage() {
   updateStageScale();
 }
 
+function createResultStatsDebugButton() {
+  if (document.querySelector(".result-stats-debug-button")) {
+    return;
+  }
+
+  const button = document.createElement("button");
+
+  button.type = "button";
+  button.className = "result-stats-debug-button";
+  button.textContent = "数据";
+  button.title = "查看玩家实时记录（R）";
+  button.addEventListener("click", (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    showResultStatsOverlay();
+  });
+  document.body.appendChild(button);
+}
+
 function showLoadError(error) {
   const frameTrack = document.getElementById("frameTrack");
   const frame = document.createElement("section");
@@ -980,6 +1004,305 @@ function startAct3Intro() {
 }
 
 // ---------------------------------------------------------------------------
+// Result risk calculation
+// ---------------------------------------------------------------------------
+
+const RISK_DIMENSION_KEYS = ["sensory", "rhythm", "specificity", "danger"];
+const ACT1_BREAKFAST_RISK_OPTION_KEYS = {
+  act1_s01_breakfast_overnightPizza: "breakfast_overnightPizza",
+  act1_s01_breakfast_baguetteCheese: "breakfast_baguetteCheese",
+  act1_s01_breakfast_hotPorridge: "breakfast_hotPorridge",
+  act1_s01_breakfast_eggHamSandwich: "breakfast_eggHamSandwich",
+  act1_s01_breakfast_cornEggMilk: "breakfast_cornEggMilk"
+};
+const ACT1_EATING_SPEED_RISK_OPTION_KEYS = {
+  fast: "breakfast_speed_fast",
+  medium: "breakfast_speed_medium",
+  slow: "breakfast_speed_slow"
+};
+const ACT2_LUNCH_FOOD_RISK_OPTION_KEYS = {
+  act2_food_qingjiao_larou: "lunch_qingjiao_larou",
+  act2_food_koushuiji: "lunch_koushuiji",
+  act2_food_zhaxiao_rouwan: "lunch_zhaxiao_rouwan",
+  act2_food_huobao_youyu: "lunch_huobao_youyu",
+  act2_food_jiang_niurou: "lunch_jiang_niurou",
+  act2_food_xiaren_caixin: "lunch_xiaren_caixin",
+  act2_food_shaguo_zhou: "lunch_shaguo_zhou",
+  act2_food_hanbao_zhaji: "lunch_hanbao_zhaji",
+  act2_food_paocai_niurou_xinlamian: "lunch_paocai_niurou_xinlamian",
+  act2_food_baimifan: "lunch_baimifan"
+};
+const ACT2_LUNCH_PLACE_RISK_OPTION_KEYS = {
+  act2_place_canteen_table: "lunch_place_canteen_table",
+  act2_place_coworkers: "lunch_place_coworkers",
+  act2_place_park_bench: "lunch_place_park_bench",
+  act2_place_office_desk: "lunch_place_office_desk"
+};
+const ACT3_HOTPOT_FOOD_RISK_OPTION_KEYS = {
+  act3_s01_food_maodu: "hotpot_maodu",
+  act3_s01_food_sausage: "hotpot_sausage",
+  act3_s01_food_vegetable: "hotpot_vegetable",
+  act3_s01_food_luncheonMeat: "hotpot_luncheonMeat",
+  act3_s01_food_youtiao: "hotpot_youtiao",
+  act3_s01_food_daiRouCuiGu: "hotpot_daiRouCuiGu",
+  act3_s01_food_beefSlices: "hotpot_beefSlices"
+};
+const ACT3_HOTPOT_TARGET_RISK_OPTION_KEYS = {
+  act3_s01_target_clearPot: "hotpot_target_clear",
+  act3_s01_target_spicyPot: "hotpot_target_spicy"
+};
+const ACT3_DRINK_RISK_OPTION_KEYS = {
+  act3_s02_drink_softDrink: "drink_softDrink",
+  act3_s02_drink_lowAlcohol: "drink_lowAlcohol",
+  act3_s02_drink_highAlcohol: "drink_highAlcohol",
+  act3_s02_drink_lemonWater: "drink_lemonWater",
+  act3_s02_drink_beer: "drink_lowAlcohol"
+};
+
+function getRiskConfig() {
+  return window.RISK_CONFIG || {};
+}
+
+function getOptionRiskTags(optionKey) {
+  return [...(getRiskConfig().OPTION_RISK_TAGS?.[optionKey] || [])];
+}
+
+function calculatePlayerRisk(input = playerChoices) {
+  const normalizedChoices = Array.isArray(input)
+    ? normalizePlayerChoicesForRisk(input)
+    : normalizeRiskInput(input || {});
+  const riskConfig = getRiskConfig();
+  const riskTags = riskConfig.RISK_TAGS || {};
+  const riskMax = riskConfig.RISK_MAX || {};
+  const tagCounts = {};
+  const unknownRiskTags = [];
+
+  collectSelectedRiskTags(normalizedChoices).forEach((tag) => {
+    if (!tag || tag === "无") {
+      return;
+    }
+
+    if (!riskTags[tag]) {
+      unknownRiskTags.push(tag);
+      return;
+    }
+
+    tagCounts[tag] = (tagCounts[tag] || 0) + 1;
+  });
+
+  const riskTagCounts = {};
+  const dimensionScores = RISK_DIMENSION_KEYS.reduce((scores, dimension) => {
+    scores[dimension] = 0;
+    return scores;
+  }, {});
+
+  Object.entries(tagCounts).forEach(([tag, rawChosen]) => {
+    const config = riskTags[tag];
+    const appear = Math.max(1, config.appear || 1);
+    const effectiveChosen = Math.min(rawChosen, appear);
+    const exposure = Math.sqrt(effectiveChosen / appear);
+    const score = exposure * (config.logOR || 0);
+
+    riskTagCounts[tag] = {
+      rawChosen,
+      effectiveChosen,
+      exposure: roundRiskValue(exposure, 4),
+      score: roundRiskValue(score, 4),
+      dimension: config.dimension
+    };
+
+    if (dimensionScores[config.dimension] !== undefined) {
+      dimensionScores[config.dimension] += score;
+    }
+  });
+
+  const totalScore = Object.values(dimensionScores).reduce((sum, score) => sum + score, 0);
+  const totalRiskIndex = normalizeRiskIndex(totalScore, riskMax.total);
+  const riskLevel = getRiskLevel(totalRiskIndex);
+  const dimensions = RISK_DIMENSION_KEYS.reduce((result, dimension) => {
+    const score = dimensionScores[dimension] || 0;
+    const riskIndex = normalizeRiskIndex(score, riskMax[dimension]);
+
+    result[dimension] = {
+      score: roundRiskValue(score, 4),
+      riskIndex,
+      endpoint: getDimensionEndpoint(dimension, riskIndex)
+    };
+
+    return result;
+  }, {});
+
+  return {
+    province: normalizedChoices.province || null,
+    selectedItems: normalizedChoices.selectedItems,
+    riskTagCounts,
+    totalScore: roundRiskValue(totalScore, 4),
+    totalRiskIndex,
+    riskLevel,
+    riskLevelLabel: getRiskConfig().RISK_LEVEL_LABELS?.[riskLevel] || riskLevel,
+    dimensions,
+    behavior: normalizedChoices.behavior,
+    unknownRiskTags: [...new Set(unknownRiskTags)]
+  };
+}
+
+function normalizeRiskInput(input) {
+  const selectedItems = {
+    breakfast: input.breakfast || null,
+    breakfastSpeed: input.breakfastSpeed || null,
+    lunchFoods: [...(input.lunchFoods || [])].slice(0, 4),
+    lunchPlace: input.lunchPlace || null,
+    hotpotFoods: [...(input.hotpotFoods || [])].slice(0, 3).map((food) => ({
+      id: food.id || null,
+      target: food.target || null
+    })),
+    drink: input.drink || null
+  };
+  const behavior = normalizeRiskBehavior(input.behavior || {}, selectedItems);
+
+  return {
+    province: input.province || null,
+    selectedItems,
+    behavior
+  };
+}
+
+function normalizePlayerChoicesForRisk(choices) {
+  const breakfastChoice = choices.find((choice) => choice.stepId === "act1_breakfastChoice");
+  const breakfastSpeedChoice = choices.find((choice) => choice.stepId === "act1_eatingSpeed");
+  const lunchPlateChoice = choices.find((choice) => choice.stepId === "act2_lunchPlateChoice");
+  const lunchPlaceChoice = choices.find((choice) => choice.stepId === "act2_lunchPlaceChoice");
+  const hotpotChoice = choices.find((choice) => choice.stepId === "act3_s01_foodChoice");
+  const drinkChoice = choices.find((choice) => choice.stepId === "act3_s02_drinkChoice");
+  const provinceChoice = choices.find((choice) => choice.province || choice.provinceName);
+  const selectedItems = {
+    breakfast: ACT1_BREAKFAST_RISK_OPTION_KEYS[breakfastChoice?.breakfastId] || null,
+    breakfastSpeed: ACT1_EATING_SPEED_RISK_OPTION_KEYS[breakfastSpeedChoice?.eatingSpeed] || null,
+    lunchFoods: (lunchPlateChoice?.selectedFoods || [])
+      .slice(0, 4)
+      .map((food) => ACT2_LUNCH_FOOD_RISK_OPTION_KEYS[food.foodId])
+      .filter(Boolean),
+    lunchPlace: ACT2_LUNCH_PLACE_RISK_OPTION_KEYS[lunchPlaceChoice?.placeId] || null,
+    hotpotFoods: (hotpotChoice?.selectedFoods || [])
+      .slice(0, 3)
+      .map((food) => ({
+        id: ACT3_HOTPOT_FOOD_RISK_OPTION_KEYS[food.foodId] || null,
+        target: ACT3_HOTPOT_TARGET_RISK_OPTION_KEYS[food.targetId] || null
+      }))
+      .filter((food) => food.id),
+    drink: ACT3_DRINK_RISK_OPTION_KEYS[drinkChoice?.drinkId] || null
+  };
+  const behavior = normalizeRiskBehavior(
+    {
+      eatingDurationMs: breakfastSpeedChoice?.elapsedMs,
+      clickCount: breakfastSpeedChoice?.clickCount,
+      eatingSpeedLevel: breakfastSpeedChoice?.eatingSpeed
+    },
+    selectedItems
+  );
+
+  return {
+    province: provinceChoice?.province || provinceChoice?.provinceName || null,
+    selectedItems,
+    behavior
+  };
+}
+
+function normalizeRiskBehavior(behavior, selectedItems) {
+  const eatingDurationMs = Number(behavior.eatingDurationMs || behavior.elapsedMs || 0);
+  const clickCount = Number(behavior.clickCount || 0);
+  const clickSpeed = Number.isFinite(Number(behavior.clickSpeed))
+    ? Number(behavior.clickSpeed)
+    : eatingDurationMs > 0
+      ? clickCount / (eatingDurationMs / 1000)
+      : 0;
+  const eatingSpeedLevel =
+    behavior.eatingSpeedLevel ||
+    behavior.eatingSpeed ||
+    selectedItems.breakfastSpeed?.replace("breakfast_speed_", "") ||
+    null;
+  const regularity =
+    selectedItems.lunchPlace === "lunch_place_office_desk"
+      ? "irregular"
+      : selectedItems.lunchPlace
+        ? "regular"
+        : behavior.regularity || null;
+
+  return {
+    eatingDurationMs,
+    clickCount,
+    clickSpeed: roundRiskValue(clickSpeed, 2),
+    eatingSpeedLevel,
+    regularity
+  };
+}
+
+function collectSelectedRiskTags(normalizedChoices) {
+  const { selectedItems } = normalizedChoices;
+
+  return [
+    ...getOptionRiskTags(selectedItems.breakfast),
+    ...getOptionRiskTags(selectedItems.breakfastSpeed),
+    ...selectedItems.lunchFoods.flatMap((foodKey) => getOptionRiskTags(foodKey)),
+    ...getOptionRiskTags(selectedItems.lunchPlace),
+    ...selectedItems.hotpotFoods.flatMap((food) => [
+      ...getOptionRiskTags(food.id),
+      ...getOptionRiskTags(food.target)
+    ]),
+    ...getOptionRiskTags(selectedItems.drink)
+  ].filter(Boolean);
+}
+
+function normalizeRiskIndex(score, maxScore) {
+  if (!maxScore) {
+    return 0;
+  }
+
+  return roundRiskValue(Math.max(0, Math.min(100, (score / maxScore) * 100)), 2);
+}
+
+function getRiskLevel(totalRiskIndex) {
+  const thresholds = getRiskConfig().RISK_LEVEL_THRESHOLDS || {};
+
+  if (totalRiskIndex < (thresholds.lowMax ?? 33)) {
+    return "low";
+  }
+
+  if (totalRiskIndex < (thresholds.highMin ?? 42)) {
+    return "medium";
+  }
+
+  return "high";
+}
+
+function getDimensionEndpoint(dimension, riskIndex) {
+  const threshold = getRiskConfig().DIMENSION_ENDPOINT_THRESHOLDS?.[dimension] ?? 50;
+  const endpoints = getRiskConfig().DIMENSION_ENDPOINTS?.[dimension] || { high: "", low: "" };
+
+  return riskIndex >= threshold ? endpoints.high : endpoints.low;
+}
+
+function roundRiskValue(value, digits = 2) {
+  const factor = 10 ** digits;
+
+  return Math.round((Number(value) || 0) * factor) / factor;
+}
+
+function updatePlayerRiskResult() {
+  playerRiskResult = calculatePlayerRisk(playerChoices);
+  window.playerRiskResult = playerRiskResult;
+
+  return playerRiskResult;
+}
+
+function getPlayerRiskResult() {
+  return playerRiskResult || updatePlayerRiskResult();
+}
+
+window.calculatePlayerRisk = calculatePlayerRisk;
+window.getPlayerRiskResult = getPlayerRiskResult;
+
+// ---------------------------------------------------------------------------
 // Act1 Breakfast Module
 // Owner area for Act1 breakfast flow only.
 // Allowed here: Act1 state entry, Act1 low-fidelity rendering, Act1-specific
@@ -1007,6 +1330,9 @@ function enterAct1BreakfastChoice() {
     const element = createAct1ObjectElement(objectId, objectConfig);
 
     updateAct1ObjectLayout(element, objectConfig);
+    if (objectConfig.type === "microwavePanel") {
+      element.classList.add("act1-microwave-drop-in");
+    }
     objectLayer.appendChild(element);
   });
 
@@ -1059,15 +1385,22 @@ function createAct1ObjectElement(objectId, objectConfig) {
       <div class="act1-microwave-hint">按住鼠标加热</div>
     `;
     element.addEventListener("pointerdown", startAct1HeatingPress);
+  } else if (objectConfig.type === "heatPlate") {
+    element.innerHTML = `<span class="act1-heat-plate-label">${objectConfig.content || ""}</span>`;
   } else if (isTemperatureGauge) {
     element.innerHTML = `
+      <div class="act1-gauge-guide">${getAct1HeatingConfig().guideText}</div>
       <div class="act1-gauge-ring">
-        <span class="act1-gauge-needle"></span>
+        <span class="act1-gauge-progress"></span>
+        <span class="act1-gauge-zone act1-gauge-zone-1"></span>
+        <span class="act1-gauge-zone act1-gauge-zone-2"></span>
+        <span class="act1-gauge-pointer"></span>
+        <button class="act1-gauge-center-button" type="button" aria-label="Hold to heat"></button>
       </div>
       <div class="act1-gauge-readout">0%</div>
       <div class="act1-gauge-label">${objectConfig.content || ""}</div>
     `;
-    element.addEventListener("pointerdown", startAct1HeatingPress);
+    element.querySelector(".act1-gauge-center-button").addEventListener("pointerdown", startAct1HeatingPress);
   } else if (objectConfig.type === "atmosphereFrame") {
     element.innerHTML = `
       <div class="act1-window-tree"></div>
@@ -1097,7 +1430,29 @@ function createAct1ObjectElement(objectId, objectConfig) {
   element.dataset.objectId = objectId;
   element.dataset.objectType = objectConfig.type;
   element.className = getAct1ObjectClassName(objectConfig.type);
+  syncAct1PlaceholderImage(element, objectConfig, objectConfig.label || objectConfig.content || objectId);
   return element;
+}
+
+function syncAct1PlaceholderImage(element, objectConfig, fallbackLabel) {
+  if (!objectConfig.image) {
+    return;
+  }
+
+  const image = document.createElement("img");
+
+  image.className = "act1-placeholder-image";
+  image.alt = fallbackLabel || "";
+  image.draggable = false;
+  image.src = objectConfig.image;
+  image.onload = () => {
+    element.classList.add("has-act1-image");
+  };
+  image.onerror = () => {
+    element.classList.remove("has-act1-image");
+    image.remove();
+  };
+  element.prepend(image);
 }
 
 function getAct1ObjectClassName(type) {
@@ -1105,8 +1460,16 @@ function getAct1ObjectClassName(type) {
     return "act1-scene-object act1-breakfast-option";
   }
 
+  if (type === "breakfastFrame") {
+    return "act1-scene-object act1-breakfast-frame";
+  }
+
   if (type === "microwavePanel") {
     return "act1-scene-object act1-microwave-panel";
+  }
+
+  if (type === "heatPlate") {
+    return "act1-scene-object act1-heat-plate";
   }
 
   if (type === "temperatureGauge") {
@@ -1117,8 +1480,20 @@ function getAct1ObjectClassName(type) {
     return "act1-scene-object act1-atmosphere-frame";
   }
 
+  if (type === "eatingSceneBg") {
+    return "act1-scene-object act1-eating-scene-bg";
+  }
+
+  if (type === "eatingAtmosphereAsset") {
+    return "act1-scene-object act1-eating-atmosphere";
+  }
+
   if (type === "eatingTable") {
     return "act1-scene-object act1-eating-table";
+  }
+
+  if (type === "eatingPlate") {
+    return "act1-scene-object act1-eating-plate";
   }
 
   if (type === "eatingFood") {
@@ -1181,9 +1556,7 @@ function handleAct1BreakfastChoice(optionElement) {
     }, exitDuration + 80);
   });
 
-  window.setTimeout(() => {
-    enterAct1MicrowaveHeat();
-  }, getAct1StateConfig(ACT1_STATES.BREAKFAST_CHOICE).nextStateDelay || 1300);
+  playAct1BreakfastToHeatTransition(optionElement);
 }
 
 function recordAct1BreakfastChoice(choice) {
@@ -1204,8 +1577,57 @@ function recordAct1BreakfastChoice(choice) {
   console.log("Act 1 playerChoices:", playerChoices);
 }
 
+function getAct1MicrowaveEntryConfig() {
+  const state = getAct1StateConfig(ACT1_STATES.MICROWAVE_HEAT);
+  const config = state.entryTransition || {};
+
+  return {
+    duration: config.duration ?? 1500,
+    orthogonalStepDelay: config.orthogonalStepDelay ?? 520,
+    targetCenterX: config.targetCenterX ?? 768,
+    targetCenterY: config.targetCenterY ?? 469,
+    targetScale: config.targetScale ?? 1.3
+  };
+}
+
+function playAct1BreakfastToHeatTransition(selectedElement) {
+  const config = getAct1MicrowaveEntryConfig();
+  const selectedConfig = getAct1StateConfig(ACT1_STATES.BREAKFAST_CHOICE)
+    .objects?.[selectedElement.dataset.objectId];
+
+  objectLayer.querySelectorAll(".act1-breakfast-frame").forEach((element) => {
+    element.classList.add("is-leaving-up");
+  });
+
+  if (!selectedConfig) {
+    window.setTimeout(enterAct1MicrowaveHeat, config.duration);
+    return;
+  }
+
+  const stage = act1Layouts?.stage || { width: DESIGN_WIDTH, height: DESIGN_HEIGHT };
+  const targetWidth = selectedConfig.width * config.targetScale;
+  const targetHeight = selectedConfig.height * config.targetScale;
+  const targetLeft = config.targetCenterX - targetWidth / 2;
+  const targetTop = config.targetCenterY - targetHeight / 2;
+
+  selectedElement.classList.add("is-travelling-to-microwave");
+  selectedElement.style.zIndex = "30";
+  selectedElement.style.transitionDuration = `${config.orthogonalStepDelay}ms`;
+  selectedElement.style.left = `${(targetLeft / stage.width) * 100}%`;
+  selectedElement.style.transform = `scale(${config.targetScale})`;
+
+  window.setTimeout(() => {
+    selectedElement.style.top = `${(targetTop / stage.height) * 100}%`;
+  }, config.orthogonalStepDelay);
+
+  window.setTimeout(() => {
+    enterAct1MicrowaveHeat();
+  }, config.duration);
+}
+
 function enterAct1MicrowaveHeat() {
   const state = getAct1StateConfig(ACT1_STATES.MICROWAVE_HEAT);
+  const carriedFood = objectLayer.querySelector(".act1-breakfast-option.is-travelling-to-microwave");
 
   currentPhase = PHASES.ACT1_HEATING;
   currentState = ACT1_STATES.MICROWAVE_HEAT;
@@ -1213,10 +1635,23 @@ function enterAct1MicrowaveHeat() {
   isAct1HeatingPressed = false;
   isAct1HeatingComplete = false;
   act1HeatValue = getAct1HeatingConfig().minTemperature;
+  act1ClearedHeatZoneIds = new Set();
   stopAct1HeatLoop();
   hideHoverInfoTooltip();
   updateStageHeader("\u7b2c\u4e00\u5e55\u4f4e\u4fdd\u771f\u539f\u578b", "\u65e9\u6668\u2014\u2014\u5fae\u6ce2\u52a0\u70ed");
-  objectLayer.querySelectorAll(".act1-scene-object").forEach((element) => element.remove());
+  objectLayer.querySelectorAll(".act1-scene-object").forEach((element) => {
+    if (element === carriedFood) {
+      return;
+    }
+
+    element.remove();
+  });
+
+  if (carriedFood) {
+    carriedFood.classList.add("act1-carried-heat-food");
+    carriedFood.classList.remove("is-selected");
+    carriedFood.disabled = true;
+  }
 
   Object.entries(state.objects || {}).forEach(([objectId, objectConfig]) => {
     const element = createAct1ObjectElement(objectId, objectConfig);
@@ -1238,7 +1673,10 @@ function getAct1HeatingConfig() {
     maxTemperature: config.maxTemperature ?? 100,
     completionTemperature: config.completionTemperature ?? config.maxTemperature ?? 100,
     heatUpPerSecond: config.heatUpPerSecond ?? 42,
-    coolDownPerSecond: config.coolDownPerSecond ?? 24
+    coolDownPerSecond: config.coolDownPerSecond ?? 0,
+    resetTemperature: config.resetTemperature ?? config.minTemperature ?? 0,
+    cautionZones: config.cautionZones || [],
+    guideText: config.guideText || "Hold to heat. Release inside orange zones."
   };
 }
 
@@ -1255,10 +1693,19 @@ function startAct1HeatingPress(event) {
 }
 
 function stopAct1HeatingPress() {
+  if (currentPhase === PHASES.ACT1_HEATING && !isAct1HeatingComplete) {
+    const activeZone = getAct1ActiveHeatZone();
+
+    if (activeZone) {
+      act1ClearedHeatZoneIds.add(activeZone.id);
+    }
+  }
+
   isAct1HeatingPressed = false;
   objectLayer?.querySelectorAll(".act1-microwave-panel, .act1-temperature-gauge").forEach((element) => {
     element.classList.remove("is-heating");
   });
+  updateAct1HeatVisuals();
 }
 
 function startAct1HeatLoop() {
@@ -1281,6 +1728,7 @@ function stopAct1HeatLoop() {
 function updateAct1HeatLoop(timestamp) {
   const config = getAct1HeatingConfig();
   const elapsedSeconds = Math.max(0, (timestamp - act1HeatLastTimestamp) / 1000);
+  const previousValue = act1HeatValue;
   const delta = isAct1HeatingPressed
     ? config.heatUpPerSecond * elapsedSeconds
     : -config.coolDownPerSecond * elapsedSeconds;
@@ -1290,6 +1738,11 @@ function updateAct1HeatLoop(timestamp) {
     config.minTemperature,
     Math.min(config.maxTemperature, act1HeatValue + delta)
   );
+
+  if (isAct1HeatingPressed && hasAct1MissedHeatZone(previousValue, act1HeatValue, config)) {
+    resetAct1HeatingProgress(config);
+  }
+
   updateAct1HeatVisuals();
 
   if (act1HeatValue >= config.completionTemperature) {
@@ -1300,11 +1753,54 @@ function updateAct1HeatLoop(timestamp) {
   act1HeatAnimationFrame = window.requestAnimationFrame(updateAct1HeatLoop);
 }
 
+function getAct1HeatPercent(value = act1HeatValue) {
+  const config = getAct1HeatingConfig();
+  const range = Math.max(1, config.maxTemperature - config.minTemperature);
+
+  return Math.max(0, Math.min(100, ((value - config.minTemperature) / range) * 100));
+}
+
+function getAct1ActiveHeatZone() {
+  const percent = getAct1HeatPercent();
+  const config = getAct1HeatingConfig();
+
+  return config.cautionZones.find((zone) => (
+    !act1ClearedHeatZoneIds.has(zone.id) &&
+    percent >= zone.start &&
+    percent <= zone.end
+  )) || null;
+}
+
+function hasAct1MissedHeatZone(previousValue, nextValue, config) {
+  const previousPercent = getAct1HeatPercent(previousValue);
+  const nextPercent = getAct1HeatPercent(nextValue);
+
+  return config.cautionZones.some((zone) => (
+    !act1ClearedHeatZoneIds.has(zone.id) &&
+    previousPercent <= zone.end &&
+    nextPercent > zone.end
+  ));
+}
+
+function resetAct1HeatingProgress(config = getAct1HeatingConfig()) {
+  act1HeatValue = config.resetTemperature;
+  act1ClearedHeatZoneIds = new Set();
+  isAct1HeatingPressed = false;
+  objectLayer?.querySelectorAll(".act1-microwave-panel, .act1-temperature-gauge").forEach((element) => {
+    element.classList.remove("is-heating");
+    element.classList.add("is-resetting");
+    window.setTimeout(() => {
+      element.classList.remove("is-resetting");
+    }, 420);
+  });
+}
+
 function updateAct1HeatVisuals() {
   const config = getAct1HeatingConfig();
   const range = Math.max(1, config.maxTemperature - config.minTemperature);
   const progress = Math.max(0, Math.min(1, (act1HeatValue - config.minTemperature) / range));
   const percent = Math.round(progress * 100);
+  const activeZone = getAct1ActiveHeatZone();
 
   objectLayer?.querySelectorAll(".act1-temperature-gauge").forEach((element) => {
     element.style.setProperty("--act1-heat-progress", `${percent}%`);
@@ -1312,6 +1808,19 @@ function updateAct1HeatVisuals() {
     element.style.setProperty("--act1-gauge-fill", `${(progress * 75).toFixed(2)}%`);
     element.style.setProperty("--act1-heat-deg", `${-135 + progress * 270}deg`);
     element.dataset.temperature = String(percent);
+    element.classList.toggle("is-in-caution", Boolean(activeZone));
+    element.classList.toggle("is-zone-1-cleared", act1ClearedHeatZoneIds.has("act1_heat_zone_1"));
+    element.classList.toggle("is-zone-2-cleared", act1ClearedHeatZoneIds.has("act1_heat_zone_2"));
+    const guide = element.querySelector(".act1-gauge-guide");
+
+    if (guide) {
+      guide.textContent = activeZone
+        ? "\u677e\u624b\uff01\u8ba9\u6a59\u8272\u533a\u95f4\u6d88\u5931\uff0c\u518d\u7ee7\u7eed\u52a0\u70ed\u3002"
+        : act1ClearedHeatZoneIds.size >= config.cautionZones.length
+          ? "\u6a59\u8272\u533a\u95f4\u5df2\u5904\u7406\u5b8c\uff0c\u6309\u4f4f\u52a0\u70ed\u5230\u6ee1\u683c\uff01"
+          : config.guideText;
+    }
+
     element.querySelector(".act1-gauge-readout").textContent = `${percent}%`;
   });
   objectLayer?.querySelectorAll(".act1-microwave-panel").forEach((element) => {
@@ -1364,6 +1873,7 @@ function recordAct1HeatingResult() {
 function enterAct1EatingSpeed() {
   const state = getAct1StateConfig(ACT1_STATES.EATING_SPEED);
   const config = getAct1EatingConfig();
+  const carriedFood = objectLayer.querySelector(".act1-carried-heat-food");
 
   currentPhase = PHASES.ACT1_EATING;
   currentState = ACT1_STATES.EATING_SPEED;
@@ -1374,7 +1884,13 @@ function enterAct1EatingSpeed() {
   isAct1EatingComplete = false;
   hideHoverInfoTooltip();
   updateStageHeader("\u7b2c\u4e00\u5e55\u4f4e\u4fdd\u771f\u539f\u578b", "\u65e9\u6668\u2014\u2014\u5403\u65e9\u996d");
-  objectLayer.querySelectorAll(".act1-scene-object").forEach((element) => element.remove());
+  objectLayer.querySelectorAll(".act1-scene-object").forEach((element) => {
+    if (element === carriedFood) {
+      return;
+    }
+
+    element.remove();
+  });
 
   Object.entries(state.objects || {}).forEach(([objectId, objectConfig]) => {
     const element = createAct1ObjectElement(objectId, objectConfig);
@@ -1382,6 +1898,10 @@ function enterAct1EatingSpeed() {
     updateAct1ObjectLayout(element, objectConfig);
     objectLayer.appendChild(element);
   });
+
+  if (carriedFood) {
+    prepareAct1CarriedFoodForEating(carriedFood, config);
+  }
 
   updateAct1EatingVisuals();
   console.log("Entered act1_03_eating_speed", { selectedAct1BreakfastId });
@@ -1394,8 +1914,37 @@ function getAct1EatingConfig() {
     requiredClicks: Math.max(1, config.requiredClicks ?? 6),
     fastMaxMs: config.fastMaxMs ?? 3500,
     mediumMaxMs: config.mediumMaxMs ?? 7000,
-    nextStateDelay: config.nextStateDelay ?? 1200
+    nextStateDelay: config.nextStateDelay ?? 1200,
+    targetCenterX: config.targetCenterX ?? 964,
+    targetCenterY: config.targetCenterY ?? 654,
+    targetScale: config.targetScale ?? 1.3,
+    assetPattern: config.assetPattern || "assets/images/act1/eating/{slug}-{state}.png"
   };
+}
+
+function prepareAct1CarriedFoodForEating(foodElement, config = getAct1EatingConfig()) {
+  const sourceConfig = getAct1StateConfig(ACT1_STATES.BREAKFAST_CHOICE)
+    .objects?.[foodElement.dataset.objectId];
+  const stage = act1Layouts?.stage || { width: DESIGN_WIDTH, height: DESIGN_HEIGHT };
+
+  if (!sourceConfig) {
+    return;
+  }
+
+  const visualWidth = sourceConfig.width * config.targetScale;
+  const visualHeight = sourceConfig.height * config.targetScale;
+  const targetLeft = config.targetCenterX - visualWidth / 2;
+  const targetTop = config.targetCenterY - visualHeight / 2;
+
+  foodElement.classList.add("act1-carried-eating-food");
+  foodElement.classList.remove("act1-carried-heat-food");
+  foodElement.style.left = `${(targetLeft / stage.width) * 100}%`;
+  foodElement.style.top = `${(targetTop / stage.height) * 100}%`;
+  foodElement.style.transform = `scale(${config.targetScale})`;
+  foodElement.style.zIndex = "30";
+  foodElement.disabled = false;
+  foodElement.addEventListener("click", handleAct1EatingFoodClick);
+  updateAct1CarriedFoodEatingAsset(foodElement, 0);
 }
 
 function handleAct1EatingFoodClick() {
@@ -1408,6 +1957,10 @@ function handleAct1EatingFoodClick() {
   }
 
   act1EatingClickCount = Math.min(act1EatingRequiredClicks, act1EatingClickCount + 1);
+  updateAct1CarriedFoodEatingAsset(
+    objectLayer.querySelector(".act1-carried-eating-food"),
+    act1EatingClickCount
+  );
   updateAct1EatingVisuals();
 
   if (act1EatingClickCount >= act1EatingRequiredClicks) {
@@ -1415,9 +1968,61 @@ function handleAct1EatingFoodClick() {
   }
 }
 
+function getAct1BreakfastAssetSlug(choiceId = selectedAct1BreakfastId) {
+  const slugMap = {
+    act1_s01_breakfast_overnightPizza: "overnight-pizza",
+    act1_s01_breakfast_baguetteCheese: "baguette-cheese",
+    act1_s01_breakfast_hotPorridge: "hot-porridge",
+    act1_s01_breakfast_eggHamSandwich: "egg-ham-sandwich",
+    act1_s01_breakfast_cornEggMilk: "corn-egg-milk"
+  };
+
+  return slugMap[choiceId] || "breakfast";
+}
+
+function updateAct1CarriedFoodEatingAsset(foodElement, stateIndex) {
+  if (!foodElement) {
+    return;
+  }
+
+  const config = getAct1EatingConfig();
+  const slug = getAct1BreakfastAssetSlug();
+  const existingImage = foodElement.querySelector(":scope > .act1-placeholder-image");
+
+  foodElement.dataset.eatingAssetState = String(stateIndex);
+
+  if (stateIndex <= 0) {
+    return;
+  }
+
+  const imagePath = config.assetPattern
+    .replace("{slug}", slug)
+    .replace("{state}", String(stateIndex));
+  const image = existingImage || document.createElement("img");
+
+  image.className = "act1-placeholder-image";
+  image.alt = "";
+  image.draggable = false;
+  image.src = imagePath;
+  image.onload = () => {
+    foodElement.classList.add("has-act1-image");
+    foodElement.classList.remove("is-eating-asset-missing");
+  };
+  image.onerror = () => {
+    foodElement.classList.remove("has-act1-image");
+    foodElement.classList.add("is-eating-asset-missing");
+    image.remove();
+  };
+
+  if (!existingImage) {
+    foodElement.prepend(image);
+  }
+}
+
 function updateAct1EatingVisuals() {
   const progress = Math.max(0, Math.min(1, act1EatingClickCount / act1EatingRequiredClicks));
   const remaining = Math.max(0, 1 - progress);
+  const carriedFood = objectLayer?.querySelector(".act1-carried-eating-food");
 
   objectLayer?.querySelectorAll(".act1-eating-food").forEach((element) => {
     element.style.setProperty("--act1-food-remaining", remaining.toFixed(3));
@@ -1429,9 +2034,23 @@ function updateAct1EatingVisuals() {
     if (label) {
       label.textContent = progress >= 1
         ? "\u53ea\u5269\u76d8\u5b50"
-        : `${act1EatingClickCount}/${act1EatingRequiredClicks}`;
+      : `${act1EatingClickCount}/${act1EatingRequiredClicks}`;
     }
   });
+
+  if (carriedFood) {
+    carriedFood.style.setProperty("--act1-food-remaining", remaining.toFixed(3));
+    carriedFood.style.setProperty("--act1-bite-size", `${Math.round(progress * 90)}px`);
+    carriedFood.dataset.eatenClicks = String(act1EatingClickCount);
+    carriedFood.dataset.requiredClicks = String(act1EatingRequiredClicks);
+    const label = carriedFood.querySelector(".act1-breakfast-label");
+
+    if (label) {
+      label.textContent = progress >= 1
+        ? "\u53ea\u5269\u76d8\u5b50"
+        : `${act1EatingClickCount}/${act1EatingRequiredClicks}`;
+    }
+  }
 }
 
 function completeAct1Eating() {
@@ -1447,6 +2066,7 @@ function completeAct1Eating() {
   objectLayer.querySelectorAll(".act1-eating-food").forEach((element) => {
     element.classList.add("is-complete");
   });
+  objectLayer.querySelector(".act1-carried-eating-food")?.classList.add("is-complete");
   recordAct1EatingSpeed(elapsedMs, eatingSpeed);
 
   window.setTimeout(() => {
@@ -1468,6 +2088,7 @@ function getAct1EatingSpeed(elapsedMs, config) {
 }
 
 function recordAct1EatingSpeed(elapsedMs, eatingSpeed) {
+  const speedRiskKey = ACT1_EATING_SPEED_RISK_OPTION_KEYS[eatingSpeed];
   const record = {
     sceneId: "act1",
     stepId: "act1_eatingSpeed",
@@ -1477,7 +2098,7 @@ function recordAct1EatingSpeed(elapsedMs, eatingSpeed) {
     requiredClicks: act1EatingRequiredClicks,
     elapsedMs,
     eatingSpeed,
-    riskTags: [],
+    riskTags: getOptionRiskTags(speedRiskKey),
     tendencyScores: {}
   };
 
@@ -4578,12 +5199,259 @@ function ensureResultRiskLayer() {
   return resultRiskLayer;
 }
 
+function formatRegularityForStats(regularity) {
+  if (regularity === "irregular") {
+    return "不规律进食";
+  }
+
+  if (regularity === "regular") {
+    return "规律进食";
+  }
+
+  return "未记录";
+}
+
+function bindResultStatsDebugShortcut() {
+  if (resultStatsShortcutBound) {
+    return;
+  }
+
+  resultStatsShortcutBound = true;
+  window.addEventListener("keydown", (event) => {
+    if (!isResultStatsShortcutEvent(event) || event.repeat || shouldIgnoreResultStatsShortcut(event)) {
+      return;
+    }
+
+    event.preventDefault();
+    event.stopPropagation();
+    toggleResultStatsOverlay();
+  }, true);
+}
+
+function isResultStatsShortcutEvent(event) {
+  return event.code === "KeyR" || event.key === "r" || event.key === "R";
+}
+
+function shouldIgnoreResultStatsShortcut(event) {
+  const target = event.target;
+
+  return Boolean(
+    target?.closest?.("input, textarea, select, [contenteditable='true']")
+  );
+}
+
+function toggleResultStatsOverlay() {
+  const layer = ensureResultStatsOverlayLayer();
+
+  if (layer.classList.contains("is-visible")) {
+    hideResultStatsOverlay();
+    return;
+  }
+
+  showResultStatsOverlay();
+}
+
+function showResultStatsOverlay() {
+  const layer = ensureResultStatsOverlayLayer();
+
+  updatePlayerRiskResult();
+  renderResultStatsOverlay(layer);
+  layer.classList.add("is-visible");
+}
+
+function hideResultStatsOverlay() {
+  resultStatsOverlayLayer?.classList.remove("is-visible");
+}
+
+function ensureResultStatsOverlayLayer() {
+  if (resultStatsOverlayLayer) {
+    return resultStatsOverlayLayer;
+  }
+
+  resultStatsOverlayLayer = document.createElement("section");
+  resultStatsOverlayLayer.className = "result-stats-overlay";
+  resultStatsOverlayLayer.setAttribute("aria-label", "玩家数据统计弹窗");
+  resultStatsOverlayLayer.innerHTML = "";
+  document.body.appendChild(resultStatsOverlayLayer);
+  resultStatsOverlayLayer.addEventListener("click", (event) => {
+    if (
+      event.target === resultStatsOverlayLayer ||
+      event.target.closest(".result-stats-overlay-close")
+    ) {
+      hideResultStatsOverlay();
+    }
+  });
+
+  return resultStatsOverlayLayer;
+}
+
+function renderResultStatsOverlay(layer) {
+  const riskResult = getPlayerRiskResult();
+  const selectedItems = riskResult.selectedItems || {};
+  const behavior = riskResult.behavior || {};
+
+  layer.innerHTML = `
+    <div class="result-stats-overlay-panel" role="dialog" aria-modal="true">
+      <button class="result-stats-overlay-close" type="button" aria-label="关闭统计弹窗">×</button>
+      <div class="result-stats-overlay-header">
+        <div>
+          <p class="result-stats-overlay-kicker">实时数据检测</p>
+          <h2>玩家记录统计</h2>
+        </div>
+        <div class="result-stats-overlay-summary">
+          <span>总风险 ${riskResult.totalRiskIndex}/100</span>
+          <span>${riskResult.riskLevelLabel || riskResult.riskLevel}</span>
+        </div>
+      </div>
+
+      <div class="result-stats-debug-grid">
+        <section class="result-stats-debug-card result-stats-debug-card-wide">
+          <h3>玩家选择</h3>
+          ${renderStatsKeyValueList([
+            ["省份", riskResult.province || "未记录"],
+            ["早餐", selectedItems.breakfast || "未记录"],
+            ["早餐速度", selectedItems.breakfastSpeed || "未记录"],
+            ["午餐菜品", (selectedItems.lunchFoods || []).join("、") || "未记录"],
+            ["午餐地点", selectedItems.lunchPlace || "未记录"],
+            ["火锅食材", formatHotpotFoodsForStats(selectedItems.hotpotFoods)],
+            ["饮品", selectedItems.drink || "未记录"]
+          ])}
+        </section>
+
+        <section class="result-stats-debug-card">
+          <h3>风险标签统计</h3>
+          ${renderRiskTagCountsTable(riskResult.riskTagCounts)}
+        </section>
+
+        <section class="result-stats-debug-card">
+          <h3>四维风险</h3>
+          ${renderDimensionStats(riskResult.dimensions)}
+        </section>
+
+        <section class="result-stats-debug-card">
+          <h3>行为判定</h3>
+          ${renderStatsKeyValueList([
+            ["快速进食等级", behavior.eatingSpeedLevel || "未记录"],
+            ["进食时长", `${behavior.eatingDurationMs || 0} ms`],
+            ["点击次数", behavior.clickCount || 0],
+            ["点击速度", `${behavior.clickSpeed || 0} 次/秒`],
+            ["规律性", formatRegularityForStats(behavior.regularity)]
+          ])}
+        </section>
+
+        <section class="result-stats-debug-card">
+          <h3>记录数量</h3>
+          ${renderStatsKeyValueList([
+            ["playerChoices", `${playerChoices.length} 条`],
+            ["未知风险标签", riskResult.unknownRiskTags?.join("、") || "无"],
+            ["当前阶段", currentState || "未记录"]
+          ])}
+        </section>
+
+        <section class="result-stats-debug-card result-stats-debug-card-full">
+          <h3>原始 playerChoices</h3>
+          <pre class="result-stats-debug-json">${escapeHtml(JSON.stringify(playerChoices, null, 2))}</pre>
+        </section>
+      </div>
+    </div>
+  `;
+}
+
+function renderStatsKeyValueList(items) {
+  return `
+    <dl class="result-stats-debug-kv">
+      ${items.map(([label, value]) => `
+        <div>
+          <dt>${escapeHtml(label)}</dt>
+          <dd>${escapeHtml(value)}</dd>
+        </div>
+      `).join("")}
+    </dl>
+  `;
+}
+
+function renderRiskTagCountsTable(riskTagCounts = {}) {
+  const entries = Object.entries(riskTagCounts);
+
+  if (!entries.length) {
+    return `<p class="result-stats-debug-empty">暂无风险标签</p>`;
+  }
+
+  return `
+    <div class="result-stats-tag-table">
+      <div class="result-stats-tag-row result-stats-tag-head">
+        <span>标签</span><span>原始</span><span>有效</span><span>分数</span>
+      </div>
+      ${entries.map(([tag, count]) => `
+        <div class="result-stats-tag-row">
+          <span>${escapeHtml(tag)}</span>
+          <span>${count.rawChosen}</span>
+          <span>${count.effectiveChosen}</span>
+          <span>${count.score}</span>
+        </div>
+      `).join("")}
+    </div>
+  `;
+}
+
+function renderDimensionStats(dimensions = {}) {
+  return `
+    <div class="result-stats-dimensions">
+      ${RISK_DIMENSION_KEYS.map((dimension) => {
+        const item = dimensions[dimension] || {};
+        return `
+          <div class="result-stats-dimension">
+            <div class="result-stats-dimension-label">
+              <span>${escapeHtml(getDimensionDisplayName(dimension))}</span>
+              <strong>${escapeHtml(item.endpoint || "-")}</strong>
+            </div>
+            <div class="result-stats-dimension-track">
+              <span style="width:${Math.max(0, Math.min(100, item.riskIndex || 0))}%"></span>
+            </div>
+            <div class="result-stats-dimension-meta">${item.riskIndex || 0}/100 · ${item.score || 0}</div>
+          </div>
+        `;
+      }).join("")}
+    </div>
+  `;
+}
+
+function getDimensionDisplayName(dimension) {
+  const names = {
+    sensory: "感官刺激",
+    rhythm: "节律",
+    specificity: "特异",
+    danger: "危险"
+  };
+
+  return names[dimension] || dimension;
+}
+
+function formatHotpotFoodsForStats(hotpotFoods = []) {
+  if (!hotpotFoods.length) {
+    return "未记录";
+  }
+
+  return hotpotFoods.map((food) => `${food.id || "unknown"} -> ${food.target || "unknown"}`).join("；");
+}
+
+function escapeHtml(value) {
+  return String(value ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
 function renderResultRiskIntroLayout(layer) {
   const config = RESULT_GALAXY_LOCATING_CONFIG.resultDietGalaxy.riskIntro;
   const shapes = config.shapes || [];
   const prompt = config.prompt || {};
   const centerExplanation = config.centerExplanation || {};
   const riskIndex = config.riskIndex || {};
+  const riskResult = getPlayerRiskResult();
+  const riskIndexValue = `${Math.round(riskResult.totalRiskIndex)}/100`;
   const shapeMarkup = shapes
     .map((shape, index) => `
       <div
@@ -4640,7 +5508,7 @@ function renderResultRiskIntroLayout(layer) {
     <div class="result-risk-transition-layer"></div>
     <div class="result-risk-score-block">
       <p class="result-risk-score-title">${riskIndex.title || ""}</p>
-      <p class="result-risk-score-value">${riskIndex.value || ""}</p>
+      <p class="result-risk-score-value">${riskIndexValue}</p>
       <p class="result-risk-score-note">${(riskIndex.note || "").replace(/\n/g, "<br>")}</p>
     </div>
   `;
@@ -4802,6 +5670,8 @@ function getRiskTransitionEdgePoint() {
 
 function renderResultDietGalaxyLayout(layer) {
   const config = RESULT_GALAXY_LOCATING_CONFIG.resultDietGalaxy;
+  const riskResult = getPlayerRiskResult();
+  const traitDimensionOrder = ["sensory", "danger", "specificity", "rhythm"];
   const paragraphs = config.panel.paragraphs
     .map((paragraph) => `<p>${paragraph.replace(/\n/g, "<br>")}</p>`)
     .join("");
@@ -4814,8 +5684,13 @@ function renderResultDietGalaxyLayout(layer) {
       pointerShape: "square"
     }));
   const traitBars = traitBarItems
-    .map((item) => `
-      <div class="result-trait-bar" style="--trait-position: ${item.value}%">
+    .map((item, index) => {
+      const dimension = traitDimensionOrder[index];
+      const dynamicValue = riskResult.dimensions?.[dimension]?.riskIndex;
+      const value = dynamicValue ?? item.value;
+
+      return `
+      <div class="result-trait-bar" style="--trait-position: ${value}%">
         <div class="result-trait-track-wrap">
           <div class="result-trait-track"></div>
           <div class="result-trait-endpoint result-trait-endpoint-left"></div>
@@ -4827,7 +5702,8 @@ function renderResultDietGalaxyLayout(layer) {
           <span class="result-trait-label result-trait-label-right">${item.rightLabel || ""}</span>
         </div>
       </div>
-    `)
+    `;
+    })
     .join("");
 
   layer.style.setProperty("--result-label-x", `${config.galaxyLabel.x}px`);
@@ -4907,6 +5783,7 @@ function enterGalaxyLocatingState() {
     return;
   }
 
+  updatePlayerRiskResult();
   act3ExitProgress = ACT3_EXIT_SCROLL_CONFIG.maxProgress;
   isAct3ScrollExitEnabled = false;
   isAct3ExitAnimating = false;
@@ -4915,6 +5792,7 @@ function enterGalaxyLocatingState() {
   createGalaxyLocatingLayer();
   console.log("Entered result_state_00_galaxy_locating", {
     playerChoices,
+    playerRiskResult,
     act3ExitProgress
   });
 }
@@ -4930,6 +5808,7 @@ function enterResultGalaxyState() {
   isAct3ExitAnimating = false;
   currentPhase = PHASES.RESULT_GALAXY;
   currentState = RESULT_STATES.DIET_GALAXY;
+  updatePlayerRiskResult();
   hasResultRiskIntroStarted = false;
   resultRiskIntroStep = 0;
   resultRiskIntroWheelLocked = false;
@@ -4948,6 +5827,7 @@ function enterResultGalaxyState() {
   updateResultGalaxyProgress(1);
   console.log("Entered result_state_01_diet_galaxy", {
     playerChoices,
+    playerRiskResult,
     act3ExitProgress
   });
 }
@@ -5311,6 +6191,8 @@ function handleResultGalaxyWheel(event) {
     return;
   }
 
+  // The diet galaxy screen is the final in-flow result screen.
+  // Further result details stay available only through the debug overlay.
   event.preventDefault();
   // RESULT OLD RISK INTRO START
   // enterResultRiskIntroState();
@@ -5355,6 +6237,7 @@ function startResultGalaxyEnterTransition() {
 function completeResultGalaxyEnterTransition() {
   currentPhase = PHASES.RESULT_GALAXY;
   currentState = RESULT_STATES.DIET_GALAXY;
+  updatePlayerRiskResult();
   isAct3ScrollExitEnabled = false;
   isAct3ExitAnimating = false;
   act3ExitProgress = ACT3_EXIT_SCROLL_CONFIG.maxProgress;
@@ -5367,9 +6250,13 @@ function completeResultGalaxyEnterTransition() {
   }
   resultRiskLayer?.classList.remove("is-visible");
   resultGalaxyLayer?.classList.remove("is-hidden");
+  if (resultGalaxyLayer) {
+    renderResultDietGalaxyLayout(resultGalaxyLayer);
+  }
   updateResultGalaxyProgress(1);
   console.log("Entered result_state_01_diet_galaxy", {
     playerChoices,
+    playerRiskResult,
     act3ExitProgress,
     preservedGalaxyLocatingLayer: Boolean(galaxyLocatingLayer)
   });
@@ -5389,11 +6276,13 @@ function enterResultRiskIntroState() {
   }
   currentPhase = PHASES.RESULT_RISK_INTRO;
   currentState = RESULT_STATES.RISK_INTRO;
+  updatePlayerRiskResult();
   renderResultRiskIntroLayout(ensureResultRiskLayer());
   ensureResultRiskLayer().classList.add("is-visible");
   resultGalaxyLayer?.classList.add("is-hidden");
   console.log("Entered result_state_02_risk_intro", {
     playerChoices,
+    playerRiskResult,
     preservedResultGalaxyLayer: Boolean(resultGalaxyLayer)
   });
 }

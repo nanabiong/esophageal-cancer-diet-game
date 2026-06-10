@@ -3185,6 +3185,10 @@ button:disabled {
   display: block;
   opacity: 0;
   pointer-events: none;
+  background:
+    radial-gradient(circle at 50% 42%, rgba(255, 255, 255, 0.65) 0%, rgba(255, 255, 255, 0) 34%),
+    linear-gradient(180deg, rgba(255, 250, 242, 0.55) 0%, rgba(246, 238, 220, 0.92) 100%),
+    #f6eedc;
   transform: translateX(80px);
 }
 
@@ -3195,6 +3199,10 @@ button:disabled {
 .result-galaxy-layer.is-hidden {
   opacity: 0;
   visibility: hidden;
+}
+
+.result-galaxy-layer.is-orbit-scene {
+  background: #ffffff;
 }
 
 .result-risk-layer {
@@ -3699,6 +3707,7 @@ button:disabled {
 
 .result-galaxy-label {
   position: absolute;
+  z-index: 15;
   left: var(--result-label-x, 430px);
   top: var(--result-label-y, 690px);
   width: var(--result-label-width, 520px);
@@ -3706,6 +3715,132 @@ button:disabled {
   font-family: YouYuan, "幼圆", "Microsoft YaHei", sans-serif;
   text-align: center;
   transform: translate(-50%, -50%);
+}
+
+.result-galaxy-visual-placeholder {
+  position: absolute;
+  left: var(--result-visual-x, 117px);
+  top: var(--result-visual-y, 80px);
+  width: var(--result-visual-width, 790px);
+  height: var(--result-visual-height, 790px);
+  z-index: 1;
+  border-radius: 999px;
+  background: var(--result-visual-color, #d9d9d9);
+  transition:
+    left var(--result-dock-duration, 760ms) cubic-bezier(0.22, 0.9, 0.28, 1),
+    top var(--result-dock-duration, 760ms) cubic-bezier(0.22, 0.9, 0.28, 1),
+    width var(--result-dock-duration, 760ms) cubic-bezier(0.22, 0.9, 0.28, 1),
+    height var(--result-dock-duration, 760ms) cubic-bezier(0.22, 0.9, 0.28, 1);
+}
+
+.result-main-planet--docked {
+  left: var(--result-docked-planet-x, 1320px);
+  top: var(--result-docked-planet-y, 395px);
+  width: var(--result-docked-planet-size, 720px);
+  height: var(--result-docked-planet-size, 720px);
+  z-index: 20;
+}
+
+.result-orbit-stage {
+  position: absolute;
+  left: var(--result-orbit-x, -100px);
+  top: var(--result-orbit-y, -80px);
+  width: var(--result-orbit-width, 1250px);
+  height: var(--result-orbit-height, 950px);
+  z-index: 10;
+  pointer-events: auto;
+  opacity: 0;
+  overflow: visible;
+  transform: translate3d(-120px, -80px, 0) rotate(calc(var(--result-orbit-rotate, -8deg) - 8deg));
+  transform-origin: var(--result-orbit-focus-x, 580px) var(--result-orbit-focus-y, 590px);
+  transition:
+    opacity 520ms ease,
+    transform var(--result-orbit-camera-duration, 760ms) cubic-bezier(0.22, 0.9, 0.28, 1);
+}
+
+.result-orbit-stage.is-visible {
+  opacity: 1;
+  transform: translate3d(0, 0, 0) rotate(var(--result-orbit-rotate, -8deg));
+}
+
+.result-orbit-stage--zoomed {
+  transform:
+    translate3d(var(--result-orbit-camera-x, 120px), var(--result-orbit-camera-y, -20px), 0)
+    rotate(var(--result-orbit-camera-rotate, -16deg))
+    scale(var(--result-orbit-camera-scale, 1.9));
+}
+
+.result-orbit-path {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.result-orbit-path path {
+  fill: none;
+  stroke: rgba(80, 80, 80, 0.72);
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.result-orbit-planet {
+  position: absolute;
+  left: var(--result-planet-x, 0px);
+  top: var(--result-planet-y, 0px);
+  width: var(--result-planet-size, 120px);
+  height: var(--result-planet-size, 120px);
+  z-index: 2;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: #cfcfcf;
+  box-shadow: inset 0 0 0 3px rgba(130, 130, 130, 0.45);
+  transform: translate(-50%, -50%);
+  transition:
+    transform 360ms ease,
+    background 360ms ease,
+    box-shadow 360ms ease;
+}
+
+.result-orbit-planet--largest {
+  cursor: pointer;
+  background: #bdbdbd;
+}
+
+.result-orbit-planet--largest:hover {
+  transform: translate(-50%, -50%) scale(1.04);
+}
+
+.result-orbit-planet--selected {
+  background: #b8b8b8;
+  box-shadow:
+    inset 0 0 0 4px rgba(120, 120, 120, 0.55),
+    0 24px 60px rgba(90, 70, 50, 0.18);
+  transform: translate(-50%, -50%) scale(1.18);
+}
+
+.result-planet-node {
+  position: absolute;
+  left: var(--result-node-x, 50%);
+  top: var(--result-node-y, 50%);
+  width: var(--result-node-size, 90px);
+  height: var(--result-node-size, 90px);
+  border-radius: 999px;
+  background: #eeeeee;
+  box-shadow: inset 0 0 0 3px rgba(150, 150, 150, 0.55);
+  opacity: 0;
+  transform: translate(-50%, -50%) scale(0.6);
+  animation: resultPlanetNodeIn 420ms ease-out forwards;
+}
+
+@keyframes resultPlanetNodeIn {
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
 }
 
 .result-galaxy-label p {
@@ -3725,6 +3860,7 @@ button:disabled {
 
 .result-diet-galaxy-panel {
   position: absolute;
+  z-index: 15;
   left: var(--result-panel-x, 1040px);
   top: var(--result-panel-y, 130px);
   width: var(--result-panel-width, 660px);
@@ -3763,6 +3899,7 @@ button:disabled {
 
 .result-trait-bars {
   position: absolute;
+  z-index: 15;
   left: var(--result-bars-x, 1040px);
   top: var(--result-bars-y, 650px);
   width: var(--result-bars-width, 620px);
@@ -3864,6 +4001,14 @@ button:disabled {
 
 .result-trait-label-right {
   text-align: right;
+}
+
+.result-galaxy-layer.is-orbit-scene .result-galaxy-label,
+.result-galaxy-layer.is-orbit-scene .result-diet-galaxy-panel,
+.result-galaxy-layer.is-orbit-scene .result-trait-bars {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
 }
 
 .result-galaxy-kicker {

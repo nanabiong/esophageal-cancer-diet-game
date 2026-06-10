@@ -62,11 +62,13 @@ const PHASES = {
   EXIT_SCROLL: "act3_exit_scroll",
   RESULT_GALAXY_LOCATING: "result_galaxy_locating",
   RESULT_GALAXY: "result_galaxy",
+  RESULT_ORBIT: "result_orbit",
   RESULT_RISK_INTRO: "result_risk_intro"
 };
 const RESULT_STATES = {
   GALAXY_LOCATING: "result_state_00_galaxy_locating",
   DIET_GALAXY: "result_state_01_diet_galaxy",
+  ORBIT_SCENE: "result_state_03_orbit_scene",
   RISK_INTRO: "result_state_02_risk_intro"
 };
 const PREVIEW_ENTRY_CONFIG = {
@@ -284,6 +286,47 @@ const RESULT_GALAXY_LOCATING_DEFAULT_CONFIG = {
       width: 520,
       eyebrow: "\u4f60\u7684\u996e\u98df\u661f\u7cfb\u662f...",
       title: "\u9ad8\u538b\u7099\u70ed\u661f\u73af!"
+    },
+    visualPlaceholder: {
+      x: 117,
+      y: 80,
+      width: 790,
+      height: 790,
+      color: "#d9d9d9"
+    },
+    orbitScene: {
+      dockDuration: 760,
+      dockedPlanet: {
+        x: 1320,
+        y: 395,
+        size: 720
+      },
+      orbitStage: {
+        x: -100,
+        y: -80,
+        width: 1250,
+        height: 950,
+        rotate: 0
+      },
+      orbitPlanets: [
+        { id: "planet_1", x: 140, y: 720, size: 230 },
+        { id: "planet_2", x: 610, y: 655, size: 460 },
+        { id: "planet_3", x: 930, y: 350, size: 230 },
+        { id: "planet_4", x: 1015, y: 90, size: 140 }
+      ],
+      focusCamera: {
+        x: 760,
+        y: 430,
+        scale: 1.9,
+        rotate: -16,
+        duration: 900,
+        nodeDelay: 760
+      },
+      selectedPlanetNodes: [
+        { x: "38%", y: "30%", size: 90 },
+        { x: "60%", y: "48%", size: 90 },
+        { x: "45%", y: "68%", size: 90 }
+      ]
     },
     panel: {
       x: 1040,
@@ -568,8 +611,10 @@ let isAct3ExitAnimating = false;
 let hasAct3ExitStarted = false;
 let act3ExitProgress = 0;
 let resultGalaxyLayer = null;
+let resultOrbitLayer = null;
 let resultRiskLayer = null;
-let resultStatsOverlayLayer = null;
+let isResultOrbitPlanetSelected = false;
+let resultOrbitNodeTimer = null;
 let act0AlarmLayer = null;
 let act0Clock = null;
 let act0MinuteHand = null;
@@ -778,6 +823,30 @@ function mergeResultGalaxyLocatingConfig(config) {
       galaxyLabel: {
         ...RESULT_GALAXY_LOCATING_DEFAULT_CONFIG.resultDietGalaxy.galaxyLabel,
         ...(config.resultDietGalaxy?.galaxyLabel || {})
+      },
+      visualPlaceholder: {
+        ...RESULT_GALAXY_LOCATING_DEFAULT_CONFIG.resultDietGalaxy.visualPlaceholder,
+        ...(config.resultDietGalaxy?.visualPlaceholder || {})
+      },
+      orbitScene: {
+        ...RESULT_GALAXY_LOCATING_DEFAULT_CONFIG.resultDietGalaxy.orbitScene,
+        ...(config.resultDietGalaxy?.orbitScene || {}),
+        dockedPlanet: {
+          ...RESULT_GALAXY_LOCATING_DEFAULT_CONFIG.resultDietGalaxy.orbitScene.dockedPlanet,
+          ...(config.resultDietGalaxy?.orbitScene?.dockedPlanet || {})
+        },
+        orbitStage: {
+          ...RESULT_GALAXY_LOCATING_DEFAULT_CONFIG.resultDietGalaxy.orbitScene.orbitStage,
+          ...(config.resultDietGalaxy?.orbitScene?.orbitStage || {})
+        },
+        orbitPlanets: config.resultDietGalaxy?.orbitScene?.orbitPlanets ||
+          RESULT_GALAXY_LOCATING_DEFAULT_CONFIG.resultDietGalaxy.orbitScene.orbitPlanets,
+        focusCamera: {
+          ...RESULT_GALAXY_LOCATING_DEFAULT_CONFIG.resultDietGalaxy.orbitScene.focusCamera,
+          ...(config.resultDietGalaxy?.orbitScene?.focusCamera || {})
+        },
+        selectedPlanetNodes: config.resultDietGalaxy?.orbitScene?.selectedPlanetNodes ||
+          RESULT_GALAXY_LOCATING_DEFAULT_CONFIG.resultDietGalaxy.orbitScene.selectedPlanetNodes
       },
       panel: {
         ...RESULT_GALAXY_LOCATING_DEFAULT_CONFIG.resultDietGalaxy.panel,
@@ -4041,12 +4110,17 @@ function renderDebugEntryControls() {
 
   const controls = document.createElement("div");
   const jumpAct2Button = document.createElement("button");
+  const jumpAct3FinalButton = document.createElement("button");
 
   controls.className = "debug-entry-controls";
   jumpAct2Button.type = "button";
   jumpAct2Button.textContent = "跳到 Act2 开始测试";
   jumpAct2Button.addEventListener("click", startDebugAct2Entry);
+  jumpAct3FinalButton.type = "button";
+  jumpAct3FinalButton.textContent = "\u8df3\u5230 Act3 \u6700\u540e\u4e00\u5e55";
+  jumpAct3FinalButton.addEventListener("click", startDebugAct3FinalEntry);
   controls.appendChild(jumpAct2Button);
+  controls.appendChild(jumpAct3FinalButton);
   document.querySelector("#app")?.appendChild(controls);
 }
 
@@ -4070,6 +4144,8 @@ function startDebugAct2Entry() {
   cleanupGalaxyLocatingLayer();
   resultGalaxyLayer?.remove();
   resultGalaxyLayer = null;
+  resultOrbitLayer = null;
+  clearResultOrbitNodeTimer();
   resultRiskLayer = null;
   objectLayer?.querySelectorAll(".act1-scene-object, .act2-scene-object").forEach((element) => element.remove());
   objectLayer?.classList.remove("act3-exit-sequence");
@@ -4083,6 +4159,59 @@ function startDebugAct2Entry() {
   resultRiskIntroWheelLocked = false;
   currentState = null;
   enterAct2LunchIntro();
+}
+
+function startDebugAct3FinalEntry() {
+  removeDebugEntryControls();
+  isIntroActive = false;
+  introStep = 0;
+  isWheelLocked = false;
+  isIntroAnimating = false;
+  isTransitioning = false;
+  isStateLocked = false;
+  hideIntroBubble();
+  hideGuidanceBubbles();
+  hideHoverInfoTooltip();
+  stopHotpotFloatingBubbles();
+  cleanupAct0Layer();
+  cleanupAct2WorkBubbles();
+  cleanupAct2FriendMealInteraction();
+  cleanupAct2ParkScene();
+  cleanupAct2SoloMealInteraction();
+  cleanupAct2CatchGame();
+  cleanupAct2IntroWheel();
+  cleanupAct2LunchChoiceWheel();
+  cleanupAct2CannotGoBackHint();
+  cleanupGalaxyLocatingLayer();
+  resultGalaxyLayer?.remove();
+  resultGalaxyLayer = null;
+  resultOrbitLayer = null;
+  clearResultOrbitNodeTimer();
+  resultRiskLayer?.remove();
+  resultRiskLayer = null;
+  objectLayer?.querySelectorAll(".act1-scene-object, .act2-scene-object").forEach((element) => element.remove());
+  objectLayer?.classList.remove("act3-exit-sequence");
+  hasAct3ExitStarted = false;
+  isAct3ExitAnimating = false;
+  isAct3ScrollExitEnabled = false;
+  isAct3Complete = false;
+  isFoodChoiceLocked = true;
+  isDrinkChoiceLocked = true;
+  selectedFoods = [];
+  selectedDrinkId = null;
+  act3ExitProgress = 0;
+  hasResultRiskIntroStarted = false;
+  resultRiskIntroStep = 0;
+  resultRiskIntroWheelLocked = false;
+  if (resultRiskIntroWheelLockTimer) {
+    window.clearTimeout(resultRiskIntroWheelLockTimer);
+    resultRiskIntroWheelLockTimer = null;
+  }
+  currentState = null;
+  applyState(ACT3_STATES.DRINK_CHOICE, { animate: false });
+  window.setTimeout(() => {
+    enableAct3ScrollExit();
+  }, 0);
 }
 // DEBUG ACT2 END
 
@@ -4101,6 +4230,8 @@ function startPreviewEntry() {
   cleanupGalaxyLocatingLayer();
   resultGalaxyLayer?.remove();
   resultGalaxyLayer = null;
+  resultOrbitLayer = null;
+  clearResultOrbitNodeTimer();
   resultRiskLayer = null;
   objectLayer?.classList.remove("act3-exit-sequence");
   hasAct3ExitStarted = false;
@@ -5578,6 +5709,15 @@ function renderResultDietGalaxyLayout(layer) {
   layer.style.setProperty("--result-label-x", `${config.galaxyLabel.x}px`);
   layer.style.setProperty("--result-label-y", `${config.galaxyLabel.y}px`);
   layer.style.setProperty("--result-label-width", `${config.galaxyLabel.width}px`);
+  layer.style.setProperty("--result-visual-x", `${config.visualPlaceholder.x}px`);
+  layer.style.setProperty("--result-visual-y", `${config.visualPlaceholder.y}px`);
+  layer.style.setProperty("--result-visual-width", `${config.visualPlaceholder.width}px`);
+  layer.style.setProperty("--result-visual-height", `${config.visualPlaceholder.height}px`);
+  layer.style.setProperty("--result-visual-color", config.visualPlaceholder.color || "#d9d9d9");
+  layer.style.setProperty("--result-docked-planet-x", `${config.orbitScene.dockedPlanet.x}px`);
+  layer.style.setProperty("--result-docked-planet-y", `${config.orbitScene.dockedPlanet.y}px`);
+  layer.style.setProperty("--result-docked-planet-size", `${config.orbitScene.dockedPlanet.size}px`);
+  layer.style.setProperty("--result-dock-duration", `${config.orbitScene.dockDuration || 760}ms`);
   layer.style.setProperty("--result-panel-x", `${config.panel.x}px`);
   layer.style.setProperty("--result-panel-y", `${config.panel.y}px`);
   layer.style.setProperty("--result-panel-width", `${config.panel.width}px`);
@@ -5592,6 +5732,7 @@ function renderResultDietGalaxyLayout(layer) {
   layer.style.setProperty("--result-trait-label-gap", `${config.traitBars.labelGap || 16}px`);
   layer.style.setProperty("--result-trait-label-font-size", `${config.traitBars.labelFontSize || 16}px`);
   layer.innerHTML = `
+    <div class="result-galaxy-visual-placeholder result-main-planet" aria-hidden="true"></div>
     <div class="result-galaxy-label">
       <p class="result-galaxy-label-eyebrow">${config.galaxyLabel.eyebrow}</p>
       <p class="result-galaxy-label-title">${config.galaxyLabel.title}</p>
@@ -5633,7 +5774,7 @@ function startAct3ExitSequence() {
   objectLayer.classList.add("act3-exit-sequence");
 
   window.setTimeout(() => {
-    enterGalaxyLocatingState();
+    enterResultGalaxyState();
   }, ACT3_EXIT_SCROLL_CONFIG.completeDelay);
 }
 
@@ -5677,14 +5818,249 @@ function enterResultGalaxyState() {
   }
   resultRiskLayer?.classList.remove("is-visible");
   resultGalaxyLayer?.classList.remove("is-hidden");
-  if (resultGalaxyLayer) {
-    renderResultDietGalaxyLayout(resultGalaxyLayer);
-  }
+  resultGalaxyLayer?.classList.remove("is-orbit-scene");
+  resultGalaxyLayer?.querySelector(".result-main-planet")?.classList.remove("result-main-planet--docked");
+  resultOrbitLayer?.remove();
+  resultOrbitLayer = null;
+  isResultOrbitPlanetSelected = false;
+  clearResultOrbitNodeTimer();
   updateResultGalaxyProgress(1);
   console.log("Entered result_state_01_diet_galaxy", {
     playerChoices,
     playerRiskResult,
     act3ExitProgress
+  });
+}
+
+function enterResultOrbitScene() {
+  if (currentPhase === PHASES.RESULT_ORBIT) {
+    return;
+  }
+
+  currentPhase = PHASES.RESULT_ORBIT;
+  currentState = RESULT_STATES.ORBIT_SCENE;
+  isResultOrbitPlanetSelected = false;
+  resultRiskLayer?.classList.remove("is-visible");
+  dockResultMainPlanet();
+
+  const config = getResultOrbitSceneConfig();
+  window.setTimeout(() => {
+    renderResultOrbitStage();
+  }, config.dockDuration || 760);
+}
+
+function getResultOrbitSceneConfig() {
+  return RESULT_GALAXY_LOCATING_CONFIG.resultDietGalaxy.orbitScene || {};
+}
+
+function dockResultMainPlanet() {
+  const layer = ensureResultGalaxyLayer();
+  const planet = layer.querySelector(".result-main-planet");
+
+  layer.classList.add("is-orbit-scene");
+  planet?.classList.add("result-main-planet--docked");
+}
+
+function renderResultOrbitStage() {
+  const config = getResultOrbitSceneConfig();
+  const stageConfig = config.orbitStage || {};
+  const largestPlanet = findLargestOrbitPlanet(config.orbitPlanets || []);
+
+  resultOrbitLayer?.remove();
+  clearResultOrbitNodeTimer();
+  resultOrbitLayer = document.createElement("section");
+  resultOrbitLayer.id = RESULT_STATES.ORBIT_SCENE;
+  resultOrbitLayer.className = "result-orbit-stage";
+  resultOrbitLayer.style.setProperty("--result-orbit-x", `${stageConfig.x || 0}px`);
+  resultOrbitLayer.style.setProperty("--result-orbit-y", `${stageConfig.y || 0}px`);
+  resultOrbitLayer.style.setProperty("--result-orbit-width", `${stageConfig.width || 1200}px`);
+  resultOrbitLayer.style.setProperty("--result-orbit-height", `${stageConfig.height || 900}px`);
+  resultOrbitLayer.style.setProperty("--result-orbit-rotate", `${stageConfig.rotate || 0}deg`);
+
+  resultOrbitLayer.appendChild(createResultOrbitPath(config.orbitPlanets || []));
+
+  (config.orbitPlanets || []).forEach((planetConfig) => {
+    const isLargest = planetConfig.id === largestPlanet?.id;
+    const planet = document.createElement(isLargest ? "button" : "div");
+
+    planet.className = `result-orbit-planet${isLargest ? " result-orbit-planet--largest" : ""}`;
+    planet.dataset.planetId = planetConfig.id;
+    planet.style.setProperty("--result-planet-x", `${planetConfig.x}px`);
+    planet.style.setProperty("--result-planet-y", `${planetConfig.y}px`);
+    planet.style.setProperty("--result-planet-size", `${planetConfig.size}px`);
+
+    if (isLargest) {
+      planet.type = "button";
+      planet.addEventListener("click", handleLargestOrbitPlanetClick);
+    }
+
+    resultOrbitLayer.appendChild(planet);
+  });
+
+  ensureResultGalaxyLayer().appendChild(resultOrbitLayer);
+  window.requestAnimationFrame(() => {
+    resultOrbitLayer?.classList.add("is-visible");
+  });
+}
+
+function createResultOrbitPath(planets = []) {
+  const pathLayer = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+  const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+
+  pathLayer.classList.add("result-orbit-path");
+  pathLayer.setAttribute("viewBox", "0 0 1250 950");
+  pathLayer.setAttribute("preserveAspectRatio", "none");
+  path.setAttribute("d", createResultOrbitPathData(planets));
+  path.setAttribute("pathLength", "1");
+  pathLayer.appendChild(path);
+
+  return pathLayer;
+}
+
+function createResultOrbitPathData(planets = []) {
+  const points = planets
+    .map((planet) => ({
+      x: Number(planet.x),
+      y: Number(planet.y)
+    }))
+    .filter((point) => Number.isFinite(point.x) && Number.isFinite(point.y));
+
+  if (points.length < 2) {
+    return "";
+  }
+
+  const extendedPoints = getExtendedOrbitPoints(points);
+  let pathData = `M ${extendedPoints[0].x} ${extendedPoints[0].y}`;
+
+  for (let index = 0; index < extendedPoints.length - 1; index += 1) {
+    const p0 = extendedPoints[Math.max(0, index - 1)];
+    const p1 = extendedPoints[index];
+    const p2 = extendedPoints[index + 1];
+    const p3 = extendedPoints[Math.min(extendedPoints.length - 1, index + 2)];
+    const control1 = {
+      x: p1.x + (p2.x - p0.x) / 6,
+      y: p1.y + (p2.y - p0.y) / 6
+    };
+    const control2 = {
+      x: p2.x - (p3.x - p1.x) / 6,
+      y: p2.y - (p3.y - p1.y) / 6
+    };
+
+    pathData += ` C ${control1.x} ${control1.y}, ${control2.x} ${control2.y}, ${p2.x} ${p2.y}`;
+  }
+
+  return pathData;
+}
+
+function getExtendedOrbitPoints(points) {
+  const first = points[0];
+  const second = points[1];
+  const beforeFirst = {
+    x: first.x + (first.x - second.x) * 0.55,
+    y: first.y + (first.y - second.y) * 0.55
+  };
+  const last = points[points.length - 1];
+  const previous = points[points.length - 2];
+  const afterLast = {
+    x: last.x + (last.x - previous.x) * 0.75,
+    y: last.y + (last.y - previous.y) * 0.75
+  };
+
+  return [beforeFirst, ...points, afterLast];
+}
+
+function findLargestOrbitPlanet(planets = []) {
+  return planets.reduce((largest, planet) => {
+    if (!largest || Number(planet.size) > Number(largest.size)) {
+      return planet;
+    }
+
+    return largest;
+  }, null);
+}
+
+function handleLargestOrbitPlanetClick(event) {
+  if (isResultOrbitPlanetSelected) {
+    return;
+  }
+
+  event.preventDefault();
+  zoomIntoResultOrbitPlanet(event.currentTarget);
+}
+
+function zoomIntoResultOrbitPlanet(planetElement) {
+  if (!planetElement || !resultOrbitLayer) {
+    return;
+  }
+
+  const config = getResultOrbitSceneConfig();
+  const planetConfig = (config.orbitPlanets || []).find((planet) => planet.id === planetElement.dataset.planetId);
+  const focusTransform = getResultOrbitFocusTransform(
+    planetConfig,
+    config.orbitStage || {},
+    config.focusCamera || {}
+  );
+
+  isResultOrbitPlanetSelected = true;
+  clearResultOrbitNodeTimer();
+  resultOrbitLayer.style.setProperty("--result-orbit-camera-x", `${focusTransform.x}px`);
+  resultOrbitLayer.style.setProperty("--result-orbit-camera-y", `${focusTransform.y}px`);
+  resultOrbitLayer.style.setProperty("--result-orbit-camera-scale", focusTransform.scale);
+  resultOrbitLayer.style.setProperty("--result-orbit-camera-rotate", `${focusTransform.rotate}deg`);
+  resultOrbitLayer.style.setProperty("--result-orbit-camera-duration", `${focusTransform.duration}ms`);
+  planetElement.classList.add("result-orbit-planet--selected");
+  resultOrbitLayer.classList.add("result-orbit-stage--zoomed");
+
+  resultOrbitNodeTimer = window.setTimeout(() => {
+    renderSelectedPlanetNodes(planetElement);
+    resultOrbitNodeTimer = null;
+  }, focusTransform.nodeDelay);
+}
+
+function getResultOrbitFocusTransform(planetConfig, stageConfig = {}, cameraConfig = {}) {
+  const stageX = Number(stageConfig.x) || 0;
+  const stageY = Number(stageConfig.y) || 0;
+  const planetX = Number(planetConfig?.x) || 0;
+  const planetY = Number(planetConfig?.y) || 0;
+  const focusX = Number(cameraConfig.x) || 760;
+  const focusY = Number(cameraConfig.y) || 430;
+  const scale = Number(cameraConfig.scale) || 1.9;
+  const rotate = Number(cameraConfig.rotate) || 0;
+  const theta = (rotate * Math.PI) / 180;
+  const rotatedX = ((planetX * Math.cos(theta)) - (planetY * Math.sin(theta))) * scale;
+  const rotatedY = ((planetX * Math.sin(theta)) + (planetY * Math.cos(theta))) * scale;
+
+  return {
+    x: focusX - stageX - rotatedX,
+    y: focusY - stageY - rotatedY,
+    scale,
+    rotate,
+    duration: Number(cameraConfig.duration) || 900,
+    nodeDelay: Number(cameraConfig.nodeDelay) || 760
+  };
+}
+
+function clearResultOrbitNodeTimer() {
+  if (!resultOrbitNodeTimer) {
+    return;
+  }
+
+  window.clearTimeout(resultOrbitNodeTimer);
+  resultOrbitNodeTimer = null;
+}
+
+function renderSelectedPlanetNodes(planetElement) {
+  const nodes = getResultOrbitSceneConfig().selectedPlanetNodes || [];
+
+  planetElement.querySelectorAll(".result-planet-node").forEach((node) => node.remove());
+  nodes.forEach((nodeConfig) => {
+    const node = document.createElement("span");
+
+    node.className = "result-planet-node";
+    node.style.setProperty("--result-node-x", nodeConfig.x);
+    node.style.setProperty("--result-node-y", nodeConfig.y);
+    node.style.setProperty("--result-node-size", `${nodeConfig.size}px`);
+    planetElement.appendChild(node);
   });
 }
 
@@ -5818,6 +6194,10 @@ function handleResultGalaxyWheel(event) {
   // The diet galaxy screen is the final in-flow result screen.
   // Further result details stay available only through the debug overlay.
   event.preventDefault();
+  // RESULT OLD RISK INTRO START
+  // enterResultRiskIntroState();
+  // RESULT OLD RISK INTRO END
+  enterResultOrbitScene();
 }
 
 function handleResultRiskIntroWheel(event) {
@@ -6790,6 +7170,7 @@ function shouldSuppressHoverInfo(element) {
     currentPhase === PHASES.EXIT_SCROLL ||
     currentPhase === PHASES.RESULT_GALAXY_LOCATING ||
     currentPhase === PHASES.RESULT_GALAXY ||
+    currentPhase === PHASES.RESULT_ORBIT ||
     element.classList.contains("is-used") ||
     element.classList.contains("dragging") ||
     element.classList.contains("is-dragging")

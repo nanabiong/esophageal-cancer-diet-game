@@ -322,10 +322,19 @@ const RESULT_GALAXY_LOCATING_DEFAULT_CONFIG = {
         duration: 900,
         nodeDelay: 760
       },
+      orbitZoom: {
+        duration: 1100,
+        stageScale: 2.2,
+        stageTranslateX: -360,
+        stageTranslateY: -220,
+        stageRotate: -18,
+        largestPlanetTranslateX: 120,
+        largestPlanetTranslateY: 80
+      },
       selectedPlanetNodes: [
-        { x: "38%", y: "30%", size: 90 },
-        { x: "60%", y: "48%", size: 90 },
-        { x: "45%", y: "68%", size: 90 }
+        { x: "42%", y: "28%", size: 90 },
+        { x: "28%", y: "58%", size: 90 },
+        { x: "62%", y: "48%", size: 90 }
       ]
     },
     panel: {
@@ -613,7 +622,11 @@ let act3ExitProgress = 0;
 let resultGalaxyLayer = null;
 let resultOrbitLayer = null;
 let resultRiskLayer = null;
+let resultStatsOverlayLayer = null;
 let isResultOrbitPlanetSelected = false;
+let resultOrbitZooming = false;
+let selectedOrbitPlanetId = null;
+let resultOrbitZoomComplete = false;
 let resultOrbitNodeTimer = null;
 let act0AlarmLayer = null;
 let act0Clock = null;
@@ -844,6 +857,10 @@ function mergeResultGalaxyLocatingConfig(config) {
         focusCamera: {
           ...RESULT_GALAXY_LOCATING_DEFAULT_CONFIG.resultDietGalaxy.orbitScene.focusCamera,
           ...(config.resultDietGalaxy?.orbitScene?.focusCamera || {})
+        },
+        orbitZoom: {
+          ...RESULT_GALAXY_LOCATING_DEFAULT_CONFIG.resultDietGalaxy.orbitScene.orbitZoom,
+          ...(config.resultDietGalaxy?.orbitScene?.orbitZoom || {})
         },
         selectedPlanetNodes: config.resultDietGalaxy?.orbitScene?.selectedPlanetNodes ||
           RESULT_GALAXY_LOCATING_DEFAULT_CONFIG.resultDietGalaxy.orbitScene.selectedPlanetNodes
@@ -5823,6 +5840,9 @@ function enterResultGalaxyState() {
   resultOrbitLayer?.remove();
   resultOrbitLayer = null;
   isResultOrbitPlanetSelected = false;
+  resultOrbitZooming = false;
+  selectedOrbitPlanetId = null;
+  resultOrbitZoomComplete = false;
   clearResultOrbitNodeTimer();
   updateResultGalaxyProgress(1);
   console.log("Entered result_state_01_diet_galaxy", {
@@ -5868,6 +5888,9 @@ function renderResultOrbitStage() {
 
   resultOrbitLayer?.remove();
   clearResultOrbitNodeTimer();
+  resultOrbitZooming = false;
+  selectedOrbitPlanetId = null;
+  resultOrbitZoomComplete = false;
   resultOrbitLayer = document.createElement("section");
   resultOrbitLayer.id = RESULT_STATES.ORBIT_SCENE;
   resultOrbitLayer.className = "result-orbit-stage";
@@ -5980,64 +6003,69 @@ function findLargestOrbitPlanet(planets = []) {
 }
 
 function handleLargestOrbitPlanetClick(event) {
-  if (isResultOrbitPlanetSelected) {
+  if (isResultOrbitPlanetSelected || resultOrbitZooming || resultOrbitZoomComplete) {
     return;
   }
 
   event.preventDefault();
-  zoomIntoResultOrbitPlanet(event.currentTarget);
+  animateResultOrbitZoom(event.currentTarget);
 }
 
-function zoomIntoResultOrbitPlanet(planetElement) {
+function animateResultOrbitZoom(planetElement) {
   if (!planetElement || !resultOrbitLayer) {
     return;
   }
 
   const config = getResultOrbitSceneConfig();
-  const planetConfig = (config.orbitPlanets || []).find((planet) => planet.id === planetElement.dataset.planetId);
-  const focusTransform = getResultOrbitFocusTransform(
-    planetConfig,
-    config.orbitStage || {},
-    config.focusCamera || {}
-  );
+  const zoomConfig = getResultOrbitZoomConfig(config);
 
-  isResultOrbitPlanetSelected = true;
+  lockResultOrbitInteraction(planetElement.dataset.planetId);
   clearResultOrbitNodeTimer();
-  resultOrbitLayer.style.setProperty("--result-orbit-camera-x", `${focusTransform.x}px`);
-  resultOrbitLayer.style.setProperty("--result-orbit-camera-y", `${focusTransform.y}px`);
-  resultOrbitLayer.style.setProperty("--result-orbit-camera-scale", focusTransform.scale);
-  resultOrbitLayer.style.setProperty("--result-orbit-camera-rotate", `${focusTransform.rotate}deg`);
-  resultOrbitLayer.style.setProperty("--result-orbit-camera-duration", `${focusTransform.duration}ms`);
-  planetElement.classList.add("result-orbit-planet--selected");
-  resultOrbitLayer.classList.add("result-orbit-stage--zoomed");
+  resultOrbitLayer.style.setProperty("--result-orbit-zoom-x", `${zoomConfig.stageTranslateX}px`);
+  resultOrbitLayer.style.setProperty("--result-orbit-zoom-y", `${zoomConfig.stageTranslateY}px`);
+  resultOrbitLayer.style.setProperty("--result-orbit-zoom-scale", zoomConfig.stageScale);
+  resultOrbitLayer.style.setProperty("--result-orbit-zoom-rotate", `${zoomConfig.stageRotate}deg`);
+  resultOrbitLayer.style.setProperty("--result-orbit-zoom-duration", `${zoomConfig.duration}ms`);
+  planetElement.style.setProperty("--result-planet-move-x", `${zoomConfig.largestPlanetTranslateX}px`);
+  planetElement.style.setProperty("--result-planet-move-y", `${zoomConfig.largestPlanetTranslateY}px`);
+  planetElement.classList.add("result-orbit-planet--moving");
+  resultOrbitLayer.classList.add("result-orbit-stage--zooming");
 
   resultOrbitNodeTimer = window.setTimeout(() => {
+    resultOrbitLayer.classList.remove("result-orbit-stage--zooming");
+    resultOrbitLayer.classList.add("result-orbit-stage--zoomed");
+    planetElement.classList.remove("result-orbit-planet--moving");
+    planetElement.classList.add("result-orbit-planet--selected");
+    unlockResultOrbitInteraction();
     renderSelectedPlanetNodes(planetElement);
     resultOrbitNodeTimer = null;
-  }, focusTransform.nodeDelay);
+  }, zoomConfig.duration + zoomConfig.nodeDelay);
 }
 
-function getResultOrbitFocusTransform(planetConfig, stageConfig = {}, cameraConfig = {}) {
-  const stageX = Number(stageConfig.x) || 0;
-  const stageY = Number(stageConfig.y) || 0;
-  const planetX = Number(planetConfig?.x) || 0;
-  const planetY = Number(planetConfig?.y) || 0;
-  const focusX = Number(cameraConfig.x) || 760;
-  const focusY = Number(cameraConfig.y) || 430;
-  const scale = Number(cameraConfig.scale) || 1.9;
-  const rotate = Number(cameraConfig.rotate) || 0;
-  const theta = (rotate * Math.PI) / 180;
-  const rotatedX = ((planetX * Math.cos(theta)) - (planetY * Math.sin(theta))) * scale;
-  const rotatedY = ((planetX * Math.sin(theta)) + (planetY * Math.cos(theta))) * scale;
-
+function getResultOrbitZoomConfig(config = {}) {
+  const zoomConfig = config.orbitZoom || {};
   return {
-    x: focusX - stageX - rotatedX,
-    y: focusY - stageY - rotatedY,
-    scale,
-    rotate,
-    duration: Number(cameraConfig.duration) || 900,
-    nodeDelay: Number(cameraConfig.nodeDelay) || 760
+    duration: Number(zoomConfig.duration) || 1100,
+    stageScale: Number(zoomConfig.stageScale) || 2.2,
+    stageTranslateX: Number(zoomConfig.stageTranslateX) || -360,
+    stageTranslateY: Number(zoomConfig.stageTranslateY) || -220,
+    stageRotate: Number(zoomConfig.stageRotate) || -18,
+    largestPlanetTranslateX: Number(zoomConfig.largestPlanetTranslateX) || 120,
+    largestPlanetTranslateY: Number(zoomConfig.largestPlanetTranslateY) || 80,
+    nodeDelay: Number(zoomConfig.nodeDelay) || 0
   };
+}
+
+function lockResultOrbitInteraction(planetId) {
+  isResultOrbitPlanetSelected = true;
+  resultOrbitZooming = true;
+  resultOrbitZoomComplete = false;
+  selectedOrbitPlanetId = planetId || null;
+}
+
+function unlockResultOrbitInteraction() {
+  resultOrbitZooming = false;
+  resultOrbitZoomComplete = true;
 }
 
 function clearResultOrbitNodeTimer() {

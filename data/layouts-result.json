@@ -145,10 +145,35 @@
           "duration": 900,
           "nodeDelay": 760
         },
+        "orbitZoom": {
+          "duration": 1100,
+          "stageScale": 1.8,
+          "stageTranslateX": 260,
+          "stageTranslateY": -120,
+          "stageRotate": -18,
+          "largestPlanetTranslateX": 120,
+          "largestPlanetTranslateY": 80
+        },
         "selectedPlanetNodes": [
-          { "x": "38%", "y": "30%", "size": 90 },
-          { "x": "60%", "y": "48%", "size": 90 },
-          { "x": "45%", "y": "68%", "size": 90 }
+          { "id": "node_1", "x": "42%", "y": "28%", "size": 90, "clickable": true },
+          { "id": "node_2", "x": "28%", "y": "58%", "size": 90, "clickable": false },
+          { "id": "node_3", "x": "62%", "y": "48%", "size": 90, "clickable": false }
+        ],
+        "planetLayer1Nodes": [
+          { "id": "node_1", "x": "42%", "y": "28%", "size": 90, "clickable": true },
+          { "id": "node_2", "x": "28%", "y": "58%", "size": 90, "clickable": false },
+          { "id": "node_3", "x": "62%", "y": "48%", "size": 90, "clickable": false }
+        ],
+        "planetNodeZoom": {
+          "duration": 1000,
+          "scale": 5.2,
+          "translateX": -260,
+          "translateY": -180
+        },
+        "planetLayer2Nodes": [
+          { "id": "subnode_1", "x": "42%", "y": "28%", "size": 90 },
+          { "id": "subnode_2", "x": "28%", "y": "58%", "size": 90 },
+          { "id": "subnode_3", "x": "62%", "y": "48%", "size": 90 }
         ]
       },
       "panel": {

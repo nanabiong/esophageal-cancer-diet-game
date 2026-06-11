@@ -322,10 +322,35 @@ const RESULT_GALAXY_LOCATING_DEFAULT_CONFIG = {
         duration: 900,
         nodeDelay: 760
       },
+      orbitZoom: {
+        duration: 1100,
+        stageScale: 2.2,
+        stageTranslateX: -360,
+        stageTranslateY: -220,
+        stageRotate: -18,
+        largestPlanetTranslateX: 120,
+        largestPlanetTranslateY: 80
+      },
       selectedPlanetNodes: [
-        { x: "38%", y: "30%", size: 90 },
-        { x: "60%", y: "48%", size: 90 },
-        { x: "45%", y: "68%", size: 90 }
+        { id: "node_1", x: "42%", y: "28%", size: 90, clickable: true },
+        { id: "node_2", x: "28%", y: "58%", size: 90, clickable: false },
+        { id: "node_3", x: "62%", y: "48%", size: 90, clickable: false }
+      ],
+      planetLayer1Nodes: [
+        { id: "node_1", x: "42%", y: "28%", size: 90, clickable: true },
+        { id: "node_2", x: "28%", y: "58%", size: 90, clickable: false },
+        { id: "node_3", x: "62%", y: "48%", size: 90, clickable: false }
+      ],
+      planetNodeZoom: {
+        duration: 1000,
+        scale: 5.2,
+        translateX: -260,
+        translateY: -180
+      },
+      planetLayer2Nodes: [
+        { id: "subnode_1", x: "42%", y: "28%", size: 90 },
+        { id: "subnode_2", x: "28%", y: "58%", size: 90 },
+        { id: "subnode_3", x: "62%", y: "48%", size: 90 }
       ]
     },
     panel: {
@@ -615,7 +640,14 @@ let resultOrbitLayer = null;
 let resultRiskLayer = null;
 let resultStatsOverlayLayer = null;
 let isResultOrbitPlanetSelected = false;
+let resultOrbitZooming = false;
+let selectedOrbitPlanetId = null;
+let resultOrbitZoomComplete = false;
 let resultOrbitNodeTimer = null;
+let selectedResultPlanetNodeId = null;
+let resultPlanetNodeZooming = false;
+let resultPlanetLayer2Active = false;
+let resultPlanetNodeZoomTimer = null;
 let act0AlarmLayer = null;
 let act0Clock = null;
 let act0MinuteHand = null;
@@ -846,8 +878,21 @@ function mergeResultGalaxyLocatingConfig(config) {
           ...RESULT_GALAXY_LOCATING_DEFAULT_CONFIG.resultDietGalaxy.orbitScene.focusCamera,
           ...(config.resultDietGalaxy?.orbitScene?.focusCamera || {})
         },
+        orbitZoom: {
+          ...RESULT_GALAXY_LOCATING_DEFAULT_CONFIG.resultDietGalaxy.orbitScene.orbitZoom,
+          ...(config.resultDietGalaxy?.orbitScene?.orbitZoom || {})
+        },
         selectedPlanetNodes: config.resultDietGalaxy?.orbitScene?.selectedPlanetNodes ||
-          RESULT_GALAXY_LOCATING_DEFAULT_CONFIG.resultDietGalaxy.orbitScene.selectedPlanetNodes
+          RESULT_GALAXY_LOCATING_DEFAULT_CONFIG.resultDietGalaxy.orbitScene.selectedPlanetNodes,
+        planetLayer1Nodes: config.resultDietGalaxy?.orbitScene?.planetLayer1Nodes ||
+          config.resultDietGalaxy?.orbitScene?.selectedPlanetNodes ||
+          RESULT_GALAXY_LOCATING_DEFAULT_CONFIG.resultDietGalaxy.orbitScene.planetLayer1Nodes,
+        planetNodeZoom: {
+          ...RESULT_GALAXY_LOCATING_DEFAULT_CONFIG.resultDietGalaxy.orbitScene.planetNodeZoom,
+          ...(config.resultDietGalaxy?.orbitScene?.planetNodeZoom || {})
+        },
+        planetLayer2Nodes: config.resultDietGalaxy?.orbitScene?.planetLayer2Nodes ||
+          RESULT_GALAXY_LOCATING_DEFAULT_CONFIG.resultDietGalaxy.orbitScene.planetLayer2Nodes
       },
       panel: {
         ...RESULT_GALAXY_LOCATING_DEFAULT_CONFIG.resultDietGalaxy.panel,
@@ -4147,6 +4192,7 @@ function startDebugAct2Entry() {
   resultGalaxyLayer = null;
   resultOrbitLayer = null;
   clearResultOrbitNodeTimer();
+  clearResultPlanetNodeZoomTimer();
   resultRiskLayer = null;
   objectLayer?.querySelectorAll(".act1-scene-object, .act2-scene-object").forEach((element) => element.remove());
   objectLayer?.classList.remove("act3-exit-sequence");
@@ -4188,6 +4234,7 @@ function startDebugAct3FinalEntry() {
   resultGalaxyLayer = null;
   resultOrbitLayer = null;
   clearResultOrbitNodeTimer();
+  clearResultPlanetNodeZoomTimer();
   resultRiskLayer?.remove();
   resultRiskLayer = null;
   objectLayer?.querySelectorAll(".act1-scene-object, .act2-scene-object").forEach((element) => element.remove());
@@ -4233,6 +4280,7 @@ function startPreviewEntry() {
   resultGalaxyLayer = null;
   resultOrbitLayer = null;
   clearResultOrbitNodeTimer();
+  clearResultPlanetNodeZoomTimer();
   resultRiskLayer = null;
   objectLayer?.classList.remove("act3-exit-sequence");
   hasAct3ExitStarted = false;
@@ -5824,7 +5872,11 @@ function enterResultGalaxyState() {
   resultOrbitLayer?.remove();
   resultOrbitLayer = null;
   isResultOrbitPlanetSelected = false;
+  resultOrbitZooming = false;
+  selectedOrbitPlanetId = null;
+  resultOrbitZoomComplete = false;
   clearResultOrbitNodeTimer();
+  clearResultPlanetNodeZoomTimer();
   updateResultGalaxyProgress(1);
   console.log("Entered result_state_01_diet_galaxy", {
     playerChoices,
@@ -5869,6 +5921,13 @@ function renderResultOrbitStage() {
 
   resultOrbitLayer?.remove();
   clearResultOrbitNodeTimer();
+  clearResultPlanetNodeZoomTimer();
+  resultOrbitZooming = false;
+  selectedOrbitPlanetId = null;
+  resultOrbitZoomComplete = false;
+  selectedResultPlanetNodeId = null;
+  resultPlanetNodeZooming = false;
+  resultPlanetLayer2Active = false;
   resultOrbitLayer = document.createElement("section");
   resultOrbitLayer.id = RESULT_STATES.ORBIT_SCENE;
   resultOrbitLayer.className = "result-orbit-stage";
@@ -5981,64 +6040,65 @@ function findLargestOrbitPlanet(planets = []) {
 }
 
 function handleLargestOrbitPlanetClick(event) {
-  if (isResultOrbitPlanetSelected) {
+  if (isResultOrbitPlanetSelected || resultOrbitZooming || resultOrbitZoomComplete) {
     return;
   }
 
   event.preventDefault();
-  zoomIntoResultOrbitPlanet(event.currentTarget);
+  animateResultOrbitZoom(event.currentTarget);
 }
 
-function zoomIntoResultOrbitPlanet(planetElement) {
+function animateResultOrbitZoom(planetElement) {
   if (!planetElement || !resultOrbitLayer) {
     return;
   }
 
   const config = getResultOrbitSceneConfig();
-  const planetConfig = (config.orbitPlanets || []).find((planet) => planet.id === planetElement.dataset.planetId);
-  const focusTransform = getResultOrbitFocusTransform(
-    planetConfig,
-    config.orbitStage || {},
-    config.focusCamera || {}
-  );
+  const zoomConfig = getResultOrbitZoomConfig(config);
 
-  isResultOrbitPlanetSelected = true;
+  lockResultOrbitInteraction(planetElement.dataset.planetId);
   clearResultOrbitNodeTimer();
-  resultOrbitLayer.style.setProperty("--result-orbit-camera-x", `${focusTransform.x}px`);
-  resultOrbitLayer.style.setProperty("--result-orbit-camera-y", `${focusTransform.y}px`);
-  resultOrbitLayer.style.setProperty("--result-orbit-camera-scale", focusTransform.scale);
-  resultOrbitLayer.style.setProperty("--result-orbit-camera-rotate", `${focusTransform.rotate}deg`);
-  resultOrbitLayer.style.setProperty("--result-orbit-camera-duration", `${focusTransform.duration}ms`);
-  planetElement.classList.add("result-orbit-planet--selected");
-  resultOrbitLayer.classList.add("result-orbit-stage--zoomed");
+  resultOrbitLayer.style.setProperty("--result-orbit-zoom-x", `${zoomConfig.stageTranslateX}px`);
+  resultOrbitLayer.style.setProperty("--result-orbit-zoom-y", `${zoomConfig.stageTranslateY}px`);
+  resultOrbitLayer.style.setProperty("--result-orbit-zoom-scale", zoomConfig.stageScale);
+  resultOrbitLayer.style.setProperty("--result-orbit-zoom-rotate", `${zoomConfig.stageRotate}deg`);
+  resultOrbitLayer.style.setProperty("--result-orbit-zoom-duration", `${zoomConfig.duration}ms`);
+  resultOrbitLayer.classList.add("result-orbit-stage--zooming");
 
   resultOrbitNodeTimer = window.setTimeout(() => {
+    resultOrbitLayer.classList.remove("result-orbit-stage--zooming");
+    resultOrbitLayer.classList.add("result-orbit-stage--zoomed");
+    planetElement.classList.add("result-orbit-planet--selected");
+    unlockResultOrbitInteraction();
     renderSelectedPlanetNodes(planetElement);
     resultOrbitNodeTimer = null;
-  }, focusTransform.nodeDelay);
+  }, zoomConfig.duration + zoomConfig.nodeDelay);
 }
 
-function getResultOrbitFocusTransform(planetConfig, stageConfig = {}, cameraConfig = {}) {
-  const stageX = Number(stageConfig.x) || 0;
-  const stageY = Number(stageConfig.y) || 0;
-  const planetX = Number(planetConfig?.x) || 0;
-  const planetY = Number(planetConfig?.y) || 0;
-  const focusX = Number(cameraConfig.x) || 760;
-  const focusY = Number(cameraConfig.y) || 430;
-  const scale = Number(cameraConfig.scale) || 1.9;
-  const rotate = Number(cameraConfig.rotate) || 0;
-  const theta = (rotate * Math.PI) / 180;
-  const rotatedX = ((planetX * Math.cos(theta)) - (planetY * Math.sin(theta))) * scale;
-  const rotatedY = ((planetX * Math.sin(theta)) + (planetY * Math.cos(theta))) * scale;
-
+function getResultOrbitZoomConfig(config = {}) {
+  const zoomConfig = config.orbitZoom || {};
   return {
-    x: focusX - stageX - rotatedX,
-    y: focusY - stageY - rotatedY,
-    scale,
-    rotate,
-    duration: Number(cameraConfig.duration) || 900,
-    nodeDelay: Number(cameraConfig.nodeDelay) || 760
+    duration: Number(zoomConfig.duration) || 1100,
+    stageScale: Number(zoomConfig.stageScale) || 2.2,
+    stageTranslateX: Number(zoomConfig.stageTranslateX) || -360,
+    stageTranslateY: Number(zoomConfig.stageTranslateY) || -220,
+    stageRotate: Number(zoomConfig.stageRotate) || -18,
+    largestPlanetTranslateX: Number(zoomConfig.largestPlanetTranslateX) || 120,
+    largestPlanetTranslateY: Number(zoomConfig.largestPlanetTranslateY) || 80,
+    nodeDelay: Number(zoomConfig.nodeDelay) || 0
   };
+}
+
+function lockResultOrbitInteraction(planetId) {
+  isResultOrbitPlanetSelected = true;
+  resultOrbitZooming = true;
+  resultOrbitZoomComplete = false;
+  selectedOrbitPlanetId = planetId || null;
+}
+
+function unlockResultOrbitInteraction() {
+  resultOrbitZooming = false;
+  resultOrbitZoomComplete = true;
 }
 
 function clearResultOrbitNodeTimer() {
@@ -6051,18 +6111,127 @@ function clearResultOrbitNodeTimer() {
 }
 
 function renderSelectedPlanetNodes(planetElement) {
-  const nodes = getResultOrbitSceneConfig().selectedPlanetNodes || [];
+  const config = getResultOrbitSceneConfig();
+  const nodes = config.planetLayer1Nodes || config.selectedPlanetNodes || [];
 
-  planetElement.querySelectorAll(".result-planet-node").forEach((node) => node.remove());
+  planetElement.classList.remove("result-orbit-planet--layer-2-active");
+  planetElement.querySelectorAll(".result-planet-node, .result-planet-layer-2").forEach((node) => node.remove());
   nodes.forEach((nodeConfig) => {
     const node = document.createElement("span");
+    const isClickable = Boolean(nodeConfig.clickable);
 
     node.className = "result-planet-node";
+    if (isClickable) {
+      node.classList.add("result-planet-node--clickable");
+      node.setAttribute("role", "button");
+      node.tabIndex = 0;
+      node.addEventListener("click", handleResultPlanetNodeClick);
+      node.addEventListener("keydown", (event) => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          handleResultPlanetNodeClick(event);
+        }
+      });
+    }
+    node.dataset.nodeId = nodeConfig.id || "";
     node.style.setProperty("--result-node-x", nodeConfig.x);
     node.style.setProperty("--result-node-y", nodeConfig.y);
     node.style.setProperty("--result-node-size", `${nodeConfig.size}px`);
     planetElement.appendChild(node);
   });
+}
+
+function handleResultPlanetNodeClick(event) {
+  if (resultPlanetNodeZooming || resultPlanetLayer2Active) {
+    return;
+  }
+
+  const nodeElement = event.currentTarget;
+  if (!nodeElement?.classList.contains("result-planet-node--clickable")) {
+    return;
+  }
+
+  event.preventDefault();
+  event.stopPropagation();
+  animateResultPlanetNodeZoom(nodeElement);
+}
+
+function animateResultPlanetNodeZoom(nodeElement) {
+  if (!nodeElement) {
+    return;
+  }
+
+  const zoomConfig = getResultPlanetNodeZoomConfig();
+  const siblingNodes = nodeElement.parentElement?.querySelectorAll(".result-planet-node") || [];
+  const planetElement = nodeElement.parentElement;
+
+  lockResultPlanetNodeInteraction(nodeElement.dataset.nodeId);
+  clearResultPlanetNodeZoomTimer();
+  planetElement?.classList.add("result-orbit-planet--layer-2-active");
+  siblingNodes.forEach((node) => {
+    node.classList.add("result-planet-node--hidden");
+  });
+  nodeElement.style.setProperty("--result-node-zoom-duration", `${zoomConfig.duration}ms`);
+
+  resultPlanetNodeZoomTimer = window.setTimeout(() => {
+    renderResultSecondLayerNodes(planetElement);
+    unlockResultPlanetNodeInteraction();
+    resultPlanetNodeZoomTimer = null;
+  }, Math.min(220, zoomConfig.duration));
+}
+
+function getResultPlanetNodeZoomConfig() {
+  const zoomConfig = getResultOrbitSceneConfig().planetNodeZoom || {};
+  return {
+    duration: Number(zoomConfig.duration) || 1000,
+    scale: Number(zoomConfig.scale) || 5.2,
+    translateX: Number(zoomConfig.translateX) || -260,
+    translateY: Number(zoomConfig.translateY) || -180
+  };
+}
+
+function lockResultPlanetNodeInteraction(nodeId) {
+  selectedResultPlanetNodeId = nodeId || null;
+  resultPlanetNodeZooming = true;
+  resultPlanetLayer2Active = false;
+}
+
+function unlockResultPlanetNodeInteraction() {
+  resultPlanetNodeZooming = false;
+  resultPlanetLayer2Active = true;
+}
+
+function clearResultPlanetNodeZoomTimer() {
+  if (!resultPlanetNodeZoomTimer) {
+    return;
+  }
+
+  window.clearTimeout(resultPlanetNodeZoomTimer);
+  resultPlanetNodeZoomTimer = null;
+}
+
+function renderResultSecondLayerNodes(planetElement) {
+  const nodes = getResultOrbitSceneConfig().planetLayer2Nodes || [];
+  const layer = document.createElement("span");
+
+  if (!planetElement) {
+    return;
+  }
+
+  planetElement.querySelectorAll(".result-planet-layer-2").forEach((node) => node.remove());
+  layer.className = "result-planet-layer-2";
+  nodes.forEach((nodeConfig) => {
+    const node = document.createElement("span");
+
+    node.className = "result-planet-subnode";
+    node.dataset.subnodeId = nodeConfig.id || "";
+    node.style.setProperty("--result-subnode-x", nodeConfig.x);
+    node.style.setProperty("--result-subnode-y", nodeConfig.y);
+    node.style.setProperty("--result-subnode-size", `${Number(nodeConfig.size || 90)}px`);
+    layer.appendChild(node);
+  });
+
+  planetElement.appendChild(layer);
 }
 
 function createGalaxyLocatingLayer() {

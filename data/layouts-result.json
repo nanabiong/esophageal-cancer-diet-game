@@ -148,8 +148,8 @@
         "orbitZoom": {
           "duration": 1100,
           "stageScale": 1.8,
-          "stageTranslateX": -360,
-          "stageTranslateY": -220,
+          "stageTranslateX": 260,
+          "stageTranslateY": -120,
           "stageRotate": -18,
           "largestPlanetTranslateX": 120,
           "largestPlanetTranslateY": 80

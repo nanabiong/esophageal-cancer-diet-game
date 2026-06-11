@@ -1,0 +1,33 @@
+{
+  "maxHits": 3,
+  "backgroundLevels": [
+    "#000000",
+    "#2A241F",
+    "#5E5144",
+    "#F6EEDC"
+  ],
+  "handAngles": [0, 30, 60, 90],
+  "minuteHandOrigin": "50% 90%",
+  "layerId": "act0-alarm-layer",
+  "clockId": "act0-clock",
+  "clockX": 957,
+  "clockY": 450,
+  "clockSize": 600,
+  "backgroundTransitionDuration": 760,
+  "hitDuration": 260,
+  "nextRingDelay": 720,
+  "completeDelay": 940,
+  "ringShakeDistance": 12,
+  "ringRotateDeg": 5,
+  "ringScale": 1.03,
+  "ringAnimationDuration": 140,
+  "ringLinesOpacity": 0.92,
+  "hourHandAngle": -150,
+  "imagePaths": {
+    "body": "assets/images/act0/clock/clock-body.png",
+    "hourHand": "assets/images/act0/clock/hour-hand.png",
+    "minuteHand": "assets/images/act0/clock/minute-hand.png",
+    "ringLines": "assets/images/act0/clock/ring-lines.png",
+    "hitFeedback": "assets/images/act0/clock/hand-hit.png"
+  }
+}

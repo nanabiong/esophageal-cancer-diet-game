@@ -1,0 +1,20 @@
+[
+  {
+    "sceneId": "scene_01_morning",
+    "choiceId": "placeholder_choice_01",
+    "choiceName": "V2 占位选择 1",
+    "riskTags": [],
+    "orExpression": "1",
+    "orValue": 1,
+    "tendencyScores": {}
+  },
+  {
+    "sceneId": "scene_02_noon",
+    "choiceId": "placeholder_choice_02",
+    "choiceName": "V2 占位选择 2",
+    "riskTags": [],
+    "orExpression": "1",
+    "orValue": 1,
+    "tendencyScores": {}
+  }
+]

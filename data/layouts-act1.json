@@ -1,0 +1,367 @@
+{
+  "_note": "Act1 breakfast layout. Low-fidelity placeholder only.",
+  "_todo": [
+    "Adjust option positions and sizes here before replacing boxes with final images.",
+    "Keep field names close to layouts-act3.json: stage, defaults, states, objects.",
+    "Use image or bgImage later when final breakfast assets are ready."
+  ],
+  "stage": {
+    "width": 1920,
+    "height": 920
+  },
+  "defaults": {
+    "duration": 900,
+    "easing": "cubic-bezier(0.65, 0, 0.22, 1)"
+  },
+  "states": {
+    "act1_01_breakfast_choice": {
+      "_note": "Act1 1-1 breakfast choice low-fidelity state.",
+      "nextStateDelay": 1300,
+      "objects": {
+        "act1_s01_bubble_hurry": {
+          "type": "bubble",
+          "x": 80,
+          "y": 352,
+          "width": 430,
+          "height": 138,
+          "opacity": 1,
+          "scale": 1,
+          "zIndex": 20,
+          "content": "\u518d\u4e0d\u8d70\u8981\u8fdf\u5230\u4e86\uff0c\u65e9\u996d\u5c31\u9009\u5b83\u5427\uff01"
+        },
+        "act1_s01_bg_cornEggMilk": {
+          "type": "breakfastFrame",
+          "x": 300,
+          "y": 489,
+          "width": 443,
+          "height": 298,
+          "opacity": 1,
+          "scale": 1,
+          "zIndex": 4,
+          "image": "assets/images/act1/breakfast/corn-egg-milk-bg.png"
+        },
+        "act1_s01_bg_eggHamSandwich": {
+          "type": "breakfastFrame",
+          "x": 1471,
+          "y": 68,
+          "width": 368,
+          "height": 330,
+          "opacity": 1,
+          "scale": 1,
+          "zIndex": 4,
+          "image": "assets/images/act1/breakfast/egg-ham-sandwich-bg.png"
+        },
+        "act1_s01_bg_overnightPizza": {
+          "type": "breakfastFrame",
+          "x": 150,
+          "y": 131,
+          "width": 391,
+          "height": 313,
+          "opacity": 1,
+          "scale": 1,
+          "zIndex": 4,
+          "image": "assets/images/act1/breakfast/overnight-pizza-bg.png"
+        },
+        "act1_s01_bg_baguetteCheese": {
+          "type": "breakfastFrame",
+          "x": 795,
+          "y": 233,
+          "width": 405,
+          "height": 380,
+          "opacity": 1,
+          "scale": 1,
+          "zIndex": 4,
+          "image": "assets/images/act1/breakfast/baguette-cheese-bg.png"
+        },
+        "act1_s01_bg_hotPorridge": {
+          "type": "breakfastFrame",
+          "x": 1268,
+          "y": 444,
+          "width": 323,
+          "height": 397,
+          "opacity": 1,
+          "scale": 1,
+          "zIndex": 4,
+          "image": "assets/images/act1/breakfast/hot-porridge-bg.png"
+        },
+        "act1_s01_breakfast_overnightPizza": {
+          "type": "breakfastOption",
+          "x": 300,
+          "y": 263,
+          "width": 186,
+          "height": 160,
+          "opacity": 1,
+          "scale": 1,
+          "zIndex": 8,
+          "choiceId": "act1_s01_breakfast_overnightPizza",
+          "image": "assets/images/act1/breakfast/overnight-pizza.png",
+          "exitDuration": 760,
+          "exitDriftX": -52,
+          "exitDriftY": -260
+        },
+        "act1_s01_breakfast_baguetteCheese": {
+          "type": "breakfastOption",
+          "x": 805,
+          "y": 360,
+          "width": 385,
+          "height": 126,
+          "opacity": 1,
+          "scale": 1,
+          "zIndex": 7,
+          "choiceId": "act1_s01_breakfast_baguetteCheese",
+          "image": "assets/images/act1/breakfast/baguette-cheese.png",
+          "exitDuration": 980,
+          "exitDriftX": -24,
+          "exitDriftY": -330
+        },
+        "act1_s01_breakfast_hotPorridge": {
+          "type": "breakfastOption",
+          "x": 1318,
+          "y": 460,
+          "width": 237,
+          "height": 308,
+          "opacity": 1,
+          "scale": 1,
+          "zIndex": 8,
+          "choiceId": "act1_s01_breakfast_hotPorridge",
+          "image": "assets/images/act1/breakfast/hot-porridge.png",
+          "exitDuration": 1180,
+          "exitDriftX": 30,
+          "exitDriftY": -420
+        },
+        "act1_s01_breakfast_eggHamSandwich": {
+          "type": "breakfastOption",
+          "x": 1527,
+          "y": 182,
+          "width": 255,
+          "height": 147,
+          "opacity": 1,
+          "scale": 1,
+          "zIndex": 6,
+          "choiceId": "act1_s01_breakfast_eggHamSandwich",
+          "image": "assets/images/act1/breakfast/egg-ham-sandwich.png",
+          "exitDuration": 900,
+          "exitDriftX": 72,
+          "exitDriftY": -300
+        },
+        "act1_s01_breakfast_cornEggMilk": {
+          "type": "breakfastOption",
+          "x": 381,
+          "y": 522,
+          "width": 281,
+          "height": 214,
+          "opacity": 1,
+          "scale": 1,
+          "zIndex": 9,
+          "choiceId": "act1_s01_breakfast_cornEggMilk",
+          "image": "assets/images/act1/breakfast/corn-egg-milk.png",
+          "exitDuration": 1040,
+          "exitDriftX": 12,
+          "exitDriftY": -360
+        }
+      }
+    },
+    "act1_02_microwave_heat": {
+      "_note": "Act1 1-2 microwave heating low-fidelity state. Hold pointer down to heat up; release to cool down.",
+      "heating": {
+        "minTemperature": 0,
+        "maxTemperature": 100,
+        "completionTemperature": 100,
+        "heatUpPerSecond": 42,
+        "coolDownPerSecond": 28,
+        "resetTemperature": 0,
+        "cautionZones": [
+          {
+            "id": "act1_heat_zone_1",
+            "start": 32,
+            "end": 44
+          },
+          {
+            "id": "act1_heat_zone_2",
+            "start": 68,
+            "end": 80
+          }
+        ],
+        "guideText": "\u6309\u4f4f\u52a0\u70ed\uff0c\u6307\u9488\u8fdb\u5165\u6a59\u8272\u533a\u95f4\u65f6\u7acb\u523b\u677e\u624b\uff1b\u6a59\u8272\u6d88\u5931\u540e\u518d\u7ee7\u7eed\u6309\u4f4f\u3002"
+      },
+      "entryTransition": {
+        "duration": 1500,
+        "orthogonalStepDelay": 520,
+        "targetCenterX": 768,
+        "targetCenterY": 469,
+        "targetScale": 1.3
+      },
+      "objects": {
+        "act1_s02_main_microwave": {
+          "type": "microwavePanel",
+          "x": 212,
+          "y": 99,
+          "width": 1067,
+          "height": 754,
+          "opacity": 1,
+          "scale": 1,
+          "zIndex": 8,
+          "image": "assets/images/act1/microwave/microwave.png",
+          "content": "\u5fae\u6ce2\u7089\u52a0\u5de5"
+        },
+        "act1_s02_plate": {
+          "type": "heatPlate",
+          "x": 357,
+          "y": 549,
+          "width": 777,
+          "height": 277,
+          "opacity": 1,
+          "scale": 1,
+          "zIndex": 9,
+          "image": "assets/images/act1/microwave/plate.png",
+          "content": "\u76d8\u5b50"
+        },
+        "act1_s02_temperature_gauge": {
+          "type": "temperatureGauge",
+          "x": 1325,
+          "y": 188,
+          "width": 560,
+          "height": 650,
+          "opacity": 1,
+          "scale": 1,
+          "zIndex": 9,
+          "content": "\u957f\u6309\u52a0\u70ed"
+        }
+      }
+    },
+    "act1_03_eating_speed": {
+      "_note": "Act1 1-3 eating speed low-fidelity state. Click the selected breakfast until it is finished.",
+      "eating": {
+        "requiredClicks": 5,
+        "fastMaxMs": 3500,
+        "mediumMaxMs": 7000,
+        "nextStateDelay": 1200,
+        "targetCenterX": 964,
+        "targetCenterY": 654,
+        "targetScale": 1.3,
+        "assetPattern": "assets/images/act1/eating/{slug}-{state}.png"
+      },
+      "objects": {
+        "act1_s03_scene_background": {
+          "type": "eatingSceneBg",
+          "x": 0,
+          "y": 0,
+          "width": 1920,
+          "height": 931,
+          "opacity": 1,
+          "scale": 1,
+          "zIndex": 1,
+          "content": "\u80cc\u666f",
+          "image": "assets/images/act1/eating/scene-bg.png"
+        },
+        "act1_s03_table": {
+          "type": "eatingTable",
+          "x": 381,
+          "y": 446,
+          "width": 1165,
+          "height": 442,
+          "opacity": 1,
+          "scale": 1,
+          "zIndex": 4,
+          "content": "\u684c\u5b50",
+          "image": "assets/images/act1/eating/table.png"
+        },
+        "act1_s03_sky": {
+          "type": "eatingAtmosphereAsset",
+          "x": 401,
+          "y": 51,
+          "width": 1125,
+          "height": 275,
+          "opacity": 1,
+          "scale": 1,
+          "zIndex": 5,
+          "content": "\u5929\u7a7a",
+          "image": "assets/images/act1/eating/sky.png"
+        },
+        "act1_s03_cloud": {
+          "type": "eatingAtmosphereAsset",
+          "x": 489,
+          "y": 86,
+          "width": 998,
+          "height": 226,
+          "opacity": 1,
+          "scale": 1,
+          "zIndex": 6,
+          "content": "\u4e91",
+          "image": "assets/images/act1/eating/cloud.png"
+        },
+        "act1_s03_vase": {
+          "type": "eatingAtmosphereAsset",
+          "x": 386,
+          "y": 454,
+          "width": 1149,
+          "height": 285,
+          "opacity": 1,
+          "scale": 1,
+          "zIndex": 5,
+          "content": "\u82b1\u74f6",
+          "image": "assets/images/act1/eating/vase.png"
+        },
+        "act1_s03_window": {
+          "type": "eatingAtmosphereAsset",
+          "x": 378,
+          "y": 39,
+          "width": 1165,
+          "height": 385,
+          "opacity": 1,
+          "scale": 1,
+          "zIndex": 7,
+          "content": "\u7a97\u53f0\u7f6e\u666f",
+          "image": "assets/images/act1/eating/window.png"
+        },
+        "act1_s03_bird_left": {
+          "type": "eatingAtmosphereAsset",
+          "x": 1079,
+          "y": 280,
+          "width": 60.83,
+          "height": 63,
+          "opacity": 1,
+          "scale": 1,
+          "zIndex": 8,
+          "content": "\u9e1f\u5de6",
+          "image": "assets/images/act1/eating/bird-left.png"
+        },
+        "act1_s03_bird_right": {
+          "type": "eatingAtmosphereAsset",
+          "x": 1154,
+          "y": 258,
+          "width": 69,
+          "height": 68,
+          "opacity": 1,
+          "scale": 1,
+          "zIndex": 8,
+          "content": "\u9e1f\u53f3",
+          "image": "assets/images/act1/eating/bird-right.png"
+        },
+        "act1_s03_plate": {
+          "type": "eatingPlate",
+          "x": 676,
+          "y": 518,
+          "width": 575.2,
+          "height": 272,
+          "opacity": 1,
+          "scale": 1,
+          "zIndex": 9,
+          "content": "\u76d8\u5b50",
+          "image": "assets/images/act1/eating/plate.png"
+        },
+        "act1_s03_bubble_start": {
+          "type": "bubble",
+          "x": 82,
+          "y": 478,
+          "width": 330,
+          "height": 118,
+          "opacity": 1,
+          "scale": 1,
+          "zIndex": 20,
+          "content": "\u5f00\u52a8\u5566!"
+        }
+      }
+    }
+  }
+}

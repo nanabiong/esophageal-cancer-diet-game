@@ -1,0 +1,292 @@
+﻿{
+  "stage": {
+    "width": 1920,
+    "height": 920
+  },
+  "defaults": {
+    "duration": 900,
+    "easing": "cubic-bezier(0.65, 0, 0.22, 1)"
+  },
+  "introBubbles": {
+    "act3_intro_bubble_1": {
+      "type": "introBubble",
+      "x": 60,
+      "y": 91,
+      "width": 545,
+      "height": 136,
+      "zIndex": 12,
+      "image": "assets/images/act3/ui/intro-bubble-1.png",
+      "text": "忙碌一天,是时候休息一下了。",
+      "textCenterY": 50,
+      "typewriterSpeed": 70
+    },
+    "act3_intro_bubble_2": {
+      "type": "introBubble",
+      "x": 1421,
+      "y": 690,
+      "width": 440,
+      "height": 134,
+      "zIndex": 12,
+      "image": "assets/images/act3/ui/intro-bubble-2.png",
+      "text": "吃顿火锅犒劳自己吧!",
+      "textCenterY": 83,
+      "typewriterSpeed": 70
+    }
+  },
+  "guidanceDefaults": {
+    "foodGuideSecondDelay": 2000
+  },
+  "guidanceBubbles": {
+    "act3_guide_food_1": {
+      "type": "guidanceBubble",
+      "x": 1370,
+      "y": 711,
+      "width": 448,
+      "height": 136,
+      "zIndex": 50,
+      "image": "assets/images/act3/ui/guidance-bubble-1.png",
+      "text": "累了一天,先吃点爱吃的吧!",
+      "textCenterY": 50,
+      "typewriterSpeed": 70,
+      "stackY": 555
+    },
+    "act3_guide_food_2": {
+      "type": "guidanceBubble",
+      "x": 1219,
+      "y": 710,
+      "width": 599,
+      "height": 137,
+      "zIndex": 51,
+      "image": "assets/images/act3/ui/guidance-bubble-2.png",
+      "text": "选择3道喜欢的菜拖到喜欢的锅底中吧!",
+      "textCenterY": 50,
+      "typewriterSpeed": 70
+    },
+    "act3_guide_drink_1": {
+      "type": "guidanceBubble",
+      "x": 1169,
+      "y": 154,
+      "width": 417,
+      "height": 122.5,
+      "zIndex": 50,
+      "image": "assets/images/act3/ui/guidance-bubble-3.png",
+      "text": "本店特色!想喝点什么呢?",
+      "textCenterY": 75,
+      "typewriterSpeed": 70,
+      "enter": "floatUp"
+    }
+  },
+  "floatingBubbles": {
+    "enabled": true,
+    "parentId": "act3_s01_main_hotpotTable",
+    "bounds": {
+      "x": 0,
+      "y": -59,
+      "width": 1033,
+      "height": 130
+    },
+    "images": [
+      "assets/images/act3/effects/floating-bubble-1.png",
+      "assets/images/act3/effects/floating-bubble-2.png",
+      "assets/images/act3/effects/floating-bubble-3.png",
+      "assets/images/act3/effects/floating-bubble-4.png"
+    ],
+    "minSize": 170,
+    "maxSize": 200,
+    "minSpawnDelay": 300,
+    "maxSpawnDelay": 1000,
+    "minLifeTime": 1800,
+    "maxLifeTime": 3200,
+    "minFloatDistance": 12,
+    "maxFloatDistance": 32,
+    "maxCount": 5,
+    "zIndex": 8
+  },
+  "cheerZoneBreathBubble": {
+    "enabled": true,
+    "parentId": "act3_s02_targetzone_cheers",
+    "id": "act3_s02_cheer_breath_bubble",
+    "x": 39,
+    "y": -38,
+    "width": 149,
+    "height": 110,
+    "image": "assets/images/act3/effects/cheer-breath-bubble.png",
+    "zIndex": 8,
+    "scaleMin": 1.1,
+    "scaleMax": 1.2,
+    "duration": 1600
+  },
+  "sharedChildren": {
+    "hotpotTable": {
+      "act3_s01_target_spicyPot": { "type": "foodTarget", "x": 154, "y": 300, "width": 185, "height": 276, "opacity": 1, "scale": 1, "zIndex": 4, "image": "assets/images/act3/hotpot/spicy-pot.png" },
+      "act3_s01_target_clearPot": { "type": "foodTarget", "x": 340, "y": 300, "width": 185, "height": 276, "opacity": 1, "scale": 1, "zIndex": 4, "image": "assets/images/act3/hotpot/clear-pot.png" },
+      "act3_s01_food_vegetable": { "type": "food", "x": 242, "y": 80, "width": 199, "height": 182, "opacity": 1, "scale": 1, "zIndex": 8, "image": "assets/images/act3/food/vegetable.png" },
+      "act3_s01_food_luncheonMeat": { "type": "food", "x": 495, "y": 194, "width": 59, "height": 91, "opacity": 1, "scale": 1, "zIndex": 8, "image": "assets/images/act3/food/luncheon-meat.png" },
+      "act3_s01_food_sausage": { "type": "food", "x": 630, "y": 146, "width": 155, "height": 55, "opacity": 1, "scale": 1, "zIndex": 8, "image": "assets/images/act3/food/sausage.png" },
+      "act3_s01_food_youtiao": { "type": "food", "x": 598, "y": 218, "width": 209, "height": 44, "opacity": 1, "scale": 1, "zIndex": 8, "image": "assets/images/act3/food/youtiao.png" },
+      "act3_s01_food_maodu": { "type": "food", "x": 577, "y": 279, "width": 187, "height": 165, "opacity": 1, "scale": 1, "zIndex": 8, "image": "assets/images/act3/food/maodu.png" },
+      "act3_s01_food_daiRouCuiGu": { "type": "food", "x": 551, "y": 531, "width": 188, "height": 135, "opacity": 1, "scale": 1, "zIndex": 8, "image": "assets/images/act3/food/dai-rou-cui-gu.png" },
+      "act3_s01_food_beefSlices": { "type": "food", "x": 16, "y": 329, "width": 138, "height": 258, "opacity": 1, "scale": 1, "zIndex": 8, "image": "assets/images/act3/food/beef-slices.png" }
+    },
+    "cheersZone": {
+      "act3_s02_otherCup": { "type": "cup", "x": -79, "y": 76, "width": 323, "height": 285, "opacity": 1, "scale": 1, "zIndex": 8, "content": "朋友的杯子", "image": "assets/images/act3/cup/other-cup.png" },
+      "act3_s02_target_emptyCup": { "type": "drinkTarget", "x": 316, "y": 116, "width": 195, "height": 247, "opacity": 1, "scale": 1, "zIndex": 6, "content": "空杯位置", "image": "assets/images/act3/cup/empty-cup.png" }
+    },
+    "drinkTable": {
+      "act3_s02_drink_highAlcohol": { "type": "drink", "x": 82, "y": 493, "width": 104, "height": 122, "opacity": 1, "scale": 1, "zIndex": 7, "image": "assets/images/act3/drink/high-alcohol.png" },
+      "act3_s02_drink_lowAlcohol": { "type": "drink", "x": 87, "y": 286, "width": 93, "height": 142, "opacity": 1, "scale": 1, "zIndex": 7, "image": "assets/images/act3/drink/low-alcohol.png" },
+      "act3_s02_drink_softDrink": { "type": "drink", "x": 93, "y": 79, "width": 81, "height": 142, "opacity": 1, "scale": 1, "zIndex": 7, "image": "assets/images/act3/drink/soft-drink.png" },
+      "act3_s02_drink_lemonWater": { "type": "drink", "x": 87, "y": 655, "width": 89, "height": 148, "opacity": 1, "scale": 1, "zIndex": 7, "image": "assets/images/act3/drink/lemon-water.png" }
+    }
+  },
+  "states": {
+    "act3_state_00_title": {
+      "objects": {
+        "act3_s00_main_title": {
+          "type": "titleFrame",
+          "x": 459,
+          "y": 230,
+          "width": 1003,
+          "height": 460,
+          "opacity": 1,
+          "scale": 1,
+          "zIndex": 2,
+          "enterFrom": "scaleFromTopLeft",
+          "bgImage": "assets/images/act3/background/main-title-bg.png",
+          "hideText": true,
+          "content": "<p class=\"act3-kicker\">Act 3</p><h2>夜晚——聚会与火锅</h2><p>灰色舞台慢慢亮起，热气和聊天声靠近。</p>"
+        },
+        "act3_s00_narration_1": {
+          "type": "bubble",
+          "hide": true,
+          "x": 58,
+          "y": 78,
+          "width": 380,
+          "height": 90,
+          "opacity": 1,
+          "scale": 1,
+          "zIndex": 3,
+          "content": "忙了一天，朋友把你拉进一顿热闹的火锅局。点击空白处继续。"
+        }
+      }
+    },
+    "act3_intro_03_title_y_aligned": {
+      "objects": {
+        "act3_s00_main_title": {
+          "type": "titleFrame",
+          "x": 459,
+          "y": 49,
+          "width": 1003,
+          "height": 460,
+          "opacity": 1,
+          "scale": 1,
+          "zIndex": 5,
+          "bgImage": "assets/images/act3/background/main-title-bg.png",
+          "hideText": true,
+          "content": "<p class=\"act3-kicker\">Act 3</p><h2>夜晚——聚会与火锅</h2><p>灰色舞台慢慢亮起，热气和聊天声靠近。</p>"
+        }
+      }
+    },
+    "act3_state_01_food_choice": {
+      "objects": {
+        "act3_s00_main_title": {
+          "type": "titleFrame",
+          "x": 1148,
+          "y": 49,
+          "width": 697,
+          "height": 320,
+          "opacity": 1,
+          "scale": 1,
+          "zIndex": 5,
+          "bgImage": "assets/images/act3/background/main-title-bg.png",
+          "hideText": true,
+          "content": "<p class=\"act3-kicker\">Act 3</p><strong>夜晚——聚会与火锅</strong>"
+        },
+        "act3_s01_main_hotpotTable": {
+          "type": "hotpotTable",
+          "x": 88,
+          "y": 135,
+          "width": 1035,
+          "height": 711.74,
+          "opacity": 1,
+          "scale": 1,
+          "zIndex": 1,
+          "enterFrom": "enterFromBottom",
+          "bgImage": "assets/images/act3/hotpot/hotpot-table-bg.png",
+          "childrenRef": "hotpotTable"
+        },
+        "act3_s01_narration_2": {
+          "type": "bubble",
+          "hide": true,
+          "x": 1372,
+          "y": 730,
+          "width": 446,
+          "height": 119,
+          "opacity": 1,
+          "scale": 1,
+          "zIndex": 6,
+          "enterFrom": "enterFromBottom",
+          "content": "累了一天了，先吃点爱吃的。把 3 个菜拖进清汤锅或辣锅。"
+        }
+      }
+    },
+    "act3_state_02_drink_choice": {
+      "objects": {
+        "act3_s01_main_hotpotTable": {
+          "type": "hotpotTable",
+          "x": 88,
+          "y": 69,
+          "width": 1035,
+          "height": 711,
+          "opacity": 1,
+          "scale": 1,
+          "zIndex": 1,
+          "bgImage": "assets/images/act3/hotpot/hotpot-table-bg.png",
+          "childrenRef": "hotpotTable"
+        },
+        "act3_s02_targetzone_cheers": {
+          "type": "cheersZone",
+          "x": 1015,
+          "y": 444,
+          "width": 549,
+          "height": 424,
+          "opacity": 1,
+          "scale": 1,
+          "zIndex": 4,
+          "enterFrom": "scaleFromTopLeft",
+          "allowOverflow": true,
+          "bgImage": "assets/images/act3/background/cheers-zone-bg.png",
+          "childrenRef": "cheersZone"
+        },
+        "act3_s02_main_drinkTable": {
+          "type": "drinkTable",
+          "x": 1586,
+          "y": 0,
+          "width": 260,
+          "height": 884,
+          "opacity": 1,
+          "scale": 1,
+          "zIndex": 5,
+          "enterFrom": "enterFromTop",
+          "bgImage": "assets/images/act3/background/drink-table-bg.png",
+          "childrenRef": "drinkTable"
+        },
+        "act3_s02_narration_4": {
+          "type": "bubble",
+          "hide": true,
+          "x": 610,
+          "y": 60,
+          "width": 450,
+          "height": 100,
+          "opacity": 1,
+          "scale": 1,
+          "zIndex": 6,
+          "content": "选一杯放到空杯位置，完成碰杯。"
+        }
+      },
+      "exit": {
+        "act3_s00_main_title": "exitToRight"
+      }
+    }
+  }
+}

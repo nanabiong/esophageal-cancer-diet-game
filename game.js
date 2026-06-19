@@ -546,7 +546,6 @@ let RESULT_PLANET_VISUAL_CONFIG = {
   motionSpeed: 0.75,
   liveMotionScale: 1,
   svgMotionScale: 1,
-  selfSpinDegPerSecond: 4,
   foodOrbit: {
     enabled: true,
     x: 330,
@@ -881,7 +880,6 @@ function mergeResultPlanetVisualConfig(config = {}) {
     motionSpeed: Number(config.motionSpeed ?? RESULT_PLANET_VISUAL_CONFIG.motionSpeed),
     liveMotionScale: Number(config.liveMotionScale ?? RESULT_PLANET_VISUAL_CONFIG.liveMotionScale),
     svgMotionScale: Number(config.svgMotionScale ?? RESULT_PLANET_VISUAL_CONFIG.svgMotionScale),
-    selfSpinDegPerSecond: Number(config.selfSpinDegPerSecond ?? RESULT_PLANET_VISUAL_CONFIG.selfSpinDegPerSecond),
     foodOrbit: {
       ...RESULT_PLANET_VISUAL_CONFIG.foodOrbit,
       ...(config.foodOrbit || {})
@@ -7076,7 +7074,6 @@ function startResultPlanetAnimation(planetBody, metrics) {
     const motionSpeed = resultPlanetAnimationMetrics.motionSpeed || 1;
     const liveMotionScale = resultPlanetAnimationMetrics.liveMotionScale ?? 1;
     const svgMotionScale = resultPlanetAnimationMetrics.svgMotionScale ?? 1;
-    const selfSpinDegPerSecond = resultPlanetAnimationMetrics.selfSpinDegPerSecond ?? 4;
     const tick = elapsed * 0.045 * motionSpeed * (resultPlanetAnimationMetrics.rotationSpeed || 1);
     const planetElement = planetBody.parentElement;
     const svg = createResultPlanetSvg({
@@ -7086,10 +7083,9 @@ function startResultPlanetAnimation(planetBody, metrics) {
       rotationOffset: tick * 0.62
     });
     const breathScale = 1 + Math.sin(elapsed / 1450) * 0.006 * svgMotionScale;
-    const spinDeg = (elapsed / 1000) * selfSpinDegPerSecond;
 
     svg.style.transformOrigin = "center";
-    svg.style.transform = `scale(${breathScale.toFixed(4)}) rotate(${spinDeg.toFixed(3)}deg)`;
+    svg.style.transform = `scale(${breathScale.toFixed(4)})`;
     if (planetElement) {
       const liveX = Math.sin(elapsed / 2100) * 10 * liveMotionScale;
       const liveY = Math.cos(elapsed / 1800) * 16 * liveMotionScale;
@@ -7143,7 +7139,6 @@ function buildResultPlanetMetrics(riskResult = getPlayerRiskResult()) {
     motionSpeed: RESULT_PLANET_VISUAL_CONFIG.motionSpeed,
     liveMotionScale: RESULT_PLANET_VISUAL_CONFIG.liveMotionScale,
     svgMotionScale: RESULT_PLANET_VISUAL_CONFIG.svgMotionScale,
-    selfSpinDegPerSecond: RESULT_PLANET_VISUAL_CONFIG.selfSpinDegPerSecond,
     tick: 0,
     jitterFrame: 0,
     rotationOffset: 0
@@ -7292,24 +7287,28 @@ function setSvgAttrs(element, attrs = {}) {
 }
 
 function getResultPlanetColor(risk) {
-  if (risk <= 33) {
+  const thresholds = getRiskConfig().RISK_LEVEL_THRESHOLDS || {};
+  const lowMax = thresholds.lowMax ?? 33;
+  const highMin = thresholds.highMin ?? 42;
+
+  if (risk < lowMax) {
     return "#74D188";
   }
 
-  if (risk <= 66) {
-    return interpolateHexColor("#74D188", "#FFC1DF", (risk - 33) / 33);
+  if (risk < highMin) {
+    return "#FFC1DF";
   }
 
-  return interpolateHexColor("#FFC1DF", "#FF4800", (risk - 66) / 34);
+  return "#FF4800";
 }
 
 function getResultPlanetGradientColors(risk) {
-  const spread = 28 * Math.sin((risk / 100) * Math.PI);
+  const color = getResultPlanetColor(risk);
 
   return {
-    top: getResultPlanetColor(Math.min(100, risk + spread)),
-    mid: getResultPlanetColor(risk),
-    bottom: getResultPlanetColor(Math.max(0, risk - spread))
+    top: color,
+    mid: color,
+    bottom: color
   };
 }
 

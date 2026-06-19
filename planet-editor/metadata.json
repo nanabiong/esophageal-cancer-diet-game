@@ -1,0 +1,6 @@
+{
+  "name": "Planet Editor",
+  "description": "An interactive, whimsical planet editor controlled by five numerical dimensions including risk, sensory stimulation, rhythm, specificity, and danger.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

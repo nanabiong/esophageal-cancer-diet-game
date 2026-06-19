@@ -1,0 +1,24 @@
+{
+  "_note": "Planet editor visual tuning values. Game risk data still controls risk/sensory/rhythm/specificity/danger; these fields control rendering style only. x/y are offsets from the stage center.",
+  "x": -420,
+  "y": 0,
+  "size": 520,
+  "crackSize": 100,
+  "patternDensity": 8,
+  "strokeWidth": 2.5,
+  "cWaveSpan": 12,
+  "cDotSpan": 12,
+  "kChiliSpan": 12,
+  "kDotsSpan": 12,
+  "rotationSpeed": 1,
+  "foodOrbit": {
+    "_note": "Selected food overview ring. x/y are offsets from the stage center.",
+    "enabled": true,
+    "x": 330,
+    "y": 0,
+    "radiusX": 170,
+    "radiusY": 360,
+    "slotSize": 112,
+    "itemSize": 86
+  }
+}

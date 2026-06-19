@@ -18,7 +18,8 @@ const act2Files = {
 };
 
 const resultFiles = {
-  layouts: "data/layouts-result.json"
+  layouts: "data/layouts-result.json",
+  planetVisual: "data/planet-visual-config.json"
 };
 
 const ACT1_STATES = {
@@ -530,6 +531,28 @@ let RESULT_GALAXY_LOCATING_CONFIG = {
     ...RESULT_GALAXY_LOCATING_DEFAULT_CONFIG.imagePaths
   }
 };
+let RESULT_PLANET_VISUAL_CONFIG = {
+  x: -420,
+  y: 0,
+  size: 520,
+  crackSize: 100,
+  patternDensity: 8,
+  strokeWidth: 2.5,
+  cWaveSpan: 12,
+  cDotSpan: 12,
+  kChiliSpan: 12,
+  kDotsSpan: 12,
+  rotationSpeed: 1,
+  foodOrbit: {
+    enabled: true,
+    x: 330,
+    y: 0,
+    radiusX: 170,
+    radiusY: 360,
+    slotSize: 112,
+    itemSize: 86
+  }
+};
 const ACT3_HOVER_INFO = {
   act3_s01_food_vegetable: {
     title: "蔬菜",
@@ -674,6 +697,9 @@ let galaxyLocatingCaptionMainElement = null;
 let galaxyLocatingCaptionDotsElement = null;
 let galaxyLocatingCaptionParticleLayer = null;
 let galaxyLocatingRevealTimer = null;
+let resultPlanetAnimationFrame = 0;
+let resultPlanetAnimationStartTime = 0;
+let resultPlanetAnimationMetrics = null;
 let resultGalaxyRevealStarted = false;
 let hasResultGalaxyEnterStarted = false;
 let resultGalaxyEnterTimer = null;
@@ -806,7 +832,10 @@ function mergeAct0AlarmConfig(config) {
 
 async function loadResultData() {
   try {
-    const response = await fetch(resultFiles.layouts);
+    const [response, planetVisualResponse] = await Promise.all([
+      fetch(resultFiles.layouts),
+      fetch(resultFiles.planetVisual).catch(() => null)
+    ]);
 
     if (!response.ok) {
       throw new Error(`${resultFiles.layouts} 读取失败`);
@@ -816,11 +845,37 @@ async function loadResultData() {
     RESULT_GALAXY_LOCATING_CONFIG = mergeResultGalaxyLocatingConfig(
       layouts.galaxyLocating || layouts
     );
+    RESULT_PLANET_VISUAL_CONFIG = planetVisualResponse?.ok
+      ? mergeResultPlanetVisualConfig(await planetVisualResponse.json())
+      : mergeResultPlanetVisualConfig({});
     console.log("Result 配置读取完成：", RESULT_GALAXY_LOCATING_CONFIG);
   } catch (error) {
     RESULT_GALAXY_LOCATING_CONFIG = mergeResultGalaxyLocatingConfig({});
+    RESULT_PLANET_VISUAL_CONFIG = mergeResultPlanetVisualConfig({});
     console.warn("Result 配置读取失败，使用默认配置：", error);
   }
+}
+
+function mergeResultPlanetVisualConfig(config = {}) {
+  return {
+    ...RESULT_PLANET_VISUAL_CONFIG,
+    ...config,
+    x: Number(config.x ?? RESULT_PLANET_VISUAL_CONFIG.x),
+    y: Number(config.y ?? RESULT_PLANET_VISUAL_CONFIG.y),
+    size: Number(config.size ?? RESULT_PLANET_VISUAL_CONFIG.size),
+    crackSize: Number(config.crackSize ?? RESULT_PLANET_VISUAL_CONFIG.crackSize),
+    patternDensity: Number(config.patternDensity ?? RESULT_PLANET_VISUAL_CONFIG.patternDensity),
+    strokeWidth: Number(config.strokeWidth ?? RESULT_PLANET_VISUAL_CONFIG.strokeWidth),
+    cWaveSpan: Number(config.cWaveSpan ?? RESULT_PLANET_VISUAL_CONFIG.cWaveSpan),
+    cDotSpan: Number(config.cDotSpan ?? RESULT_PLANET_VISUAL_CONFIG.cDotSpan),
+    kChiliSpan: Number(config.kChiliSpan ?? RESULT_PLANET_VISUAL_CONFIG.kChiliSpan),
+    kDotsSpan: Number(config.kDotsSpan ?? RESULT_PLANET_VISUAL_CONFIG.kDotsSpan),
+    rotationSpeed: Number(config.rotationSpeed ?? RESULT_PLANET_VISUAL_CONFIG.rotationSpeed),
+    foodOrbit: {
+      ...RESULT_PLANET_VISUAL_CONFIG.foodOrbit,
+      ...(config.foodOrbit || {})
+    }
+  };
 }
 
 function mergeResultGalaxyLocatingConfig(config) {
@@ -2705,6 +2760,21 @@ function renderAct2StaticImagePreview(element, objectConfig) {
 function renderAct2PrepArea(element, objectConfig) {
   const title = document.createElement("div");
   const list = document.createElement("div");
+  const assetSrc = objectConfig.asset?.src || objectConfig.assetSrc || "assets/images/act2/lunch/prep-area.png";
+
+  if (assetSrc) {
+    const image = document.createElement("img");
+    image.className = "act2-prep-area-asset";
+    image.src = assetSrc;
+    image.alt = objectConfig.asset?.alt || objectConfig.content || "prep area";
+    image.draggable = false;
+    image.addEventListener("error", () => {
+      element.classList.remove("has-asset");
+      image.remove();
+    }, { once: true });
+    element.classList.add("has-asset");
+    element.appendChild(image);
+  }
 
   title.className = "act2-prep-area-title";
   title.textContent = objectConfig.content || "备菜区";
@@ -2731,10 +2801,36 @@ function renderAct2PrepAreaList(list) {
     const item = document.createElement("div");
 
     item.className = "act2-prep-food";
+    if (food) {
+      const image = document.createElement("img");
+      const label = document.createElement("span");
+
+      image.className = "act2-prep-food-asset";
+      image.src = getAct2LunchChoiceAssetSrc(food);
+      image.alt = food.label || food.foodName || "";
+      image.draggable = false;
+      image.addEventListener("error", () => {
+        item.classList.remove("has-asset");
+        image.remove();
+        label.classList.add("is-visible");
+      }, { once: true });
+      label.className = "act2-prep-food-label";
+      label.textContent = food.label || food.foodName;
+      item.classList.add("has-asset");
+      item.appendChild(image);
+      item.appendChild(label);
+      list.appendChild(item);
+      continue;
+    }
     item.textContent = food ? food.label || food.foodName : `空位 ${index + 1}`;
     item.classList.toggle("is-empty", !food);
     list.appendChild(item);
   }
+}
+
+function getAct2LunchChoiceAssetSrc(choice) {
+  const choiceId = choice?.id || choice?.foodId;
+  return choice?.asset?.src || choice?.assetSrc || `assets/images/act2/lunch/${choiceId}.png`;
 }
 
 function renderAct2ConveyorWindow(element, objectConfig) {
@@ -2769,21 +2865,54 @@ function createAct2LunchFoodCard(choice) {
   const foodLayer = document.createElement("span");
   const name = document.createElement("span");
   const category = document.createElement("span");
+  const assetSrc = getAct2LunchChoiceAssetSrc(choice);
+  const unitAssetSrc = choice.unitAsset?.src || choice.unitAssetSrc || "assets/images/act2/lunch/conveyor-unit.png";
 
   food.type = "button";
   food.className = "act2-lunch-food act2-conveyor-food-card";
   food.dataset.choiceId = choice.id;
   food.dataset.type = "act2LunchFood";
   plateLayer.className = "act2-food-plate";
+  if (unitAssetSrc) {
+    const unitImage = document.createElement("img");
+    unitImage.className = "act2-conveyor-unit-asset";
+    unitImage.src = unitAssetSrc;
+    unitImage.alt = choice.unitAsset?.alt || "conveyor unit";
+    unitImage.draggable = false;
+    unitImage.addEventListener("error", () => {
+      plateLayer.classList.remove("has-asset");
+      unitImage.remove();
+    }, { once: true });
+    plateLayer.classList.add("has-asset");
+    plateLayer.appendChild(unitImage);
+  }
   foodLayer.className = "act2-food-item";
   foodLayer.dataset.choiceId = choice.id;
   foodLayer.dataset.type = "act2LunchFoodItem";
+
+  if (assetSrc) {
+    const image = document.createElement("img");
+    image.className = "act2-lunch-food-asset";
+    image.src = assetSrc;
+    image.alt = choice.asset?.alt || choice.label || choice.name || "";
+    image.draggable = false;
+    image.addEventListener("error", () => {
+      foodLayer.classList.remove("has-asset");
+      image.remove();
+      foodLayer.appendChild(name);
+      foodLayer.appendChild(category);
+    }, { once: true });
+    foodLayer.classList.add("has-asset");
+    foodLayer.appendChild(image);
+  } else {
+    foodLayer.appendChild(name);
+    foodLayer.appendChild(category);
+  }
+
   name.className = "act2-lunch-food-name";
   name.textContent = choice.label || choice.name;
   category.className = "act2-lunch-food-category";
   category.textContent = choice.category || "";
-  foodLayer.appendChild(name);
-  foodLayer.appendChild(category);
   food.appendChild(plateLayer);
   food.appendChild(foodLayer);
   bindAct2LunchDragSource(foodLayer, choice.id, food);
@@ -5833,7 +5962,7 @@ function startAct3ExitSequence() {
   objectLayer.classList.add("act3-exit-sequence");
 
   window.setTimeout(() => {
-    enterResultGalaxyState();
+    enterGalaxyLocatingState();
   }, ACT3_EXIT_SCROLL_CONFIG.completeDelay);
 }
 
@@ -6322,6 +6451,7 @@ function createGalaxyLocatingLayer() {
     generateGalaxyParticles();
   }
   createGalaxyCenterPlanet();
+  createResultFoodOrbit();
   if (RESULT_PLANET_ONLY_MODE) {
     resultGalaxyRevealStarted = true;
     currentState = RESULT_STATES.DIET_GALAXY;
@@ -6620,6 +6750,10 @@ function generateGalaxyCaptionRevealParticles() {
 
 function createGalaxyCenterPlanet() {
   const config = RESULT_GALAXY_LOCATING_CONFIG.centerPlanet;
+  const visualConfig = RESULT_PLANET_VISUAL_CONFIG;
+  const planetX = Number.isFinite(visualConfig.x) ? visualConfig.x : config.x;
+  const planetY = Number.isFinite(visualConfig.y) ? visualConfig.y : config.y;
+  const planetSize = Number.isFinite(visualConfig.size) ? visualConfig.size : config.size;
 
   if (!galaxyLocatingField || !config?.enabled) {
     return;
@@ -6628,18 +6762,19 @@ function createGalaxyCenterPlanet() {
   const planet = document.createElement("div");
   const planetBody = document.createElement("div");
   const image = document.createElement("img");
-  const dynamicPlanetSvg = createResultPlanetSvgFromRiskResult(getPlayerRiskResult());
+  const dynamicPlanetMetrics = buildResultPlanetMetrics(getPlayerRiskResult());
+  const dynamicPlanetSvg = createResultPlanetSvg(dynamicPlanetMetrics);
 
   planet.id = "result-galaxy-center-planet";
   planet.className = "result-galaxy-center-planet";
   planetBody.className = "result-galaxy-center-planet-body";
-  planet.style.width = `${config.size}px`;
-  planet.style.height = `${config.size}px`;
-  planet.style.left = `calc(50% + ${config.x}px)`;
-  planet.style.top = `calc(50% + ${config.y}px)`;
+  planet.style.width = `${planetSize}px`;
+  planet.style.height = `${planetSize}px`;
+  planet.style.left = `calc(50% + ${planetX}px)`;
+  planet.style.top = `calc(50% + ${planetY}px)`;
   planet.style.zIndex = `${config.zIndex}`;
-  planet.style.setProperty("--result-center-planet-base-x", `${config.x}px`);
-  planet.style.setProperty("--result-center-planet-base-y", `${config.y}px`);
+  planet.style.setProperty("--result-center-planet-base-x", `${planetX}px`);
+  planet.style.setProperty("--result-center-planet-base-y", `${planetY}px`);
   planet.style.setProperty("--result-center-planet-color", config.fallbackColor);
   planet.style.setProperty("--result-center-planet-stroke-color", config.strokeColor);
   planet.style.setProperty("--result-center-planet-stroke-width", `${config.strokeWidth}px`);
@@ -6651,6 +6786,7 @@ function createGalaxyCenterPlanet() {
   if (dynamicPlanetSvg) {
     planet.classList.add("has-dynamic-planet");
     planetBody.appendChild(dynamicPlanetSvg);
+    startResultPlanetAnimation(planetBody, dynamicPlanetMetrics);
   } else if (config.image) {
     image.className = "result-galaxy-center-planet-image";
     image.alt = "";
@@ -6675,10 +6811,186 @@ function createGalaxyCenterPlanet() {
   galaxyLocatingField.appendChild(planet);
 }
 
+function createResultFoodOrbit() {
+  const config = RESULT_PLANET_VISUAL_CONFIG.foodOrbit || {};
+
+  if (!galaxyLocatingLayer || config.enabled === false) {
+    return;
+  }
+
+  const foods = collectResultSelectedFoods();
+  if (!foods.length) {
+    return;
+  }
+
+  const orbit = document.createElement("div");
+  const centerX = DESIGN_WIDTH / 2 + Number(config.x ?? 330);
+  const centerY = DESIGN_HEIGHT / 2 + Number(config.y ?? 0);
+  const radiusX = Number(config.radiusX ?? 170);
+  const radiusY = Number(config.radiusY ?? 360);
+  const slotSize = Number(config.slotSize ?? 112);
+  const itemSize = Number(config.itemSize ?? 86);
+  const total = foods.length;
+
+  orbit.className = "result-food-orbit";
+  orbit.style.setProperty("--result-food-orbit-x", `${centerX}px`);
+  orbit.style.setProperty("--result-food-orbit-y", `${centerY}px`);
+  orbit.style.setProperty("--result-food-orbit-radius-x", `${radiusX}px`);
+  orbit.style.setProperty("--result-food-orbit-radius-y", `${radiusY}px`);
+  orbit.style.setProperty("--result-food-orbit-slot-size", `${slotSize}px`);
+  orbit.style.setProperty("--result-food-orbit-item-size", `${itemSize}px`);
+
+  foods.forEach((food, index) => {
+    const angle = -90 + (360 * index) / Math.max(1, total);
+    const angleRad = (angle * Math.PI) / 180;
+    const slot = document.createElement("div");
+    const image = document.createElement("img");
+    const label = document.createElement("span");
+
+    slot.className = "result-food-orbit-slot";
+    slot.style.left = `${centerX + Math.cos(angleRad) * radiusX}px`;
+    slot.style.top = `${centerY + Math.sin(angleRad) * radiusY}px`;
+    slot.style.setProperty("--result-food-orbit-delay", `${index * 60}ms`);
+    slot.title = food.label || food.id;
+    label.className = "result-food-orbit-label";
+    label.textContent = food.label || food.id;
+
+    if (food.asset) {
+      image.className = "result-food-orbit-image";
+      image.alt = food.label || food.id;
+      image.draggable = false;
+      image.src = food.asset;
+      image.addEventListener("error", () => {
+        slot.classList.remove("has-image");
+        image.remove();
+        label.classList.add("is-visible");
+      }, { once: true });
+      slot.classList.add("has-image");
+      slot.appendChild(image);
+    } else {
+      label.classList.add("is-visible");
+    }
+
+    slot.appendChild(label);
+    orbit.appendChild(slot);
+  });
+
+  galaxyLocatingLayer.appendChild(orbit);
+}
+
+function collectResultSelectedFoods() {
+  const foods = [];
+  const addFood = (food) => {
+    if (!food?.id) {
+      return;
+    }
+    foods.push(food);
+  };
+  const breakfastChoice = playerChoices.find((choice) => choice.stepId === "act1_breakfastChoice");
+  const lunchChoice = [...playerChoices].reverse().find((choice) => choice.stepId === "act2_lunchPlateChoice");
+  const hotpotChoice = playerChoices.find((choice) => choice.stepId === "act3_s01_foodChoice");
+
+  if (breakfastChoice?.breakfastId) {
+    addFood({
+      id: breakfastChoice.breakfastId,
+      label: breakfastChoice.choiceLabel || breakfastChoice.label || "breakfast",
+      asset: getResultFoodAssetPath(breakfastChoice.breakfastId)
+    });
+  }
+
+  (lunchChoice?.selectedFoods || []).forEach((food) => {
+    addFood({
+      id: food.foodId,
+      label: food.label || food.foodName,
+      asset: getResultFoodAssetPath(food.foodId)
+    });
+  });
+
+  (hotpotChoice?.selectedFoods || []).forEach((food) => {
+    addFood({
+      id: food.foodId,
+      label: food.foodName || food.label,
+      asset: getResultFoodAssetPath(food.foodId)
+    });
+  });
+
+  return foods;
+}
+
+function getResultFoodAssetPath(foodId) {
+  const act1Assets = {
+    act1_s01_breakfast_overnightPizza: "assets/images/act1/breakfast/overnight-pizza.png",
+    act1_s01_breakfast_baguetteCheese: "assets/images/act1/breakfast/baguette-cheese.png",
+    act1_s01_breakfast_hotPorridge: "assets/images/act1/breakfast/hot-porridge.png",
+    act1_s01_breakfast_eggHamSandwich: "assets/images/act1/breakfast/egg-ham-sandwich.png",
+    act1_s01_breakfast_cornEggMilk: "assets/images/act1/breakfast/corn-egg-milk.png"
+  };
+  const act3Assets = {
+    act3_s01_food_vegetable: "assets/images/act3/food/vegetable.png",
+    act3_s01_food_sausage: "assets/images/act3/food/sausage.png",
+    act3_s01_food_youtiao: "assets/images/act3/food/youtiao.png",
+    act3_s01_food_luncheonMeat: "assets/images/act3/food/luncheon-meat.png",
+    act3_s01_food_maodu: "assets/images/act3/food/maodu.png",
+    act3_s01_food_daiRouCuiGu: "assets/images/act3/food/dai-rou-cui-gu.png",
+    act3_s01_food_beefSlices: "assets/images/act3/food/beef-slices.png"
+  };
+
+  if (act1Assets[foodId]) {
+    return act1Assets[foodId];
+  }
+
+  if (act3Assets[foodId]) {
+    return act3Assets[foodId];
+  }
+
+  if (foodId?.startsWith("act2_food_")) {
+    return `assets/images/act2/lunch/${foodId}.png`;
+  }
+
+  return "";
+}
+
 function createResultPlanetSvgFromRiskResult(riskResult) {
   const metrics = buildResultPlanetMetrics(riskResult);
 
   return createResultPlanetSvg(metrics);
+}
+
+function startResultPlanetAnimation(planetBody, metrics) {
+  stopResultPlanetAnimation();
+  resultPlanetAnimationMetrics = metrics;
+  resultPlanetAnimationStartTime = performance.now();
+
+  const renderFrame = (time) => {
+    if (!planetBody?.isConnected || !resultPlanetAnimationMetrics) {
+      stopResultPlanetAnimation();
+      return;
+    }
+
+    const elapsed = time - resultPlanetAnimationStartTime;
+    const tick = elapsed * 0.04 * (resultPlanetAnimationMetrics.rotationSpeed || 1);
+    const svg = createResultPlanetSvg({
+      ...resultPlanetAnimationMetrics,
+      tick,
+      jitterFrame: Math.floor(tick / 5) % 5,
+      rotationOffset: tick * 0.4
+    });
+
+    planetBody.replaceChildren(svg);
+    resultPlanetAnimationFrame = window.requestAnimationFrame(renderFrame);
+  };
+
+  resultPlanetAnimationFrame = window.requestAnimationFrame(renderFrame);
+}
+
+function stopResultPlanetAnimation() {
+  if (resultPlanetAnimationFrame) {
+    window.cancelAnimationFrame(resultPlanetAnimationFrame);
+  }
+
+  resultPlanetAnimationFrame = 0;
+  resultPlanetAnimationStartTime = 0;
+  resultPlanetAnimationMetrics = null;
 }
 
 function buildResultPlanetMetrics(riskResult = getPlayerRiskResult()) {
@@ -6693,9 +7005,17 @@ function buildResultPlanetMetrics(riskResult = getPlayerRiskResult()) {
     rhythm: clampPlanetMetric(100 - rhythmRisk),
     specificity: clampPlanetMetric(dimensions.specificity?.riskIndex ?? 50),
     danger: clampPlanetMetric(dimensions.danger?.riskIndex ?? 0),
-    crackSize: 100,
-    patternDensity: 8,
-    strokeWidth: 2.5
+    crackSize: RESULT_PLANET_VISUAL_CONFIG.crackSize,
+    patternDensity: RESULT_PLANET_VISUAL_CONFIG.patternDensity,
+    strokeWidth: RESULT_PLANET_VISUAL_CONFIG.strokeWidth,
+    cWaveSpan: RESULT_PLANET_VISUAL_CONFIG.cWaveSpan,
+    cDotSpan: RESULT_PLANET_VISUAL_CONFIG.cDotSpan,
+    kChiliSpan: RESULT_PLANET_VISUAL_CONFIG.kChiliSpan,
+    kDotsSpan: RESULT_PLANET_VISUAL_CONFIG.kDotsSpan,
+    rotationSpeed: RESULT_PLANET_VISUAL_CONFIG.rotationSpeed,
+    tick: 0,
+    jitterFrame: 0,
+    rotationOffset: 0
   };
 }
 
@@ -6704,6 +7024,19 @@ function clampPlanetMetric(value) {
 }
 
 function createResultPlanetSvg(metrics) {
+  metrics = {
+    crackSize: 100,
+    patternDensity: 8,
+    strokeWidth: 2.5,
+    cWaveSpan: 12,
+    cDotSpan: 12,
+    kChiliSpan: 12,
+    kDotsSpan: 12,
+    tick: 0,
+    jitterFrame: 0,
+    rotationOffset: 0,
+    ...metrics
+  };
   const svgNs = "http://www.w3.org/2000/svg";
   const svg = document.createElementNS(svgNs, "svg");
   const defs = document.createElementNS(svgNs, "defs");
@@ -6757,9 +7090,7 @@ function createResultPlanetSvg(metrics) {
   defs.appendChild(gradient);
   svg.appendChild(defs);
 
-  splitResultPlanetRingDots(metrics).back.forEach((dot) => {
-    backRing.appendChild(createResultPlanetRingDot(dot, colors.mid));
-  });
+  appendResultPlanetRingGroup(backRing, splitResultPlanetRingDots(metrics).back, colors.mid, metrics);
   svg.appendChild(backRing);
 
   createResultPlanetSensoryOutlines(metrics).forEach((outline) => {
@@ -6775,7 +7106,7 @@ function createResultPlanetSvg(metrics) {
   }));
   svg.appendChild(bodyClipGroup);
 
-  createResultPlanetRotatingGapPaths().forEach((gap) => {
+  createResultPlanetRotatingGapPaths(metrics).forEach((gap) => {
     svg.appendChild(gap);
   });
 
@@ -6799,9 +7130,7 @@ function createResultPlanetSvg(metrics) {
     svg.appendChild(crack);
   }
 
-  splitResultPlanetRingDots(metrics).front.forEach((dot) => {
-    frontRing.appendChild(createResultPlanetRingDot(dot, colors.mid));
-  });
+  appendResultPlanetRingGroup(frontRing, splitResultPlanetRingDots(metrics).front, colors.mid, metrics);
   svg.appendChild(frontRing);
 
   return svg;
@@ -6814,6 +7143,14 @@ function createSvgElement(tagName, attrs = {}) {
 
   return element;
 }
+
+const RESULT_PLANET_JITTER_PROFILES = [
+  [0.5, -0.8, 1.1, -0.4, 0.9, -1.2, 0.6, -0.9, 0.4, -1.1, 0.8, -0.5, 1.0, -0.7, 0.5, -0.9, 1.1, -0.6, 0.8, -0.4],
+  [-0.6, 0.9, -0.4, 1.1, -0.8, 0.5, -1.0, 0.8, -0.5, 0.9, -1.1, 0.7, -0.9, 0.4, -0.8, 1.0, -0.5, 0.9, -0.7, 0.6],
+  [0.8, -0.5, 1.0, -0.9, 0.4, -1.1, 0.7, -0.6, 0.9, -0.4, 0.8, -1.0, 0.5, -0.8, 1.1, -0.7, 0.4, -0.9, 1.0, -0.5],
+  [-0.9, 0.4, -1.1, 0.8, -0.5, 0.9, -0.8, 1.1, -0.6, 0.8, -0.4, 1.0, -0.7, 0.5, -0.9, 0.6, -1.0, 0.4, -0.8, 0.9],
+  [0.4, -1.1, 0.7, -0.5, 1.0, -0.8, 0.5, -0.9, 1.1, -0.7, 0.9, -0.4, 0.8, -1.0, 0.4, -0.9, 0.7, -0.5, 1.1, -0.8]
+];
 
 function setSvgAttrs(element, attrs = {}) {
   Object.entries(attrs).forEach(([key, value]) => {
@@ -6887,6 +7224,8 @@ function createResultPlanetSensoryOutlines(metrics) {
   return layers.map((layer, layerIndex) => {
     const points = [];
     const pointCount = 64;
+    const timeSeconds = (metrics.tick || 0) * 0.015;
+    const scaleMultiplier = 1 + 0.04 * Math.sin(timeSeconds * 2.8 + layer.phase);
 
     for (let index = 0; index < pointCount; index += 1) {
       const theta = (index * 2 * Math.PI) / pointCount;
@@ -6903,8 +7242,9 @@ function createResultPlanetSensoryOutlines(metrics) {
         Math.pow(toothValue, 3.2) * 52 -
         10 +
         Math.sin((degrees * 13 * Math.PI) / 180) * 5;
-      const jitter = Math.sin(index * 2.13 + layer.phase + layerIndex) * 0.8;
-      const finalRadius = (1 - sensoryFactor) * circleRadius + sensoryFactor * spikeRadius + jitter;
+      const jitterTable = RESULT_PLANET_JITTER_PROFILES[((metrics.jitterFrame || 0) + layerIndex) % RESULT_PLANET_JITTER_PROFILES.length];
+      const jitter = jitterTable[index % jitterTable.length] * 0.8;
+      const finalRadius = ((1 - sensoryFactor) * circleRadius + sensoryFactor * spikeRadius) * scaleMultiplier + jitter;
 
       points.push([
         cx + finalRadius * Math.cos(theta),
@@ -6939,19 +7279,23 @@ function splitResultPlanetRingDots(metrics) {
   const sinRotation = Math.sin(rotation);
 
   for (let index = 0; index < count; index += 1) {
-    const angleDeg = (index * 360) / count;
+    const currentAngle = ((index * 360) / count + (metrics.rotationOffset || 0)) % 360;
+    const angleDeg = currentAngle < 0 ? currentAngle + 360 : currentAngle;
     const angle = (angleDeg * Math.PI) / 180;
     const sizeMultiplier = 0.6 + deterministicNoise(index, 7) * 0.8;
     const orbitRadiusOffset = -12 + deterministicNoise(index, 13) * 24;
     const actualOffset = orbitRadiusOffset * (1 - rhythmFactor);
     const localX = rx * Math.cos(angle) + actualOffset * Math.cos(angle);
     const localY = ry * Math.sin(angle) + actualOffset * Math.sin(angle);
+    const jitterTable = RESULT_PLANET_JITTER_PROFILES[((metrics.jitterFrame || 0) + index) % RESULT_PLANET_JITTER_PROFILES.length];
+    const jitterValue = jitterTable[index % jitterTable.length] * 0.7;
     const radius =
       (1 - rhythmFactor) * (sizeMultiplier * 4.2) +
-      rhythmFactor * 16.5;
+      rhythmFactor * 16.5 +
+      (rhythmFactor > 0.1 ? 0 : jitterValue);
     const dot = {
-      cx: localX * cosRotation - localY * sinRotation + cx,
-      cy: localX * sinRotation + localY * cosRotation + cy + 20,
+      cx: localX * cosRotation - localY * sinRotation + cx + (rhythmFactor > 0.1 ? 0 : jitterValue * 0.3),
+      cy: localX * sinRotation + localY * cosRotation + cy + 20 + (rhythmFactor > 0.1 ? 0 : jitterValue * 0.3),
       r: Math.max(1.5, radius)
     };
 
@@ -6986,6 +7330,38 @@ function createResultPlanetRingDot(dot, color) {
   return group;
 }
 
+function appendResultPlanetRingGroup(parent, dots, color, metrics) {
+  if (!dots.length) {
+    return;
+  }
+
+  const strokeLayer = createSvgElement("g", {
+    fill: "#000000",
+    stroke: "#000000",
+    "stroke-width": 4 * (metrics.strokeWidth / 2.5),
+    "stroke-linejoin": "round"
+  });
+  const fillLayer = createSvgElement("g", {
+    fill: color
+  });
+
+  dots.forEach((dot) => {
+    strokeLayer.appendChild(createSvgElement("circle", {
+      cx: dot.cx,
+      cy: dot.cy,
+      r: dot.r
+    }));
+    fillLayer.appendChild(createSvgElement("circle", {
+      cx: dot.cx,
+      cy: dot.cy,
+      r: Math.max(1, dot.r - 0.5 * (metrics.strokeWidth / 2.5))
+    }));
+  });
+
+  parent.appendChild(strokeLayer);
+  parent.appendChild(fillLayer);
+}
+
 function createResultPlanetDecorations(metrics) {
   const decorations = [];
   const density = Math.max(2, Math.min(24, metrics.patternDensity || 8));
@@ -6996,8 +7372,13 @@ function createResultPlanetDecorations(metrics) {
     for (let index = 0; index < density; index += 1) {
       const id = ringIndex * density + index;
       const longitude = (index * 360) / density + (-12 + ((index * 17 + latitude * 3) % 25));
-      const longitudeRad = (longitude * Math.PI) / 180;
-      const latitudeRad = (latitude * Math.PI) / 180;
+      const isEven = id % 2 === 0;
+      const activeSpan = isKEnd
+        ? (isEven ? metrics.kChiliSpan : metrics.kDotsSpan)
+        : (isEven ? metrics.cWaveSpan : metrics.cDotSpan);
+      const latitudeOffset = (deterministicNoise(id, 23) * 2 - 1) * (activeSpan / 100) * 32;
+      const longitudeRad = ((longitude - (metrics.rotationOffset || 0)) * Math.PI) / 180;
+      const latitudeRad = ((latitude + latitudeOffset) * Math.PI) / 180;
       const radius = 92;
       const x3d = radius * Math.cos(latitudeRad) * Math.sin(longitudeRad);
       const y3d = radius * Math.sin(latitudeRad);
@@ -7010,8 +7391,6 @@ function createResultPlanetDecorations(metrics) {
       const tilt = (-10 * Math.PI) / 180;
       const x = x3d * Math.cos(tilt) - y3d * Math.sin(tilt) + 250;
       const y = x3d * Math.sin(tilt) + y3d * Math.cos(tilt) + 250;
-      const isEven = id % 2 === 0;
-
       decorations.push(
         isKEnd
           ? createResultPlanetKDecoration(x, y, isEven, metrics)
@@ -7084,6 +7463,12 @@ function createResultPlanetDangerCrack(metrics) {
     return null;
   }
 
+  const jitterTable = RESULT_PLANET_JITTER_PROFILES[(metrics.jitterFrame || 0) % RESULT_PLANET_JITTER_PROFILES.length];
+  const jitterX = jitterTable[0] * 2.2;
+  const jitterY = jitterTable[1] * 2.2;
+  const jitterRotation = jitterTable[2] * 3.5;
+  const crackScale = ((metrics.crackSize || 100) / 100) * 0.95;
+
   return createSvgElement("path", {
     d: "M 12,-22 L -14,-1 L -5,3 L -28,26 L -12,28 L -24,48 L -4,32 L -10,30 L 7,12 L -1,9 Z",
     fill: "#FFFFFF",
@@ -7091,20 +7476,20 @@ function createResultPlanetDangerCrack(metrics) {
     "stroke-width": 2.2 * (metrics.strokeWidth / 2.5),
     "stroke-linecap": "round",
     "stroke-linejoin": "round",
-    transform: `translate(292, 208) rotate(12) scale(${(metrics.crackSize || 100) / 100})`
+    transform: `translate(${292 + jitterX}, ${208 + jitterY}) rotate(${12 + jitterRotation}) scale(${crackScale})`
   });
 }
 
-function createResultPlanetRotatingGapPaths() {
+function createResultPlanetRotatingGapPaths(metrics) {
   return [
-    createResultPlanetGapPath(135, -55, 45, 20, 14),
-    createResultPlanetGapPath(275, 12, 62, 10, 5),
-    createResultPlanetGapPath(40, -65, -18, 10, 5)
+    createResultPlanetGapPath(135, -55, 45, 20, 14, metrics),
+    createResultPlanetGapPath(275, 12, 62, 10, 5, metrics),
+    createResultPlanetGapPath(40, -65, -18, 10, 5, metrics)
   ].flat();
 }
 
-function createResultPlanetGapPath(baseLongitude, startLatitude, endLatitude, outerWidth, innerWidth) {
-  const path = getResultPlanetProjectedPath(baseLongitude, startLatitude, endLatitude, 95);
+function createResultPlanetGapPath(baseLongitude, startLatitude, endLatitude, outerWidth, innerWidth, metrics) {
+  const path = getResultPlanetProjectedPath(baseLongitude, startLatitude, endLatitude, 95, metrics);
 
   if (!path) {
     return [];
@@ -7130,10 +7515,10 @@ function createResultPlanetGapPath(baseLongitude, startLatitude, endLatitude, ou
   ];
 }
 
-function getResultPlanetProjectedPath(baseLongitude, startLatitude, endLatitude, radius) {
+function getResultPlanetProjectedPath(baseLongitude, startLatitude, endLatitude, radius, metrics = {}) {
   const points = [];
   const stepCount = 18;
-  const longitudeRad = (baseLongitude * Math.PI) / 180;
+  const longitudeRad = ((baseLongitude - (metrics.rotationOffset || 0)) * Math.PI) / 180;
   const tilt = (-10 * Math.PI) / 180;
 
   for (let index = 0; index <= stepCount; index += 1) {
@@ -7472,6 +7857,7 @@ function cleanupGalaxyLocatingLayer() {
     window.clearTimeout(resultGalaxyEnterTimer);
   }
 
+  stopResultPlanetAnimation();
   galaxyLocatingLayer?.remove();
   galaxyLocatingLayer = null;
   galaxyLocatingField = null;

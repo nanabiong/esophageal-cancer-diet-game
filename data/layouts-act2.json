@@ -22,7 +22,7 @@
         "act2_food_huobao_youyu",
         "act2_food_jiang_niurou"
       ],
-      "duration": 36000
+      "duration": 26000
     },
     "bottom": {
       "choiceIds": [
@@ -32,7 +32,7 @@
         "act2_food_paocai_niurou_xinlamian",
         "act2_food_baimifan"
       ],
-      "duration": 42000
+      "duration": 30000
     }
   },
   "introSequence": {
@@ -55,15 +55,15 @@
       "height": 460
     },
     "choiceConveyorA": {
-      "x": 385,
-      "y": 82,
+      "x": 560,
+      "y": 189.49,
       "width": 660,
       "height": 250
     },
     "choiceConveyorB": {
-      "x": 820,
-      "y": 355,
-      "width": 660,
+      "x": 836,
+      "y": 520,
+      "width": 819,
       "height": 250
     }
   },
@@ -131,17 +131,17 @@
     "act2_03_lunch_prep_select": {
       "_note": "Act2 lunch prep selection. Drag foods from conveyor windows into prep area.",
       "prepArea": {
-        "x": 80,
-        "y": 260,
-        "width": 300,
-        "height": 360
+        "x": 162,
+        "y": -2.35,
+        "width": 260,
+        "height": 884
       },
       "objects": {
         "act2_s02_window_top": {
           "type": "act2ConveyorWindow",
           "laneId": "top",
-          "x": 385,
-          "y": 82,
+          "x": 560,
+          "y": 189.49,
           "width": 660,
           "height": 250,
           "opacity": 1,
@@ -152,9 +152,9 @@
         "act2_s02_window_bottom": {
           "type": "act2ConveyorWindow",
           "laneId": "bottom",
-          "x": 820,
-          "y": 355,
-          "width": 660,
+          "x": 836,
+          "y": 520,
+          "width": 819,
           "height": 250,
           "opacity": 1,
           "scale": 1,
@@ -163,14 +163,25 @@
         },
         "act2_s03_prep_area": {
           "type": "act2PrepArea",
-          "x": 80,
-          "y": 260,
-          "width": 300,
-          "height": 360,
+          "x": 162,
+          "y": -2.35,
+          "width": 260,
+          "height": 884,
           "opacity": 1,
           "scale": 1,
           "zIndex": 9,
           "content": "备菜区"
+        },
+        "act2_s03_choice_bubble": {
+          "type": "act2IntroBubble",
+          "x": 1272.09,
+          "y": 132.16,
+          "width": 446,
+          "height": 162,
+          "opacity": 1,
+          "scale": 1,
+          "zIndex": 10,
+          "content": "看看今天有什么菜吧"
         }
       }
     },

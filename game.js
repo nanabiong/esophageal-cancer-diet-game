@@ -76,6 +76,7 @@ const PREVIEW_ENTRY_CONFIG = {
   skipAct3AfterAct0: false,
   startAt: RESULT_STATES.GALAXY_LOCATING
 };
+const RESULT_PLANET_ONLY_MODE = true;
 
 const DESIGN_WIDTH = 1920;
 const DESIGN_HEIGHT = 920;
@@ -5720,6 +5721,15 @@ function getRiskTransitionEdgePoint() {
 function renderResultDietGalaxyLayout(layer) {
   const config = RESULT_GALAXY_LOCATING_CONFIG.resultDietGalaxy;
   const riskResult = getPlayerRiskResult();
+
+  if (RESULT_PLANET_ONLY_MODE) {
+    layer.innerHTML = "";
+    layer.classList.add("result-planet-only-layer");
+    return;
+  }
+
+  layer.classList.remove("result-planet-only-layer");
+
   const traitDimensionOrder = ["sensory", "danger", "specificity", "rhythm"];
   const paragraphs = config.panel.paragraphs
     .map((paragraph) => `<p>${paragraph.replace(/\n/g, "<br>")}</p>`)
@@ -5839,6 +5849,12 @@ function enterGalaxyLocatingState() {
   currentPhase = PHASES.RESULT_GALAXY_LOCATING;
   currentState = RESULT_STATES.GALAXY_LOCATING;
   createGalaxyLocatingLayer();
+
+  if (RESULT_PLANET_ONLY_MODE) {
+    currentPhase = PHASES.RESULT_GALAXY;
+    currentState = RESULT_STATES.DIET_GALAXY;
+  }
+
   console.log("Entered result_state_00_galaxy_locating", {
     playerChoices,
     playerRiskResult,
@@ -6240,14 +6256,15 @@ function createGalaxyLocatingLayer() {
   const config = RESULT_GALAXY_LOCATING_CONFIG;
   const layer = document.createElement("section");
   const field = document.createElement("div");
-  const caption = document.createElement("div");
-  const captionText = document.createElement("div");
-  const captionMain = document.createElement("span");
-  const captionDots = document.createElement("span");
-  const captionParticleLayer = document.createElement("div");
+  const caption = RESULT_PLANET_ONLY_MODE ? null : document.createElement("div");
+  const captionText = RESULT_PLANET_ONLY_MODE ? null : document.createElement("div");
+  const captionMain = RESULT_PLANET_ONLY_MODE ? null : document.createElement("span");
+  const captionDots = RESULT_PLANET_ONLY_MODE ? null : document.createElement("span");
+  const captionParticleLayer = RESULT_PLANET_ONLY_MODE ? null : document.createElement("div");
 
   layer.id = config.stateId;
   layer.className = "result-galaxy-locating-layer";
+  layer.classList.toggle("result-planet-only-layer", RESULT_PLANET_ONLY_MODE);
   layer.style.setProperty("--result-locating-bg", config.backgroundColor);
   layer.style.setProperty("--result-locating-field-width", `${config.fieldWidth}px`);
   layer.style.setProperty("--result-locating-field-height", `${config.fieldHeight}px`);
@@ -6275,18 +6292,22 @@ function createGalaxyLocatingLayer() {
   layer.style.setProperty("--result-planet-target-y", `${config.resultGalaxyEnter.planet.targetY}px`);
 
   field.className = "result-locating-field";
-  caption.className = "result-locating-caption";
-  captionText.className = "result-locating-caption-text";
-  captionMain.className = "result-locating-caption-main";
-  captionDots.className = "result-locating-caption-dots";
-  captionParticleLayer.className = "result-caption-particle-layer";
-  captionMain.textContent = config.captionText;
-  captionText.appendChild(captionMain);
-  captionText.appendChild(captionDots);
-  caption.appendChild(captionParticleLayer);
-  caption.appendChild(captionText);
+  if (!RESULT_PLANET_ONLY_MODE) {
+    caption.className = "result-locating-caption";
+    captionText.className = "result-locating-caption-text";
+    captionMain.className = "result-locating-caption-main";
+    captionDots.className = "result-locating-caption-dots";
+    captionParticleLayer.className = "result-caption-particle-layer";
+    captionMain.textContent = config.captionText;
+    captionText.appendChild(captionMain);
+    captionText.appendChild(captionDots);
+    caption.appendChild(captionParticleLayer);
+    caption.appendChild(captionText);
+  }
   layer.appendChild(field);
-  layer.appendChild(caption);
+  if (caption) {
+    layer.appendChild(caption);
+  }
   objectLayer.appendChild(layer);
 
   galaxyLocatingLayer = layer;
@@ -6297,11 +6318,21 @@ function createGalaxyLocatingLayer() {
   galaxyLocatingCaptionParticleLayer = captionParticleLayer;
   resultGalaxyRevealStarted = false;
   hasResultGalaxyEnterStarted = false;
-  generateGalaxyParticles();
+  if (!RESULT_PLANET_ONLY_MODE) {
+    generateGalaxyParticles();
+  }
   createGalaxyCenterPlanet();
-  bindGalaxyLocatingParallax();
-  startGalaxyLocatingCaptionDots();
-  scheduleGalaxyLocatingReveal();
+  if (RESULT_PLANET_ONLY_MODE) {
+    resultGalaxyRevealStarted = true;
+    currentState = RESULT_STATES.DIET_GALAXY;
+    window.requestAnimationFrame(() => {
+      document.getElementById("result-galaxy-center-planet")?.classList.add("is-visible");
+    });
+  } else {
+    bindGalaxyLocatingParallax();
+    startGalaxyLocatingCaptionDots();
+    scheduleGalaxyLocatingReveal();
+  }
 
   window.requestAnimationFrame(() => {
     galaxyLocatingLayer?.classList.add("is-visible");
@@ -6597,6 +6628,7 @@ function createGalaxyCenterPlanet() {
   const planet = document.createElement("div");
   const planetBody = document.createElement("div");
   const image = document.createElement("img");
+  const dynamicPlanetSvg = createResultPlanetSvgFromRiskResult(getPlayerRiskResult());
 
   planet.id = "result-galaxy-center-planet";
   planet.className = "result-galaxy-center-planet";
@@ -6616,7 +6648,10 @@ function createGalaxyCenterPlanet() {
   planet.style.setProperty("--result-center-planet-parallax-x", "0px");
   planet.style.setProperty("--result-center-planet-parallax-y", "0px");
 
-  if (config.image) {
+  if (dynamicPlanetSvg) {
+    planet.classList.add("has-dynamic-planet");
+    planetBody.appendChild(dynamicPlanetSvg);
+  } else if (config.image) {
     image.className = "result-galaxy-center-planet-image";
     image.alt = "";
     image.draggable = false;
@@ -6638,6 +6673,498 @@ function createGalaxyCenterPlanet() {
 
   planet.appendChild(planetBody);
   galaxyLocatingField.appendChild(planet);
+}
+
+function createResultPlanetSvgFromRiskResult(riskResult) {
+  const metrics = buildResultPlanetMetrics(riskResult);
+
+  return createResultPlanetSvg(metrics);
+}
+
+function buildResultPlanetMetrics(riskResult = getPlayerRiskResult()) {
+  const dimensions = riskResult?.dimensions || {};
+  const rhythmRisk = dimensions.rhythm?.riskIndex ?? 50;
+
+  return {
+    risk: clampPlanetMetric(riskResult?.totalRiskIndex ?? 50),
+    sensory: clampPlanetMetric(dimensions.sensory?.riskIndex ?? 50),
+    // Planet editor uses 0 = D/gravel and 100 = O/smooth, while risk rhythm
+    // grows toward D, so this axis is intentionally inverted.
+    rhythm: clampPlanetMetric(100 - rhythmRisk),
+    specificity: clampPlanetMetric(dimensions.specificity?.riskIndex ?? 50),
+    danger: clampPlanetMetric(dimensions.danger?.riskIndex ?? 0),
+    crackSize: 100,
+    patternDensity: 8,
+    strokeWidth: 2.5
+  };
+}
+
+function clampPlanetMetric(value) {
+  return Math.max(0, Math.min(100, Number(value) || 0));
+}
+
+function createResultPlanetSvg(metrics) {
+  const svgNs = "http://www.w3.org/2000/svg";
+  const svg = document.createElementNS(svgNs, "svg");
+  const defs = document.createElementNS(svgNs, "defs");
+  const clipPath = document.createElementNS(svgNs, "clipPath");
+  const clipCircle = document.createElementNS(svgNs, "circle");
+  const gradient = document.createElementNS(svgNs, "linearGradient");
+  const gradientId = `result-planet-gradient-${Date.now().toString(36)}`;
+  const clipId = `result-planet-clip-${Date.now().toString(36)}`;
+  const cx = 250;
+  const cy = 250;
+  const planetRadius = 100;
+  const colors = getResultPlanetGradientColors(metrics.risk);
+  const backRing = document.createElementNS(svgNs, "g");
+  const frontRing = document.createElementNS(svgNs, "g");
+  const bodyClipGroup = document.createElementNS(svgNs, "g");
+  const decorationClipGroup = document.createElementNS(svgNs, "g");
+
+  svg.classList.add("result-galaxy-dynamic-planet-svg");
+  svg.setAttribute("viewBox", "0 0 500 500");
+  svg.setAttribute("preserveAspectRatio", "xMidYMid meet");
+  svg.setAttribute("aria-hidden", "true");
+  svg.setAttribute("focusable", "false");
+
+  clipPath.setAttribute("id", clipId);
+  setSvgAttrs(clipCircle, {
+    cx,
+    cy,
+    r: planetRadius
+  });
+  clipPath.appendChild(clipCircle);
+
+  setSvgAttrs(gradient, {
+    id: gradientId,
+    x1: "0",
+    y1: "0",
+    x2: "0.1",
+    y2: "1"
+  });
+  [
+    ["0%", colors.top],
+    ["50%", colors.mid],
+    ["100%", colors.bottom]
+  ].forEach(([offset, stopColor]) => {
+    const stop = document.createElementNS(svgNs, "stop");
+    stop.setAttribute("offset", offset);
+    stop.setAttribute("stop-color", stopColor);
+    gradient.appendChild(stop);
+  });
+
+  defs.appendChild(clipPath);
+  defs.appendChild(gradient);
+  svg.appendChild(defs);
+
+  splitResultPlanetRingDots(metrics).back.forEach((dot) => {
+    backRing.appendChild(createResultPlanetRingDot(dot, colors.mid));
+  });
+  svg.appendChild(backRing);
+
+  createResultPlanetSensoryOutlines(metrics).forEach((outline) => {
+    svg.appendChild(outline);
+  });
+
+  bodyClipGroup.setAttribute("clip-path", `url(#${clipId})`);
+  bodyClipGroup.appendChild(createSvgElement("circle", {
+    cx,
+    cy,
+    r: planetRadius,
+    fill: `url(#${gradientId})`
+  }));
+  svg.appendChild(bodyClipGroup);
+
+  createResultPlanetRotatingGapPaths().forEach((gap) => {
+    svg.appendChild(gap);
+  });
+
+  decorationClipGroup.setAttribute("clip-path", `url(#${clipId})`);
+  createResultPlanetDecorations(metrics).forEach((decoration) => {
+    decorationClipGroup.appendChild(decoration);
+  });
+  svg.appendChild(decorationClipGroup);
+
+  svg.appendChild(createSvgElement("circle", {
+    cx,
+    cy,
+    r: planetRadius,
+    fill: "none",
+    stroke: "#000000",
+    "stroke-width": 3.5 * (metrics.strokeWidth / 2.5)
+  }));
+
+  const crack = createResultPlanetDangerCrack(metrics);
+  if (crack) {
+    svg.appendChild(crack);
+  }
+
+  splitResultPlanetRingDots(metrics).front.forEach((dot) => {
+    frontRing.appendChild(createResultPlanetRingDot(dot, colors.mid));
+  });
+  svg.appendChild(frontRing);
+
+  return svg;
+}
+
+function createSvgElement(tagName, attrs = {}) {
+  const element = document.createElementNS("http://www.w3.org/2000/svg", tagName);
+
+  setSvgAttrs(element, attrs);
+
+  return element;
+}
+
+function setSvgAttrs(element, attrs = {}) {
+  Object.entries(attrs).forEach(([key, value]) => {
+    if (value !== null && value !== undefined) {
+      element.setAttribute(key, String(value));
+    }
+  });
+}
+
+function getResultPlanetColor(risk) {
+  if (risk <= 33) {
+    return "#74D188";
+  }
+
+  if (risk <= 66) {
+    return interpolateHexColor("#74D188", "#FFC1DF", (risk - 33) / 33);
+  }
+
+  return interpolateHexColor("#FFC1DF", "#FF4800", (risk - 66) / 34);
+}
+
+function getResultPlanetGradientColors(risk) {
+  const spread = 28 * Math.sin((risk / 100) * Math.PI);
+
+  return {
+    top: getResultPlanetColor(Math.min(100, risk + spread)),
+    mid: getResultPlanetColor(risk),
+    bottom: getResultPlanetColor(Math.max(0, risk - spread))
+  };
+}
+
+function interpolateHexColor(startHex, endHex, amount) {
+  const start = hexToRgbTriplet(startHex);
+  const end = hexToRgbTriplet(endHex);
+
+  return rgbTripletToHex(
+    start[0] + (end[0] - start[0]) * amount,
+    start[1] + (end[1] - start[1]) * amount,
+    start[2] + (end[2] - start[2]) * amount
+  );
+}
+
+function hexToRgbTriplet(hex) {
+  const numeric = parseInt(hex.slice(1), 16);
+
+  return [
+    (numeric >> 16) & 255,
+    (numeric >> 8) & 255,
+    numeric & 255
+  ];
+}
+
+function rgbTripletToHex(red, green, blue) {
+  return `#${
+    [red, green, blue]
+      .map((value) => Math.round(value).toString(16).padStart(2, "0"))
+      .join("")
+  }`;
+}
+
+function createResultPlanetSensoryOutlines(metrics) {
+  const cx = 250;
+  const cy = 250;
+  const sensoryFactor = metrics.sensory / 100;
+  const layers = [
+    { radius: 145, phase: 0 },
+    { radius: 128, phase: 1.2 },
+    { radius: 112, phase: 2.4 }
+  ];
+
+  return layers.map((layer, layerIndex) => {
+    const points = [];
+    const pointCount = 64;
+
+    for (let index = 0; index < pointCount; index += 1) {
+      const theta = (index * 2 * Math.PI) / pointCount;
+      const degrees = (index * 360) / pointCount;
+      const circleRadius =
+        layer.radius +
+        Math.sin((degrees * 3 * Math.PI) / 180) * 3 +
+        Math.cos((degrees * 5 * Math.PI) / 180) * 2;
+      const teethCount = 10;
+      const thetaScaled = theta * teethCount;
+      const toothValue = Math.abs((thetaScaled % (2 * Math.PI)) - Math.PI) / Math.PI;
+      const spikeRadius =
+        layer.radius +
+        Math.pow(toothValue, 3.2) * 52 -
+        10 +
+        Math.sin((degrees * 13 * Math.PI) / 180) * 5;
+      const jitter = Math.sin(index * 2.13 + layer.phase + layerIndex) * 0.8;
+      const finalRadius = (1 - sensoryFactor) * circleRadius + sensoryFactor * spikeRadius + jitter;
+
+      points.push([
+        cx + finalRadius * Math.cos(theta),
+        cy + finalRadius * Math.sin(theta)
+      ]);
+    }
+
+    return createSvgElement("path", {
+      d: `M ${points[0][0]},${points[0][1]} ${points
+        .slice(1)
+        .map((point) => `L ${point[0]},${point[1]}`)
+        .join(" ")} Z`,
+      fill: "#FFFFFF",
+      stroke: "#000000",
+      "stroke-width": metrics.strokeWidth,
+      "stroke-linejoin": "round"
+    });
+  });
+}
+
+function splitResultPlanetRingDots(metrics) {
+  const back = [];
+  const front = [];
+  const rhythmFactor = metrics.rhythm / 100;
+  const count = 75;
+  const cx = 250;
+  const cy = 250;
+  const rx = 215;
+  const ry = 42;
+  const rotation = (-14 * Math.PI) / 180;
+  const cosRotation = Math.cos(rotation);
+  const sinRotation = Math.sin(rotation);
+
+  for (let index = 0; index < count; index += 1) {
+    const angleDeg = (index * 360) / count;
+    const angle = (angleDeg * Math.PI) / 180;
+    const sizeMultiplier = 0.6 + deterministicNoise(index, 7) * 0.8;
+    const orbitRadiusOffset = -12 + deterministicNoise(index, 13) * 24;
+    const actualOffset = orbitRadiusOffset * (1 - rhythmFactor);
+    const localX = rx * Math.cos(angle) + actualOffset * Math.cos(angle);
+    const localY = ry * Math.sin(angle) + actualOffset * Math.sin(angle);
+    const radius =
+      (1 - rhythmFactor) * (sizeMultiplier * 4.2) +
+      rhythmFactor * 16.5;
+    const dot = {
+      cx: localX * cosRotation - localY * sinRotation + cx,
+      cy: localX * sinRotation + localY * cosRotation + cy + 20,
+      r: Math.max(1.5, radius)
+    };
+
+    if (angleDeg >= 180 && angleDeg < 360) {
+      back.push(dot);
+    } else {
+      front.push(dot);
+    }
+  }
+
+  return { back, front };
+}
+
+function createResultPlanetRingDot(dot, color) {
+  const group = createSvgElement("g");
+
+  group.appendChild(createSvgElement("circle", {
+    cx: dot.cx,
+    cy: dot.cy,
+    r: dot.r + 1.6,
+    fill: "#000000",
+    stroke: "#000000",
+    "stroke-width": 1
+  }));
+  group.appendChild(createSvgElement("circle", {
+    cx: dot.cx,
+    cy: dot.cy,
+    r: Math.max(1, dot.r - 0.5),
+    fill: color
+  }));
+
+  return group;
+}
+
+function createResultPlanetDecorations(metrics) {
+  const decorations = [];
+  const density = Math.max(2, Math.min(24, metrics.patternDensity || 8));
+  const latitudes = [25, -25];
+  const isKEnd = metrics.specificity >= 50;
+
+  latitudes.forEach((latitude, ringIndex) => {
+    for (let index = 0; index < density; index += 1) {
+      const id = ringIndex * density + index;
+      const longitude = (index * 360) / density + (-12 + ((index * 17 + latitude * 3) % 25));
+      const longitudeRad = (longitude * Math.PI) / 180;
+      const latitudeRad = (latitude * Math.PI) / 180;
+      const radius = 92;
+      const x3d = radius * Math.cos(latitudeRad) * Math.sin(longitudeRad);
+      const y3d = radius * Math.sin(latitudeRad);
+      const z3d = radius * Math.cos(latitudeRad) * Math.cos(longitudeRad);
+
+      if (z3d < 0) {
+        continue;
+      }
+
+      const tilt = (-10 * Math.PI) / 180;
+      const x = x3d * Math.cos(tilt) - y3d * Math.sin(tilt) + 250;
+      const y = x3d * Math.sin(tilt) + y3d * Math.cos(tilt) + 250;
+      const isEven = id % 2 === 0;
+
+      decorations.push(
+        isKEnd
+          ? createResultPlanetKDecoration(x, y, isEven, metrics)
+          : createResultPlanetCDecoration(x, y, isEven, metrics)
+      );
+    }
+  });
+
+  return decorations;
+}
+
+function createResultPlanetCDecoration(x, y, isWave, metrics) {
+  const group = createSvgElement("g", {
+    transform: `translate(${x}, ${y}) scale(0.95)`
+  });
+
+  if (isWave) {
+    group.appendChild(createSvgElement("path", {
+      d: "M -15,0 C -10,-8 -5,-8 0,0 C 5,8 10,8 15,0 L 12,6 C 8,12 3,12 -2,4 C -7,-4 -11,-4 -15,0 Z",
+      fill: "#78C0FF",
+      stroke: "#000000",
+      "stroke-width": 1.8 * (metrics.strokeWidth / 2.5),
+      "stroke-linejoin": "round"
+    }));
+  } else {
+    group.appendChild(createSvgElement("circle", {
+      cx: 0,
+      cy: 0,
+      r: 7.5,
+      fill: "#FFC1DF",
+      stroke: "#000000",
+      "stroke-width": 1.8 * (metrics.strokeWidth / 2.5)
+    }));
+  }
+
+  return group;
+}
+
+function createResultPlanetKDecoration(x, y, isChili, metrics) {
+  const group = createSvgElement("g", {
+    transform: `translate(${x}, ${y}) scale(0.95)`
+  });
+
+  if (isChili) {
+    group.appendChild(createSvgElement("path", {
+      d: "M -4,-11 C -4,-11 0,-14 3,-12 C 6,-10 9,-6 8,-1 C 7,5 2,11 -6,14 C -2,8 -2,2 -3,-2 C -4,-6 -5,-9 -4,-11 Z",
+      fill: "#FF9000",
+      stroke: "#000000",
+      "stroke-width": 1.8 * (metrics.strokeWidth / 2.5),
+      "stroke-linejoin": "round"
+    }));
+  } else {
+    [-4, 4, 0].forEach((dotX, index) => {
+      group.appendChild(createSvgElement("circle", {
+        cx: dotX,
+        cy: index === 2 ? 4 : -3,
+        r: 3.2,
+        fill: "#7E0001",
+        stroke: "#000000",
+        "stroke-width": 1.5 * (metrics.strokeWidth / 2.5)
+      }));
+    });
+  }
+
+  return group;
+}
+
+function createResultPlanetDangerCrack(metrics) {
+  if (metrics.danger < 50) {
+    return null;
+  }
+
+  return createSvgElement("path", {
+    d: "M 12,-22 L -14,-1 L -5,3 L -28,26 L -12,28 L -24,48 L -4,32 L -10,30 L 7,12 L -1,9 Z",
+    fill: "#FFFFFF",
+    stroke: "#000000",
+    "stroke-width": 2.2 * (metrics.strokeWidth / 2.5),
+    "stroke-linecap": "round",
+    "stroke-linejoin": "round",
+    transform: `translate(292, 208) rotate(12) scale(${(metrics.crackSize || 100) / 100})`
+  });
+}
+
+function createResultPlanetRotatingGapPaths() {
+  return [
+    createResultPlanetGapPath(135, -55, 45, 20, 14),
+    createResultPlanetGapPath(275, 12, 62, 10, 5),
+    createResultPlanetGapPath(40, -65, -18, 10, 5)
+  ].flat();
+}
+
+function createResultPlanetGapPath(baseLongitude, startLatitude, endLatitude, outerWidth, innerWidth) {
+  const path = getResultPlanetProjectedPath(baseLongitude, startLatitude, endLatitude, 95);
+
+  if (!path) {
+    return [];
+  }
+
+  return [
+    createSvgElement("path", {
+      d: path,
+      fill: "none",
+      stroke: "#000000",
+      "stroke-width": outerWidth,
+      "stroke-linecap": "round",
+      "stroke-linejoin": "round"
+    }),
+    createSvgElement("path", {
+      d: path,
+      fill: "none",
+      stroke: "#FCF0D9",
+      "stroke-width": innerWidth,
+      "stroke-linecap": "round",
+      "stroke-linejoin": "round"
+    })
+  ];
+}
+
+function getResultPlanetProjectedPath(baseLongitude, startLatitude, endLatitude, radius) {
+  const points = [];
+  const stepCount = 18;
+  const longitudeRad = (baseLongitude * Math.PI) / 180;
+  const tilt = (-10 * Math.PI) / 180;
+
+  for (let index = 0; index <= stepCount; index += 1) {
+    const latitude = startLatitude + (endLatitude - startLatitude) * (index / stepCount);
+    const latitudeRad = (latitude * Math.PI) / 180;
+    const x3d = radius * Math.cos(latitudeRad) * Math.sin(longitudeRad);
+    const y3d = radius * Math.sin(latitudeRad);
+    const z3d = radius * Math.cos(latitudeRad) * Math.cos(longitudeRad);
+
+    if (z3d >= -2) {
+      points.push([
+        x3d * Math.cos(tilt) - y3d * Math.sin(tilt) + 250,
+        x3d * Math.sin(tilt) + y3d * Math.cos(tilt) + 250
+      ]);
+    }
+  }
+
+  if (points.length < 2) {
+    return "";
+  }
+
+  return `M ${points[0][0]},${points[0][1]} ${points
+    .slice(1)
+    .map((point) => `L ${point[0]},${point[1]}`)
+    .join(" ")}`;
+}
+
+function deterministicNoise(seed, salt = 1) {
+  const value = Math.sin(seed * 12.9898 + salt * 78.233) * 43758.5453123;
+
+  return value - Math.floor(value);
 }
 
 function generateGalaxyParticles() {

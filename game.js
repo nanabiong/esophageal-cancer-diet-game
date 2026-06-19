@@ -543,6 +543,10 @@ let RESULT_PLANET_VISUAL_CONFIG = {
   kChiliSpan: 12,
   kDotsSpan: 12,
   rotationSpeed: 1,
+  motionSpeed: 0.75,
+  liveMotionScale: 1,
+  svgMotionScale: 1,
+  selfSpinDegPerSecond: 4,
   foodOrbit: {
     enabled: true,
     x: 330,
@@ -700,6 +704,9 @@ let galaxyLocatingRevealTimer = null;
 let resultPlanetAnimationFrame = 0;
 let resultPlanetAnimationStartTime = 0;
 let resultPlanetAnimationMetrics = null;
+let resultPlanetLastRenderTime = 0;
+let resultFoodOrbitAnimationFrame = 0;
+let resultFoodOrbitAnimationStartTime = 0;
 let resultGalaxyRevealStarted = false;
 let hasResultGalaxyEnterStarted = false;
 let resultGalaxyEnterTimer = null;
@@ -871,6 +878,10 @@ function mergeResultPlanetVisualConfig(config = {}) {
     kChiliSpan: Number(config.kChiliSpan ?? RESULT_PLANET_VISUAL_CONFIG.kChiliSpan),
     kDotsSpan: Number(config.kDotsSpan ?? RESULT_PLANET_VISUAL_CONFIG.kDotsSpan),
     rotationSpeed: Number(config.rotationSpeed ?? RESULT_PLANET_VISUAL_CONFIG.rotationSpeed),
+    motionSpeed: Number(config.motionSpeed ?? RESULT_PLANET_VISUAL_CONFIG.motionSpeed),
+    liveMotionScale: Number(config.liveMotionScale ?? RESULT_PLANET_VISUAL_CONFIG.liveMotionScale),
+    svgMotionScale: Number(config.svgMotionScale ?? RESULT_PLANET_VISUAL_CONFIG.svgMotionScale),
+    selfSpinDegPerSecond: Number(config.selfSpinDegPerSecond ?? RESULT_PLANET_VISUAL_CONFIG.selfSpinDegPerSecond),
     foodOrbit: {
       ...RESULT_PLANET_VISUAL_CONFIG.foodOrbit,
       ...(config.foodOrbit || {})
@@ -6451,7 +6462,6 @@ function createGalaxyLocatingLayer() {
     generateGalaxyParticles();
   }
   createGalaxyCenterPlanet();
-  createResultFoodOrbit();
   if (RESULT_PLANET_ONLY_MODE) {
     resultGalaxyRevealStarted = true;
     currentState = RESULT_STATES.DIET_GALAXY;
@@ -6466,6 +6476,7 @@ function createGalaxyLocatingLayer() {
 
   window.requestAnimationFrame(() => {
     galaxyLocatingLayer?.classList.add("is-visible");
+    createResultFoodOrbit();
   });
 
   return layer;
@@ -6782,11 +6793,14 @@ function createGalaxyCenterPlanet() {
   planet.style.setProperty("--result-center-planet-float-duration", `${config.floatDuration}ms`);
   planet.style.setProperty("--result-center-planet-parallax-x", "0px");
   planet.style.setProperty("--result-center-planet-parallax-y", "0px");
+  planet.style.setProperty("--result-center-planet-live-x", "0px");
+  planet.style.setProperty("--result-center-planet-live-y", "0px");
+  planet.style.setProperty("--result-center-planet-live-rotate", "0deg");
+  planet.style.setProperty("--result-center-planet-live-scale", "1");
 
   if (dynamicPlanetSvg) {
     planet.classList.add("has-dynamic-planet");
     planetBody.appendChild(dynamicPlanetSvg);
-    startResultPlanetAnimation(planetBody, dynamicPlanetMetrics);
   } else if (config.image) {
     image.className = "result-galaxy-center-planet-image";
     image.alt = "";
@@ -6809,20 +6823,23 @@ function createGalaxyCenterPlanet() {
 
   planet.appendChild(planetBody);
   galaxyLocatingField.appendChild(planet);
+
+  if (dynamicPlanetSvg) {
+    startResultPlanetAnimation(planetBody, dynamicPlanetMetrics);
+  }
 }
 
 function createResultFoodOrbit() {
   const config = RESULT_PLANET_VISUAL_CONFIG.foodOrbit || {};
 
-  if (!galaxyLocatingLayer || config.enabled === false) {
+  if ((!objectLayer && !galaxyLocatingLayer) || config.enabled === false) {
     return;
   }
 
+  const orbitParent = objectLayer || galaxyLocatingLayer;
+
+  document.querySelectorAll(".result-food-orbit").forEach((element) => element.remove());
   const foods = collectResultSelectedFoods();
-  if (!foods.length) {
-    return;
-  }
-
   const orbit = document.createElement("div");
   const centerX = DESIGN_WIDTH / 2 + Number(config.x ?? 330);
   const centerY = DESIGN_HEIGHT / 2 + Number(config.y ?? 0);
@@ -6830,9 +6847,16 @@ function createResultFoodOrbit() {
   const radiusY = Number(config.radiusY ?? 360);
   const slotSize = Number(config.slotSize ?? 112);
   const itemSize = Number(config.itemSize ?? 86);
-  const total = foods.length;
+  const slotCount = Math.max(1, Number(config.slotCount ?? Math.max(5, foods.length)));
+  const startAngle = Number(config.startAngle ?? -102);
+  const arcStep = Number(config.arcStep ?? 20);
+  const pathSlotCount = Math.max(slotCount, Number(config.pathSlotCount ?? slotCount + 6));
+  const renderedSlotCount = Math.max(slotCount, pathSlotCount);
 
   orbit.className = "result-food-orbit";
+  orbit.id = "result-food-orbit";
+  orbit.classList.add("is-visible");
+  orbit.setAttribute("aria-label", "已选择食物环形展示");
   orbit.style.setProperty("--result-food-orbit-x", `${centerX}px`);
   orbit.style.setProperty("--result-food-orbit-y", `${centerY}px`);
   orbit.style.setProperty("--result-food-orbit-radius-x", `${radiusX}px`);
@@ -6840,42 +6864,116 @@ function createResultFoodOrbit() {
   orbit.style.setProperty("--result-food-orbit-slot-size", `${slotSize}px`);
   orbit.style.setProperty("--result-food-orbit-item-size", `${itemSize}px`);
 
-  foods.forEach((food, index) => {
-    const angle = -90 + (360 * index) / Math.max(1, total);
-    const angleRad = (angle * Math.PI) / 180;
+  for (let index = 0; index < renderedSlotCount; index += 1) {
+    const food = foods.length ? foods[index % foods.length] : null;
     const slot = document.createElement("div");
-    const image = document.createElement("img");
     const label = document.createElement("span");
 
     slot.className = "result-food-orbit-slot";
-    slot.style.left = `${centerX + Math.cos(angleRad) * radiusX}px`;
-    slot.style.top = `${centerY + Math.sin(angleRad) * radiusY}px`;
+    slot.dataset.angle = String(startAngle + arcStep * index);
     slot.style.setProperty("--result-food-orbit-delay", `${index * 60}ms`);
-    slot.title = food.label || food.id;
+    slot.title = food?.label || food?.id || `slot ${index + 1}`;
     label.className = "result-food-orbit-label";
-    label.textContent = food.label || food.id;
+    label.textContent = food?.label || "未选择";
 
-    if (food.asset) {
+    if (food?.asset) {
+      const image = document.createElement("img");
       image.className = "result-food-orbit-image";
       image.alt = food.label || food.id;
       image.draggable = false;
       image.src = food.asset;
       image.addEventListener("error", () => {
-        slot.classList.remove("has-image");
+        slot.classList.remove("has-food-image");
         image.remove();
         label.classList.add("is-visible");
       }, { once: true });
-      slot.classList.add("has-image");
+      slot.classList.add("has-food-image");
       slot.appendChild(image);
     } else {
       label.classList.add("is-visible");
     }
 
+    const info = document.createElement("span");
+    info.className = "result-food-orbit-info";
+    info.textContent = food?.label || "未选择";
     slot.appendChild(label);
+    slot.appendChild(info);
     orbit.appendChild(slot);
-  });
+  }
 
-  galaxyLocatingLayer.appendChild(orbit);
+  orbitParent.appendChild(orbit);
+  positionResultFoodOrbitSlots(orbit, {
+    centerX,
+    centerY,
+    radiusX,
+    radiusY,
+    arcStep,
+    slotCount,
+    pathSlotCount: renderedSlotCount
+  }, 0);
+  startResultFoodOrbitAnimation(orbit, {
+    centerX,
+    centerY,
+    radiusX,
+    radiusY,
+    arcStep,
+    slotCount,
+    pathSlotCount: renderedSlotCount,
+    speed: Number(config.speedDegPerSecond ?? 18)
+  });
+}
+
+function startResultFoodOrbitAnimation(orbit, config) {
+  stopResultFoodOrbitAnimation();
+  resultFoodOrbitAnimationStartTime = performance.now();
+
+  const updateOrbit = (time) => {
+    if (!orbit?.isConnected) {
+      stopResultFoodOrbitAnimation();
+      return;
+    }
+
+    const elapsedSeconds = (time - resultFoodOrbitAnimationStartTime) / 1000;
+    const queueOffset = elapsedSeconds * (config.speed / Math.max(1, config.arcStep));
+
+    positionResultFoodOrbitSlots(orbit, config, queueOffset);
+
+    resultFoodOrbitAnimationFrame = window.requestAnimationFrame(updateOrbit);
+  };
+
+  resultFoodOrbitAnimationFrame = window.requestAnimationFrame(updateOrbit);
+}
+
+function positionResultFoodOrbitSlots(orbit, config, queueOffset = 0) {
+  const slotCount = Math.max(1, Number(config.slotCount || orbit.children.length || 1));
+  const pathSlotCount = Math.max(slotCount, Number(config.pathSlotCount || slotCount));
+  const arcStep = Number(config.arcStep || 20);
+
+  orbit.querySelectorAll(".result-food-orbit-slot").forEach((slot, index) => {
+    const baseAngle = Number(slot.dataset.angle || 0);
+    const startAngle = baseAngle - arcStep * index;
+    const queueIndex = ((index + queueOffset) % pathSlotCount + pathSlotCount) % pathSlotCount;
+    const angle = startAngle + arcStep * queueIndex;
+    const angleRad = (angle * Math.PI) / 180;
+    const x = config.centerX + Math.cos(angleRad) * config.radiusX;
+    const y = config.centerY + Math.sin(angleRad) * config.radiusY;
+    const depth = (Math.sin(angleRad) + 1) / 2;
+    const scale = 0.86 + depth * 0.18;
+
+    slot.style.left = `${x}px`;
+    slot.style.top = `${y}px`;
+    slot.style.zIndex = `${Math.round(20 + depth * 20)}`;
+    slot.style.setProperty("--result-food-orbit-scale", scale.toFixed(3));
+  });
+}
+
+function stopResultFoodOrbitAnimation() {
+  if (resultFoodOrbitAnimationFrame) {
+    window.cancelAnimationFrame(resultFoodOrbitAnimationFrame);
+  }
+
+  resultFoodOrbitAnimationFrame = 0;
+  resultFoodOrbitAnimationStartTime = 0;
 }
 
 function collectResultSelectedFoods() {
@@ -6960,6 +7058,7 @@ function startResultPlanetAnimation(planetBody, metrics) {
   stopResultPlanetAnimation();
   resultPlanetAnimationMetrics = metrics;
   resultPlanetAnimationStartTime = performance.now();
+  resultPlanetLastRenderTime = 0;
 
   const renderFrame = (time) => {
     if (!planetBody?.isConnected || !resultPlanetAnimationMetrics) {
@@ -6967,14 +7066,41 @@ function startResultPlanetAnimation(planetBody, metrics) {
       return;
     }
 
+    if (time - resultPlanetLastRenderTime < 80) {
+      resultPlanetAnimationFrame = window.requestAnimationFrame(renderFrame);
+      return;
+    }
+
+    resultPlanetLastRenderTime = time;
     const elapsed = time - resultPlanetAnimationStartTime;
-    const tick = elapsed * 0.04 * (resultPlanetAnimationMetrics.rotationSpeed || 1);
+    const motionSpeed = resultPlanetAnimationMetrics.motionSpeed || 1;
+    const liveMotionScale = resultPlanetAnimationMetrics.liveMotionScale ?? 1;
+    const svgMotionScale = resultPlanetAnimationMetrics.svgMotionScale ?? 1;
+    const selfSpinDegPerSecond = resultPlanetAnimationMetrics.selfSpinDegPerSecond ?? 4;
+    const tick = elapsed * 0.045 * motionSpeed * (resultPlanetAnimationMetrics.rotationSpeed || 1);
+    const planetElement = planetBody.parentElement;
     const svg = createResultPlanetSvg({
       ...resultPlanetAnimationMetrics,
       tick,
       jitterFrame: Math.floor(tick / 5) % 5,
-      rotationOffset: tick * 0.4
+      rotationOffset: tick * 0.62
     });
+    const breathScale = 1 + Math.sin(elapsed / 1450) * 0.006 * svgMotionScale;
+    const spinDeg = (elapsed / 1000) * selfSpinDegPerSecond;
+
+    svg.style.transformOrigin = "center";
+    svg.style.transform = `scale(${breathScale.toFixed(4)}) rotate(${spinDeg.toFixed(3)}deg)`;
+    if (planetElement) {
+      const liveX = Math.sin(elapsed / 2100) * 10 * liveMotionScale;
+      const liveY = Math.cos(elapsed / 1800) * 16 * liveMotionScale;
+      const liveRotate = Math.sin(elapsed / 2400) * 0.4 * liveMotionScale;
+      const liveScale = 1 + Math.sin(elapsed / 2600) * 0.018 * liveMotionScale;
+
+      planetElement.style.setProperty("--result-center-planet-live-x", `${liveX.toFixed(2)}px`);
+      planetElement.style.setProperty("--result-center-planet-live-y", `${liveY.toFixed(2)}px`);
+      planetElement.style.setProperty("--result-center-planet-live-rotate", `${liveRotate.toFixed(3)}deg`);
+      planetElement.style.setProperty("--result-center-planet-live-scale", liveScale.toFixed(4));
+    }
 
     planetBody.replaceChildren(svg);
     resultPlanetAnimationFrame = window.requestAnimationFrame(renderFrame);
@@ -6990,6 +7116,7 @@ function stopResultPlanetAnimation() {
 
   resultPlanetAnimationFrame = 0;
   resultPlanetAnimationStartTime = 0;
+  resultPlanetLastRenderTime = 0;
   resultPlanetAnimationMetrics = null;
 }
 
@@ -7013,6 +7140,10 @@ function buildResultPlanetMetrics(riskResult = getPlayerRiskResult()) {
     kChiliSpan: RESULT_PLANET_VISUAL_CONFIG.kChiliSpan,
     kDotsSpan: RESULT_PLANET_VISUAL_CONFIG.kDotsSpan,
     rotationSpeed: RESULT_PLANET_VISUAL_CONFIG.rotationSpeed,
+    motionSpeed: RESULT_PLANET_VISUAL_CONFIG.motionSpeed,
+    liveMotionScale: RESULT_PLANET_VISUAL_CONFIG.liveMotionScale,
+    svgMotionScale: RESULT_PLANET_VISUAL_CONFIG.svgMotionScale,
+    selfSpinDegPerSecond: RESULT_PLANET_VISUAL_CONFIG.selfSpinDegPerSecond,
     tick: 0,
     jitterFrame: 0,
     rotationOffset: 0
@@ -7858,6 +7989,8 @@ function cleanupGalaxyLocatingLayer() {
   }
 
   stopResultPlanetAnimation();
+  stopResultFoodOrbitAnimation();
+  objectLayer?.querySelectorAll(".result-food-orbit").forEach((element) => element.remove());
   galaxyLocatingLayer?.remove();
   galaxyLocatingLayer = null;
   galaxyLocatingField = null;

@@ -328,10 +328,10 @@
         },
         "act2_s04_plate": {
           "type": "act2Plate",
-          "x": 675.86,
-          "y": 580,
-          "width": 550,
-          "height": 300,
+          "x": 679,
+          "y": 465,
+          "width": 562,
+          "height": 382,
           "opacity": 1,
           "scale": 1,
           "zIndex": 21,
@@ -397,29 +397,41 @@
         "height": 382,
         "zIndex": 21
       },
+      "workBubbleTiming": {
+        "initialDelay": 620,
+        "roundDelay": 360,
+        "stagger": 110,
+        "enterDuration": 420
+      },
       "workBubbleRounds": [
         [
           {
-            "x": 358,
-            "y": 82,
-            "width": 280,
-            "height": 82,
+            "x": 552,
+            "y": 120,
+            "width": 133,
+            "height": 282,
+            "assetKind": "top",
+            "image": "assets/images/act2/lunch/work-top-bubble-1-1.png",
             "text": "这个表下午要吗？",
             "overlapPlate": false
           },
           {
-            "x": 1290,
-            "y": 118,
-            "width": 300,
-            "height": 82,
+            "x": 953,
+            "y": 144,
+            "width": 212,
+            "height": 200,
+            "assetKind": "top",
+            "image": "assets/images/act2/lunch/work-top-bubble-1-2.png",
             "text": "客户又改需求了",
             "overlapPlate": false
           },
           {
-            "x": 720,
-            "y": 210,
-            "width": 300,
-            "height": 82,
+            "x": 1274,
+            "y": 183,
+            "width": 133,
+            "height": 282,
+            "assetKind": "top",
+            "image": "assets/images/act2/lunch/work-top-bubble-1-3.png",
             "text": "开会链接发你了",
             "overlapPlate": false
           }
@@ -430,6 +442,8 @@
             "y": 486,
             "width": 300,
             "height": 86,
+            "assetKind": "top",
+            "image": "assets/images/act2/lunch/work-top-bubble-2-1.png",
             "text": "开会链接发你了",
             "overlapPlate": false
           },
@@ -438,6 +452,8 @@
             "y": 642,
             "width": 330,
             "height": 90,
+            "assetKind": "bottom",
+            "image": "assets/images/act2/lunch/work-bottom-bubble-2-2.png",
             "text": "你现在方便看一下吗？",
             "overlapPlate": true
           },
@@ -446,24 +462,30 @@
             "y": 574,
             "width": 300,
             "height": 86,
+            "assetKind": "bottom",
+            "image": "assets/images/act2/lunch/work-bottom-bubble-2-3.png",
             "text": "客户又改需求了",
             "overlapPlate": true
           }
         ],
         [
           {
-            "x": 780,
-            "y": 706,
-            "width": 360,
-            "height": 92,
+            "x": 706,
+            "y": 380,
+            "width": 137,
+            "height": 129,
+            "assetKind": "bottom",
+            "image": "assets/images/act2/lunch/work-bottom-bubble-2-1.png",
             "text": "麻烦五分钟内回复一下",
             "overlapPlate": true
           },
           {
-            "x": 520,
-            "y": 672,
-            "width": 310,
-            "height": 88,
+            "x": 1104,
+            "y": 509,
+            "width": 137,
+            "height": 129,
+            "assetKind": "bottom",
+            "image": "assets/images/act2/lunch/work-bottom-bubble-2-2.png",
             "text": "这个表下午要吗？",
             "overlapPlate": true
           }
@@ -597,7 +619,14 @@
             "text": "鸟",
             "zIndex": 24
           }
-        ]
+        ],
+        "autoEating": {
+          "startDelay": 720,
+          "slotDuration": 620,
+          "finalDelay": 760,
+          "crumbCount": 5,
+          "crumbDuration": 720
+        }
       },
       "soloMealInteraction": {
         "progressBar": {

@@ -238,6 +238,8 @@
         "mediumMaxMs": 7000,
         "nextStateDelay": 1200,
         "sceneTransitionDuration": 900,
+        "heatExitDuration": 760,
+        "eatingEnterDelay": 760,
         "targetCenterX": 990,
         "targetCenterY": 580,
         "targetScale": 1,
@@ -264,18 +266,6 @@
         }
       },
       "objects": {
-        "act1_s03_scene_background": {
-          "type": "eatingSceneBg",
-          "x": 0,
-          "y": 0,
-          "width": 1920,
-          "height": 931,
-          "opacity": 1,
-          "scale": 1,
-          "zIndex": 1,
-          "content": "\u80cc\u666f",
-          "image": "assets/images/act1/eating/scene-bg.png"
-        },
         "act1_s03_table": {
           "type": "eatingTable",
           "x": 381,

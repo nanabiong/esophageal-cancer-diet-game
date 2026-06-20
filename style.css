@@ -2721,12 +2721,14 @@ button:disabled {
   object-fit: contain;
   pointer-events: none;
   user-select: none;
+  --act2-food-rotation: 0deg;
   transform-origin: center;
 }
 
 .act2-plate-slot[data-slot-index="0"] .act2-plate-slot-food-asset,
 .act2-plate-slot[data-slot-index="1"] .act2-plate-slot-food-asset,
 .act2-plate-slot[data-slot-index="2"] .act2-plate-slot-food-asset {
+  --act2-food-rotation: 90deg;
   transform: rotate(90deg);
 }
 
@@ -2737,6 +2739,45 @@ button:disabled {
 
 .act2-plate-slot.has-asset.is-eaten {
   background: transparent;
+}
+
+.act2-plate-slot.has-asset.is-eaten::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 58%;
+  width: 38%;
+  height: 22%;
+  border-radius: 999px;
+  background:
+    radial-gradient(circle at 22% 44%, #9c6230 0 3px, transparent 4px),
+    radial-gradient(circle at 48% 60%, #c8873f 0 4px, transparent 5px),
+    radial-gradient(circle at 76% 38%, #7d4c26 0 3px, transparent 4px),
+    rgba(181, 120, 58, 0.18);
+  transform: translate(-50%, -50%) rotate(-6deg);
+  pointer-events: none;
+}
+
+.act2-plate-slot.is-auto-consuming .act2-plate-slot-food-asset {
+  animation: act2ParkAutoEatFood var(--act2-park-auto-eat-duration, 620ms) ease-in forwards;
+}
+
+.act2-plate-slot.has-asset.is-eaten .act2-plate-slot-food-asset {
+  opacity: 0;
+}
+
+.act2-food-crumb {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  z-index: 5;
+  width: 10px;
+  height: 8px;
+  border-radius: 50%;
+  background: #b9783a;
+  border: 1px solid rgba(23, 23, 23, 0.52);
+  pointer-events: none;
+  animation: act2FoodCrumbPop var(--act2-crumb-duration, 720ms) ease-out forwards;
 }
 
 .act2-plate-slot.is-eaten .act2-slot-food-name {
@@ -3039,6 +3080,11 @@ button:disabled {
 
 .act2-work-bubble:hover {
   transform: scale(1.04);
+}
+
+.act2-work-bubble.is-entering {
+  pointer-events: none;
+  animation: act2WorkBubblePopIn var(--act2-work-bubble-enter-duration, 420ms) cubic-bezier(0.2, 1.28, 0.34, 1) both;
 }
 
 .act2-work-bubble.is-clearing {
@@ -3489,6 +3535,23 @@ button:disabled {
   }
 }
 
+@keyframes act2WorkBubblePopIn {
+  0% {
+    opacity: 0;
+    transform: translateY(-24px) scale(0.58);
+  }
+
+  62% {
+    opacity: 1;
+    transform: translateY(4px) scale(1.08);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
 @keyframes act2CatStartle {
   0% {
     transform: translate(0, 0) rotate(-1deg);
@@ -3571,6 +3634,49 @@ button:disabled {
 
   100% {
     transform: scale(1);
+  }
+}
+
+@keyframes act2ParkAutoEatFood {
+  0% {
+    opacity: 1;
+    transform: scale(1) rotate(var(--act2-food-rotation, 0deg));
+    filter: none;
+  }
+
+  38% {
+    opacity: 1;
+    transform: scale(1.1) rotate(var(--act2-food-rotation, 0deg)) translateY(-8px);
+    filter: saturate(1.18);
+  }
+
+  100% {
+    opacity: 0;
+    transform: scale(0.18) rotate(var(--act2-food-rotation, 0deg)) translateY(10px);
+    filter: saturate(0.86);
+  }
+}
+
+@keyframes act2FoodCrumbPop {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.4);
+  }
+
+  28% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+
+  100% {
+    opacity: 0;
+    transform:
+      translate(
+        calc(-50% + var(--crumb-x, 0px)),
+        calc(-50% + var(--crumb-y, -22px))
+      )
+      scale(0.72)
+      rotate(80deg);
   }
 }
 

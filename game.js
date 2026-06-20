@@ -1716,13 +1716,19 @@ function getAct1MicrowaveEntryConfig() {
 
   return {
     duration: config.duration ?? 1500,
-    orthogonalStepDelay: config.orthogonalStepDelay ?? 520,
     targetCenterX: config.targetCenterX ?? 768,
     targetCenterY: config.targetCenterY ?? 469,
     foodOffsetX: config.foodOffsetX ?? 0,
     foodOffsetY: config.foodOffsetY ?? 0,
     targetScale: config.targetScale ?? 1.3
   };
+}
+
+function setAct1CarriedFoodScale(element, scale) {
+  const normalizedScale = Number(scale) || 1;
+
+  element.style.setProperty("--act1-carried-food-scale", normalizedScale);
+  element.style.transform = `scale(${normalizedScale})`;
 }
 
 function playAct1BreakfastToHeatTransition(selectedElement) {
@@ -1747,13 +1753,10 @@ function playAct1BreakfastToHeatTransition(selectedElement) {
 
   selectedElement.classList.add("is-travelling-to-microwave");
   selectedElement.style.zIndex = "30";
-  selectedElement.style.transitionDuration = `${config.orthogonalStepDelay}ms`;
+  selectedElement.style.transitionDuration = `${config.duration}ms`;
   selectedElement.style.left = `${(targetLeft / stage.width) * 100}%`;
-  selectedElement.style.transform = `scale(${config.targetScale})`;
-
-  window.setTimeout(() => {
-    selectedElement.style.top = `${(targetTop / stage.height) * 100}%`;
-  }, config.orthogonalStepDelay);
+  selectedElement.style.top = `${(targetTop / stage.height) * 100}%`;
+  setAct1CarriedFoodScale(selectedElement, config.targetScale);
 
   window.setTimeout(() => {
     enterAct1MicrowaveHeat();
@@ -2009,6 +2012,7 @@ function enterAct1EatingSpeed() {
   const state = getAct1StateConfig(ACT1_STATES.EATING_SPEED);
   const config = getAct1EatingConfig();
   const carriedFood = objectLayer.querySelector(".act1-carried-heat-food");
+  const sceneTransitionDuration = config.sceneTransitionDuration;
 
   currentPhase = PHASES.ACT1_EATING;
   currentState = ACT1_STATES.EATING_SPEED;
@@ -2024,14 +2028,25 @@ function enterAct1EatingSpeed() {
       return;
     }
 
-    element.remove();
+    element.style.transitionDuration = `${sceneTransitionDuration}ms`;
+    element.classList.add("act1-scene-leaving-left");
+    window.setTimeout(() => {
+      element.remove();
+    }, sceneTransitionDuration + 80);
   });
 
   Object.entries(state.objects || {}).forEach(([objectId, objectConfig]) => {
     const element = createAct1ObjectElement(objectId, objectConfig);
 
+    element.style.transitionDuration = `${sceneTransitionDuration}ms`;
+    element.classList.add("act1-scene-entering-right");
     updateAct1ObjectLayout(element, objectConfig);
     objectLayer.appendChild(element);
+    window.requestAnimationFrame(() => {
+      window.requestAnimationFrame(() => {
+        element.classList.remove("act1-scene-entering-right");
+      });
+    });
   });
 
   if (carriedFood) {
@@ -2053,7 +2068,10 @@ function getAct1EatingConfig() {
     targetCenterX: config.targetCenterX ?? 964,
     targetCenterY: config.targetCenterY ?? 654,
     targetScale: config.targetScale ?? 1.3,
-    assetPattern: config.assetPattern || "assets/images/act1/eating/{slug}-{state}.png"
+    sceneTransitionDuration: config.sceneTransitionDuration ?? 900,
+    assetIndexOffset: config.assetIndexOffset ?? 1,
+    assetPattern: config.assetPattern || "assets/images/act1/eating/{slug}-{state}.png",
+    assetStateLayouts: config.assetStateLayouts || {}
   };
 }
 
@@ -2073,9 +2091,10 @@ function prepareAct1CarriedFoodForEating(foodElement, config = getAct1EatingConf
 
   foodElement.classList.add("act1-carried-eating-food");
   foodElement.classList.remove("act1-carried-heat-food");
+  foodElement.style.transitionDuration = `${config.sceneTransitionDuration}ms`;
   foodElement.style.left = `${(targetLeft / stage.width) * 100}%`;
   foodElement.style.top = `${(targetTop / stage.height) * 100}%`;
-  foodElement.style.transform = `scale(${config.targetScale})`;
+  setAct1CarriedFoodScale(foodElement, config.targetScale);
   foodElement.style.zIndex = "30";
   foodElement.disabled = false;
   foodElement.addEventListener("click", handleAct1EatingFoodClick);
@@ -2123,16 +2142,23 @@ function updateAct1CarriedFoodEatingAsset(foodElement, stateIndex) {
   const config = getAct1EatingConfig();
   const slug = getAct1BreakfastAssetSlug();
   const existingImage = foodElement.querySelector(":scope > .act1-placeholder-image");
+  const assetLayout = getAct1EatingAssetStateLayout(slug, stateIndex, config);
 
   foodElement.dataset.eatingAssetState = String(stateIndex);
+  foodElement.style.setProperty("--act1-eating-container-anchor-x", `${assetLayout.containerAnchorX}%`);
+  foodElement.style.setProperty("--act1-eating-container-anchor-y", `${assetLayout.containerAnchorY}%`);
+  foodElement.style.setProperty("--act1-eating-image-anchor-x", `${assetLayout.imageAnchorX}%`);
+  foodElement.style.setProperty("--act1-eating-image-anchor-y", `${assetLayout.imageAnchorY}%`);
+  foodElement.style.setProperty("--act1-eating-image-offset-x", `${assetLayout.offsetX}px`);
+  foodElement.style.setProperty("--act1-eating-image-offset-y", `${assetLayout.offsetY}px`);
 
-  if (stateIndex <= 0) {
-    return;
-  }
-
+  const assetStateIndex = Math.max(
+    1,
+    Math.min(config.requiredClicks, stateIndex + config.assetIndexOffset)
+  );
   const imagePath = config.assetPattern
     .replace("{slug}", slug)
-    .replace("{state}", String(stateIndex));
+    .replace("{state}", String(assetStateIndex));
   const image = existingImage || document.createElement("img");
 
   image.className = "act1-placeholder-image";
@@ -2152,6 +2178,22 @@ function updateAct1CarriedFoodEatingAsset(foodElement, stateIndex) {
   if (!existingImage) {
     foodElement.prepend(image);
   }
+}
+
+function getAct1EatingAssetStateLayout(slug, stateIndex, config = getAct1EatingConfig()) {
+  const layouts = config.assetStateLayouts || {};
+  const specificLayout = layouts[slug]?.[stateIndex];
+  const defaultLayout = layouts.default?.[stateIndex];
+  const layout = specificLayout || defaultLayout || {};
+
+  return {
+    containerAnchorX: Number(layout.containerAnchorX ?? 50),
+    containerAnchorY: Number(layout.containerAnchorY ?? 50),
+    imageAnchorX: Number(layout.imageAnchorX ?? 50),
+    imageAnchorY: Number(layout.imageAnchorY ?? 50),
+    offsetX: Number(layout.offsetX ?? 0),
+    offsetY: Number(layout.offsetY ?? 0)
+  };
 }
 
 function updateAct1EatingVisuals() {

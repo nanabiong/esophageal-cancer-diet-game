@@ -2621,6 +2621,8 @@ function createAct2ObjectElement(objectId, objectConfig) {
     renderAct2ConveyorWindow(element, objectConfig);
   } else if (objectConfig.type === "act2StaticImagePreview") {
     renderAct2StaticImagePreview(element, objectConfig);
+  } else if (objectConfig.type === "act2RotatingFan") {
+    renderAct2RotatingFan(element, objectConfig);
   } else if (objectConfig.type === "act2IntroBubble") {
     renderAct2IntroBubble(element, objectConfig);
   } else if (objectConfig.type === "act2PrepArea") {
@@ -2665,6 +2667,10 @@ function getAct2ObjectClassName(type) {
 
   if (type === "act2StaticImagePreview") {
     return "act2-scene-object act2-static-image-preview";
+  }
+
+  if (type === "act2RotatingFan") {
+    return "act2-scene-object act2-rotating-fan";
   }
 
   if (type === "act2IntroBubble") {
@@ -2739,7 +2745,17 @@ function syncAct2PersistentPlateSlotLayout(stateConfig = getAct2StateConfig(curr
     return;
   }
 
-  const [, plateConfig] = plateEntry;
+  const [plateObjectId, basePlateConfig] = plateEntry;
+  const plateConfig = {
+    ...basePlateConfig,
+    ...(stateConfig?.plateLayout || {})
+  };
+  const plateElement = document.getElementById(plateObjectId);
+
+  if (plateElement && stateConfig?.plateLayout) {
+    updateAct2ObjectLayout(plateElement, plateConfig);
+  }
+
   Object.entries(objects).forEach(([objectId, objectConfig]) => {
     if (objectConfig.type !== "act2PlateSlot") {
       return;
@@ -2827,6 +2843,18 @@ function renderAct2StaticImagePreview(element, objectConfig) {
   label.className = "act2-static-image-preview-label";
   label.textContent = objectConfig.content || "静态预览图";
   element.appendChild(label);
+  renderAct2OptionalAsset(element, objectConfig.image || objectConfig.asset?.src || "assets/images/act2/lunch/intro-preview.png", {
+    className: "act2-static-image-preview-asset",
+    alt: objectConfig.content || "lunch preview",
+    hideFallbackSelector: ".act2-static-image-preview-label"
+  });
+}
+
+function renderAct2RotatingFan(element, objectConfig) {
+  renderAct2OptionalAsset(element, objectConfig.image || objectConfig.asset?.src || "assets/images/act2/lunch/intro-fan.png", {
+    className: "act2-rotating-fan-asset",
+    alt: objectConfig.content || "fan"
+  });
 }
 
 function renderAct2PrepArea(element, objectConfig) {
@@ -3149,13 +3177,26 @@ function renderAct2ComicPanelSelector(element, objectConfig) {
     panel.setAttribute("aria-label", place.label || place.name);
     panel.className = "act2-comic-panel";
     panel.dataset.placeId = place.id;
-    panel.dataset.column = String(panelConfig.column || 1);
-    panel.style.gridColumn = String(panelConfig.column || 1);
-    panel.style.gridRow = String(panelConfig.row || 1);
+    if (
+      Number.isFinite(panelConfig.x) &&
+      Number.isFinite(panelConfig.y) &&
+      Number.isFinite(panelConfig.width) &&
+      Number.isFinite(panelConfig.height)
+    ) {
+      panel.classList.add("is-layout-absolute");
+      panel.style.left = `${(panelConfig.x / objectConfig.width) * 100}%`;
+      panel.style.top = `${(panelConfig.y / objectConfig.height) * 100}%`;
+      panel.style.width = `${(panelConfig.width / objectConfig.width) * 100}%`;
+      panel.style.height = `${(panelConfig.height / objectConfig.height) * 100}%`;
+    } else {
+      panel.dataset.column = String(panelConfig.column || 1);
+      panel.style.gridColumn = String(panelConfig.column || 1);
+      panel.style.gridRow = String(panelConfig.row || 1);
+    }
     shot.className = "act2-comic-panel-shot";
     shot.dataset.shot = panelConfig.shot || "";
     panel.appendChild(shot);
-    renderAct2OptionalAsset(panel, ACT2_PLACE_OPTION_ASSETS[place.id], {
+    renderAct2OptionalAsset(panel, panelConfig.image || panelConfig.asset?.src || ACT2_PLACE_OPTION_ASSETS[place.id], {
       className: "act2-place-option-asset",
       alt: place.label || place.name || "",
       hideFallbackSelector: ".act2-comic-panel-shot"
@@ -3631,6 +3672,12 @@ function getAct2FriendBubbleAssetSrc(kind, bubbleConfig = {}, index = 0) {
   return bubbleConfig.image ||
     bubbleConfig.asset?.src ||
     `assets/images/act2/lunch/friend-${kind}-bubble-${index + 1}.png`;
+}
+
+function getAct2ParkSceneAssetSrc(kind, config = {}, index = 0) {
+  return config.image ||
+    config.asset?.src ||
+    `assets/images/act2/lunch/park-${kind}${index ? `-${index}` : ""}.png`;
 }
 
 function createAct2CatchGameStage() {
@@ -4300,6 +4347,10 @@ function createAct2ParkScene() {
   act2BirdCleared = false;
   const scene = document.createElement("div");
   scene.className = "act2-scene-object act2-park-scene";
+  renderAct2OptionalAsset(scene, getAct2ParkSceneAssetSrc("bg", config.scene || {}), {
+    className: "act2-park-scene-asset",
+    alt: "park scene background"
+  });
   updateAct2ObjectLayout(scene, {
     ...(config.scene || {}),
     x: config.scene?.x ?? 339.14,
@@ -4315,7 +4366,12 @@ function createAct2ParkScene() {
   const dog = document.createElement("div");
   dog.className = "act2-scene-object act2-dog";
   dog.dataset.state = "dog_state_1";
+  dog.classList.toggle("is-state-toggle-enabled", Boolean(config.dog?.enableStateToggle));
   dog.textContent = config.dog?.state1Text || "狗";
+  renderAct2OptionalAsset(dog, getAct2ParkDogAssetSrc(config.dog || {}, 1), {
+    className: "act2-park-animal-asset",
+    alt: config.dog?.state1Text || "dog"
+  });
   updateAct2ObjectLayout(dog, {
     ...(config.dog || {}),
     opacity: 1,
@@ -4327,6 +4383,10 @@ function createAct2ParkScene() {
   const cat = document.createElement("div");
   cat.className = "act2-scene-object act2-cat";
   cat.textContent = config.cat?.text || "猫！";
+  renderAct2OptionalAsset(cat, getAct2ParkSceneAssetSrc("cat", config.cat || {}), {
+    className: "act2-park-animal-asset",
+    alt: config.cat?.text || "cat"
+  });
   updateAct2ObjectLayout(cat, {
     ...(config.cat || {}),
     opacity: 1,
@@ -4335,20 +4395,41 @@ function createAct2ParkScene() {
   });
   objectLayer.appendChild(cat);
 
-  const bird = document.createElement("button");
-  bird.type = "button";
-  bird.className = "act2-scene-object act2-bird";
-  bird.textContent = config.bird?.text || "鸟";
-  updateAct2ObjectLayout(bird, {
-    ...(config.bird || {}),
-    opacity: 1,
-    scale: 1,
-    zIndex: config.bird?.zIndex || 14
-  });
-  bird.addEventListener("click", () => handleAct2BirdClick(bird));
-  objectLayer.appendChild(bird);
+  const birdConfigs = Array.isArray(config.birds) && config.birds.length
+    ? config.birds
+    : [config.bird || {}];
 
-  startAct2DogHowling(dog, config.dog || {});
+  birdConfigs.forEach((birdConfig, index) => {
+    const bird = document.createElement("button");
+
+    bird.type = "button";
+    bird.className = "act2-scene-object act2-bird";
+    bird.textContent = birdConfig.text || "鸟";
+    renderAct2OptionalAsset(bird, getAct2ParkSceneAssetSrc("bird", birdConfig, index + 1), {
+      className: "act2-park-animal-asset",
+      alt: birdConfig.text || "bird"
+    });
+    updateAct2ObjectLayout(bird, {
+      ...birdConfig,
+      opacity: 1,
+      scale: 1,
+      zIndex: birdConfig.zIndex || 24
+    });
+    bird.addEventListener("click", () => handleAct2BirdClick(bird));
+    objectLayer.appendChild(bird);
+  });
+
+  if (config.dog?.enableStateToggle) {
+    startAct2DogHowling(dog, config.dog || {});
+  }
+}
+
+function getAct2ParkDogAssetSrc(dogConfig = {}, state = 1) {
+  return dogConfig[`state${state}Image`] ||
+    dogConfig[`state${state}Asset`]?.src ||
+    dogConfig.image ||
+    dogConfig.asset?.src ||
+    "assets/images/act2/lunch/park-dog.png";
 }
 
 function startAct2DogHowling(dog, dogConfig = {}) {
@@ -4369,6 +4450,13 @@ function toggleAct2DogState(dog, dogConfig = {}) {
 
   act2DogState = act2DogState === 1 ? 2 : 1;
   dog.dataset.state = `dog_state_${act2DogState}`;
+  const dogImage = dog.querySelector(".act2-park-animal-asset");
+
+  if (dogImage) {
+    dogImage.src = getAct2ParkDogAssetSrc(dogConfig, act2DogState);
+    return;
+  }
+
   dog.textContent = act2DogState === 1
     ? dogConfig.state1Text || "狗"
     : dogConfig.state2Text || "狗！";

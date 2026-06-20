@@ -1949,6 +1949,23 @@ button:disabled {
   pointer-events: none;
 }
 
+.act2-static-image-preview.has-asset {
+  border-color: transparent;
+  background: transparent;
+  box-shadow: none;
+}
+
+.act2-static-image-preview-asset {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  pointer-events: none;
+  user-select: none;
+}
+
 .act2-static-image-preview.is-exiting {
   animation: act2IntroBubbleFadeOut 260ms ease-out forwards;
 }
@@ -1962,6 +1979,23 @@ button:disabled {
   padding: 10px 18px;
   border: 3px solid #171717;
   background: #fff8df;
+}
+
+.act2-rotating-fan {
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+}
+
+.act2-rotating-fan-asset {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  transform-origin: center center;
+  animation: act2FanSpin 1500ms linear infinite;
+  pointer-events: none;
+  user-select: none;
 }
 
 .act2-enter-from-left {
@@ -2593,6 +2627,7 @@ button:disabled {
 }
 
 .act2-comic-grid {
+  position: relative;
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   grid-template-rows: repeat(2, minmax(0, 1fr));
@@ -2619,6 +2654,10 @@ button:disabled {
   border-color: transparent;
   background: transparent;
   box-shadow: none;
+}
+
+.act2-comic-panel.is-layout-absolute {
+  position: absolute;
 }
 
 .act2-comic-panel:hover {
@@ -2917,6 +2956,22 @@ button:disabled {
   pointer-events: none;
 }
 
+.act2-park-scene.has-asset {
+  border-color: transparent;
+  background: transparent;
+}
+
+.act2-park-scene-asset {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  pointer-events: none;
+  user-select: none;
+}
+
 .act2-dog,
 .act2-cat,
 .act2-bird {
@@ -2933,18 +2988,39 @@ button:disabled {
   box-shadow: 5px 5px 0 rgba(0, 0, 0, 0.16);
 }
 
+.act2-dog.has-asset,
+.act2-cat.has-asset,
+.act2-bird.has-asset {
+  border-color: transparent;
+  background: transparent;
+  box-shadow: none;
+  color: transparent;
+}
+
+.act2-park-animal-asset {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  pointer-events: none;
+  user-select: none;
+}
+
 .act2-dog {
   border-radius: 28px 28px 18px 18px;
   background: #d8c3a5;
   pointer-events: none;
+  animation: act2DogBounce 720ms ease-in-out infinite alternate;
 }
 
-.act2-dog[data-state="dog_state_2"] {
+.act2-dog.is-state-toggle-enabled[data-state="dog_state_2"] {
   background: #f1d08d;
   transform: scale(1.08) rotate(-2deg) !important;
 }
 
-.act2-dog[data-state="dog_state_2"]::after {
+.act2-dog.is-state-toggle-enabled[data-state="dog_state_2"]::after {
   content: "";
   position: absolute;
   right: -28px;
@@ -3211,6 +3287,20 @@ button:disabled {
   }
 }
 
+@keyframes act2DogBounce {
+  0% {
+    transform: translateY(0) rotate(-1deg) scale(1);
+  }
+
+  45% {
+    transform: translateY(-8px) rotate(2deg) scale(1.04, 0.98);
+  }
+
+  100% {
+    transform: translateY(2px) rotate(-2deg) scale(0.99, 1.03);
+  }
+}
+
 @keyframes act2BirdIdle {
   0% {
     transform: translateY(0) scale(1);
@@ -3277,6 +3367,16 @@ button:disabled {
   to {
     opacity: 0;
     transform: translateY(-12px) scale(0.96);
+  }
+}
+
+@keyframes act2FanSpin {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
   }
 }
 

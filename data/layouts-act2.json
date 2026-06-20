@@ -100,14 +100,27 @@
         },
         "act2_s02_intro_static_image": {
           "type": "act2StaticImagePreview",
-          "x": 516.19,
-          "y": 339.15,
-          "width": 1003,
-          "height": 460,
+          "x": 428,
+          "y": 214,
+          "width": 1064,
+          "height": 494,
+          "image": "assets/images/act2/lunch/intro-preview.png",
           "opacity": 1,
           "scale": 1,
           "zIndex": 4,
           "content": "静态午餐窗口预览"
+        },
+        "act2_s02_intro_fan": {
+          "type": "act2RotatingFan",
+          "x": 1147,
+          "y": 454,
+          "width": 200,
+          "height": 200,
+          "image": "assets/images/act2/lunch/intro-fan.png",
+          "opacity": 1,
+          "scale": 1,
+          "zIndex": 5,
+          "content": "风扇"
         }
       }
     },
@@ -244,39 +257,51 @@
       "objects": {
         "act2_s04_comic_grid": {
           "type": "act2ComicGrid",
-          "x": 220,
-          "y": 76,
-          "width": 1480,
-          "height": 414,
+          "x": 285,
+          "y": 87,
+          "width": 1302,
+          "height": 635,
           "opacity": 1,
           "scale": 1,
           "zIndex": 7,
           "panels": [
             {
               "placeId": "act2_place_canteen_table",
-              "row": 1,
-              "column": 1,
+              "x": 30,
+              "y": 334,
+              "width": 521,
+              "height": 270,
+              "image": "assets/images/act2/lunch/place-option-friend.png",
               "shot": "table-corner",
               "caption": "桌角特写"
             },
             {
               "placeId": "act2_place_coworkers",
-              "row": 1,
-              "column": 2,
+              "x": 873,
+              "y": 32,
+              "width": 405,
+              "height": 270,
+              "image": "assets/images/act2/lunch/place-option-work.png",
               "shot": "chat",
               "caption": "人物聊天特写"
             },
             {
               "placeId": "act2_place_park_bench",
-              "row": 2,
-              "column": 1,
+              "x": 30,
+              "y": 32,
+              "width": 810,
+              "height": 270,
+              "image": "assets/images/act2/lunch/place-option-park.png",
               "shot": "bench",
               "caption": "长椅特写"
             },
             {
               "placeId": "act2_place_office_desk",
-              "row": 2,
-              "column": 2,
+              "x": 578,
+              "y": 334,
+              "width": 700,
+              "height": 270,
+              "image": "assets/images/act2/lunch/place-option-solo.png",
               "shot": "screen",
               "caption": "一人食特写"
             }
@@ -356,6 +381,14 @@
     },
     "act2_05_lunch_place_focus": {
       "_note": "Act2 focused comic panel lunch place with persistent plate.",
+      "plateLayout": {
+        "_note": "Shared held plate layout for all four focused lunch scenes. Adjust x/y/width/height here.",
+        "x": 679,
+        "y": 465,
+        "width": 562,
+        "height": 382,
+        "zIndex": 21
+      },
       "workBubbleRounds": [
         [
           {
@@ -511,39 +544,52 @@
         ]
       },
       "parkScene": {
+        "_note": "Park scene assets and layout. Adjust x/y/width/height for dog, cat, and each item in birds.",
         "scene": {
           "x": 339.14,
           "y": 107.01,
           "width": 1190,
           "height": 650,
+          "image": "assets/images/act2/lunch/park-bg.png",
           "zIndex": 8
         },
         "dog": {
-          "x": 1210,
-          "y": 282,
-          "width": 190,
-          "height": 150,
-          "state1Text": "狗",
-          "state2Text": "狗！",
-          "interval": 600,
+          "x": 338,
+          "y": 286,
+          "width": 524,
+          "height": 233,
+          "image": "assets/images/act2/lunch/park-dog.png",
           "zIndex": 13
         },
         "cat": {
-          "x": 438,
-          "y": 298,
+          "x": 1047,
+          "y": 252,
           "width": 170,
           "height": 135,
+          "image": "assets/images/act2/lunch/park-cat.png",
           "text": "猫！",
           "zIndex": 13
         },
-        "bird": {
-          "x": 850,
-          "y": 506,
-          "width": 120,
-          "height": 90,
-          "text": "鸟",
-          "zIndex": 14
-        }
+        "birds": [
+          {
+            "x": 730,
+            "y": 476,
+            "width": 61,
+            "height": 63,
+            "image": "assets/images/act2/lunch/park-bird-1.png",
+            "text": "鸟",
+            "zIndex": 24
+          },
+          {
+            "x": 1013,
+            "y": 431,
+            "width": 61,
+            "height": 63,
+            "image": "assets/images/act2/lunch/park-bird-2.png",
+            "text": "鸟",
+            "zIndex": 24
+          }
+        ]
       },
       "soloMealInteraction": {
         "progressBar": {

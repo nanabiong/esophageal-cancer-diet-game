@@ -726,6 +726,7 @@ let resultPlanetAnimationMetrics = null;
 let resultPlanetLastRenderTime = 0;
 let resultFoodOrbitAnimationFrame = 0;
 let resultFoodOrbitAnimationStartTime = 0;
+let resultFoodOrbitLastRenderTime = 0;
 let resultGalaxyRevealStarted = false;
 let hasResultGalaxyEnterStarted = false;
 let resultGalaxyEnterTimer = null;
@@ -2274,6 +2275,7 @@ let act2IntroTypewriterDone = false;
 let act2IntroWheelLocked = false;
 let act2LunchChoiceWheelLocked = false;
 let isAct2WheelLocked = false;
+let act2PlaceTransitionInProgress = false;
 let act2CannotGoBackHintTimer = null;
 let selectedAct2PrepFoods = [];
 let act2CatchRemainingFoods = [];
@@ -3196,6 +3198,7 @@ function renderAct2ComicPanelSelector(element, objectConfig) {
     shot.className = "act2-comic-panel-shot";
     shot.dataset.shot = panelConfig.shot || "";
     panel.appendChild(shot);
+    renderAct2PlacePanelTooltip(panel, panelConfig, place);
     renderAct2OptionalAsset(panel, panelConfig.image || panelConfig.asset?.src || ACT2_PLACE_OPTION_ASSETS[place.id], {
       className: "act2-place-option-asset",
       alt: place.label || place.name || "",
@@ -3204,6 +3207,20 @@ function renderAct2ComicPanelSelector(element, objectConfig) {
     panel.addEventListener("click", () => expandAct2ComicPanel(place.id));
     element.appendChild(panel);
   });
+}
+
+function renderAct2PlacePanelTooltip(panel, panelConfig, place) {
+  const tooltip = document.createElement("div");
+  const title = document.createElement("div");
+  const body = document.createElement("div");
+
+  tooltip.className = "act2-place-tooltip";
+  title.className = "act2-place-tooltip-title";
+  body.className = "act2-place-tooltip-body";
+  title.textContent = panelConfig.tooltipTitle || place.label || place.name || "";
+  body.textContent = panelConfig.tooltipText || place.description || "";
+  tooltip.append(title, body);
+  panel.appendChild(tooltip);
 }
 
 function renderAct2ComicFocus(element) {
@@ -3240,7 +3257,11 @@ function renderAct2ComicFocus(element) {
 }
 
 function expandAct2ComicPanel(placeId) {
-  if (currentPhase !== PHASES.ACT2_LUNCH || currentState !== ACT2_LUNCH_PLACE_SELECT_STATE) {
+  if (
+    currentPhase !== PHASES.ACT2_LUNCH ||
+    currentState !== ACT2_LUNCH_PLACE_SELECT_STATE ||
+    act2PlaceTransitionInProgress
+  ) {
     return;
   }
 
@@ -3259,7 +3280,36 @@ function expandAct2ComicPanel(placeId) {
   ) {
     recordAct2LunchPlaceChoice(place);
   }
-  enterAct2LunchPlaceFocus();
+  playAct2PlaceSelectTransition(place);
+}
+
+function playAct2PlaceSelectTransition(place) {
+  const grid = objectLayer?.querySelector(".act2-comic-grid");
+  const focusConfig = getAct2StateConfig(ACT2_LUNCH_PLACE_FOCUS_STATE).objects?.act2_s05_comic_focus || {};
+  const transitionScene = document.createElement("div");
+  const duration = 760;
+
+  act2PlaceTransitionInProgress = true;
+  grid?.classList.add("is-leaving-left");
+  transitionScene.className = "act2-scene-object act2-place-focus-transition is-entering-right";
+  transitionScene.dataset.placeId = place.id;
+  renderAct2OptionalAsset(transitionScene, ACT2_PLACE_BACKGROUND_ASSETS[place.id], {
+    className: "act2-place-focus-bg-asset",
+    alt: place.label || place.name || ""
+  });
+  updateAct2ObjectLayout(transitionScene, {
+    ...focusConfig,
+    opacity: 1,
+    scale: 1,
+    zIndex: focusConfig.zIndex || 7
+  });
+  objectLayer.appendChild(transitionScene);
+
+  window.setTimeout(() => {
+    act2PlaceTransitionInProgress = false;
+    transitionScene.remove();
+    enterAct2LunchPlaceFocus();
+  }, duration);
 }
 
 function bindAct2LunchDragSource(element, choiceId, sourceCard = element) {
@@ -7426,15 +7476,18 @@ function createResultFoodOrbit() {
   const radiusY = Number(config.radiusY ?? 360);
   const slotSize = Number(config.slotSize ?? 112);
   const itemSize = Number(config.itemSize ?? 86);
+  const slotBackgroundImage = config.slotBackgroundImage || "assets/images/result/food-orbit-slot.png";
   const slotCount = Math.max(1, Number(config.slotCount ?? Math.max(5, foods.length)));
   const startAngle = Number(config.startAngle ?? -102);
   const arcStep = Number(config.arcStep ?? 20);
+  const fps = Math.max(1, Number(config.fps ?? 24));
   const pathSlotCount = Math.max(slotCount, Number(config.pathSlotCount ?? slotCount + 6));
   const renderedSlotCount = Math.max(slotCount, pathSlotCount);
 
   orbit.className = "result-food-orbit";
   orbit.id = "result-food-orbit";
   orbit.classList.add("is-visible");
+  orbit.classList.toggle("has-slot-bg", Boolean(slotBackgroundImage));
   orbit.setAttribute("aria-label", "已选择食物环形展示");
   orbit.style.setProperty("--result-food-orbit-x", `${centerX}px`);
   orbit.style.setProperty("--result-food-orbit-y", `${centerY}px`);
@@ -7442,8 +7495,8 @@ function createResultFoodOrbit() {
   orbit.style.setProperty("--result-food-orbit-radius-y", `${radiusY}px`);
   orbit.style.setProperty("--result-food-orbit-slot-size", `${slotSize}px`);
   orbit.style.setProperty("--result-food-orbit-item-size", `${itemSize}px`);
-  if (config.slotBackgroundImage) {
-    orbit.style.setProperty("--result-food-orbit-slot-bg-image", `url("${config.slotBackgroundImage}")`);
+  if (slotBackgroundImage) {
+    orbit.style.setProperty("--result-food-orbit-slot-bg-image", `url("${slotBackgroundImage}")`);
   }
 
   for (let index = 0; index < renderedSlotCount; index += 1) {
@@ -7491,7 +7544,8 @@ function createResultFoodOrbit() {
     radiusY,
     arcStep,
     slotCount,
-    pathSlotCount: renderedSlotCount
+    pathSlotCount: renderedSlotCount,
+    fps
   }, 0);
   startResultFoodOrbitAnimation(orbit, {
     centerX,
@@ -7501,13 +7555,15 @@ function createResultFoodOrbit() {
     arcStep,
     slotCount,
     pathSlotCount: renderedSlotCount,
-    speed: Number(config.speedDegPerSecond ?? 18)
+    speed: Number(config.speedDegPerSecond ?? 18),
+    fps
   });
 }
 
 function startResultFoodOrbitAnimation(orbit, config) {
   stopResultFoodOrbitAnimation();
   resultFoodOrbitAnimationStartTime = performance.now();
+  resultFoodOrbitLastRenderTime = 0;
 
   const updateOrbit = (time) => {
     if (!orbit?.isConnected) {
@@ -7515,10 +7571,15 @@ function startResultFoodOrbitAnimation(orbit, config) {
       return;
     }
 
-    const elapsedSeconds = (time - resultFoodOrbitAnimationStartTime) / 1000;
-    const queueOffset = elapsedSeconds * (config.speed / Math.max(1, config.arcStep));
+    const frameInterval = 1000 / Math.max(1, Number(config.fps || 24));
 
-    positionResultFoodOrbitSlots(orbit, config, queueOffset);
+    if (!resultFoodOrbitLastRenderTime || time - resultFoodOrbitLastRenderTime >= frameInterval) {
+      resultFoodOrbitLastRenderTime = time;
+      const elapsedSeconds = (time - resultFoodOrbitAnimationStartTime) / 1000;
+      const queueOffset = elapsedSeconds * (config.speed / Math.max(1, config.arcStep));
+
+      positionResultFoodOrbitSlots(orbit, config, queueOffset);
+    }
 
     resultFoodOrbitAnimationFrame = window.requestAnimationFrame(updateOrbit);
   };
@@ -7542,10 +7603,8 @@ function positionResultFoodOrbitSlots(orbit, config, queueOffset = 0) {
     const depth = (Math.sin(angleRad) + 1) / 2;
     const scale = 0.86 + depth * 0.18;
 
-    slot.style.left = `${x}px`;
-    slot.style.top = `${y}px`;
+    slot.style.transform = `translate3d(${x.toFixed(1)}px, ${y.toFixed(1)}px, 0) translate(-50%, -50%) scale(${scale.toFixed(3)})`;
     slot.style.zIndex = `${Math.round(20 + depth * 20)}`;
-    slot.style.setProperty("--result-food-orbit-scale", scale.toFixed(3));
   });
 }
 
@@ -7556,6 +7615,7 @@ function stopResultFoodOrbitAnimation() {
 
   resultFoodOrbitAnimationFrame = 0;
   resultFoodOrbitAnimationStartTime = 0;
+  resultFoodOrbitLastRenderTime = 0;
 }
 
 function collectResultSelectedFoods() {
@@ -7648,7 +7708,9 @@ function startResultPlanetAnimation(planetBody, metrics) {
       return;
     }
 
-    if (time - resultPlanetLastRenderTime < 80) {
+    const frameInterval = Number(resultPlanetAnimationMetrics.frameInterval ?? 140);
+
+    if (time - resultPlanetLastRenderTime < frameInterval) {
       resultPlanetAnimationFrame = window.requestAnimationFrame(renderFrame);
       return;
     }
@@ -7723,6 +7785,7 @@ function buildResultPlanetMetrics(riskResult = getPlayerRiskResult()) {
     motionSpeed: RESULT_PLANET_VISUAL_CONFIG.motionSpeed,
     liveMotionScale: RESULT_PLANET_VISUAL_CONFIG.liveMotionScale,
     svgMotionScale: RESULT_PLANET_VISUAL_CONFIG.svgMotionScale,
+    frameInterval: RESULT_PLANET_VISUAL_CONFIG.frameInterval,
     tick: 0,
     jitterFrame: 0,
     rotationOffset: 0
@@ -7983,7 +8046,7 @@ function splitResultPlanetRingDots(metrics) {
   const back = [];
   const front = [];
   const rhythmFactor = metrics.rhythm / 100;
-  const count = 75;
+  const count = Math.round(75 - rhythmFactor * 42);
   const cx = 250;
   const cy = 250;
   const rx = 215;
@@ -7993,19 +8056,22 @@ function splitResultPlanetRingDots(metrics) {
   const sinRotation = Math.sin(rotation);
 
   for (let index = 0; index < count; index += 1) {
-    const currentAngle = ((index * 360) / count + (metrics.rotationOffset || 0)) % 360;
+    const angleJitter = (deterministicNoise(index, 19) - 0.5) * rhythmFactor * 9;
+    const currentAngle = ((index * 360) / count + angleJitter + (metrics.rotationOffset || 0)) % 360;
     const angleDeg = currentAngle < 0 ? currentAngle + 360 : currentAngle;
     const angle = (angleDeg * Math.PI) / 180;
     const sizeMultiplier = 0.6 + deterministicNoise(index, 7) * 0.8;
     const orbitRadiusOffset = -12 + deterministicNoise(index, 13) * 24;
-    const actualOffset = orbitRadiusOffset * (1 - rhythmFactor);
+    const relaxedOffset = (deterministicNoise(index, 23) - 0.5) * rhythmFactor * 22;
+    const actualOffset = orbitRadiusOffset * (1 - rhythmFactor * 0.68) + relaxedOffset;
     const localX = rx * Math.cos(angle) + actualOffset * Math.cos(angle);
     const localY = ry * Math.sin(angle) + actualOffset * Math.sin(angle);
     const jitterTable = RESULT_PLANET_JITTER_PROFILES[((metrics.jitterFrame || 0) + index) % RESULT_PLANET_JITTER_PROFILES.length];
     const jitterValue = jitterTable[index % jitterTable.length] * 0.7;
+    const relaxedRadius = 9.5 + deterministicNoise(index, 29) * 12;
     const radius =
       (1 - rhythmFactor) * (sizeMultiplier * 4.2) +
-      rhythmFactor * 16.5 +
+      rhythmFactor * relaxedRadius +
       (rhythmFactor > 0.1 ? 0 : jitterValue);
     const dot = {
       cx: localX * cosRotation - localY * sinRotation + cx + (rhythmFactor > 0.1 ? 0 : jitterValue * 0.3),

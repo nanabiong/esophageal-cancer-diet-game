@@ -272,6 +272,8 @@
               "width": 521,
               "height": 270,
               "image": "assets/images/act2/lunch/place-option-friend.png",
+              "tooltipTitle": "和朋友一起吃",
+              "tooltipText": "热闹的午餐场景，聊天和分享让这一餐更轻松。",
               "shot": "table-corner",
               "caption": "桌角特写"
             },
@@ -282,6 +284,8 @@
               "width": 405,
               "height": 270,
               "image": "assets/images/act2/lunch/place-option-work.png",
+              "tooltipTitle": "办公桌吃饭",
+              "tooltipText": "工作消息和午餐同时出现，节奏更紧也更容易被打断。",
               "shot": "chat",
               "caption": "人物聊天特写"
             },
@@ -292,6 +296,8 @@
               "width": 810,
               "height": 270,
               "image": "assets/images/act2/lunch/place-option-park.png",
+              "tooltipTitle": "公园长椅",
+              "tooltipText": "在户外慢慢吃饭，周围的小动物会带来一点意外互动。",
               "shot": "bench",
               "caption": "长椅特写"
             },
@@ -302,6 +308,8 @@
               "width": 700,
               "height": 270,
               "image": "assets/images/act2/lunch/place-option-solo.png",
+              "tooltipTitle": "一个人吃饭",
+              "tooltipText": "安静地独自用餐，注意力会更多落在自己和餐盘上。",
               "shot": "screen",
               "caption": "一人食特写"
             }
@@ -326,7 +334,7 @@
           "height": 300,
           "opacity": 1,
           "scale": 1,
-          "zIndex": 6,
+          "zIndex": 21,
           "content": "餐盘"
         },
         "act2_s04_plate_slot_1": {
@@ -338,7 +346,7 @@
           "height": 110,
           "opacity": 1,
           "scale": 1,
-          "zIndex": 8,
+          "zIndex": 22,
           "content": "格子 1"
         },
         "act2_s04_plate_slot_2": {
@@ -350,7 +358,7 @@
           "height": 110,
           "opacity": 1,
           "scale": 1,
-          "zIndex": 8,
+          "zIndex": 22,
           "content": "格子 2"
         },
         "act2_s04_plate_slot_3": {
@@ -362,7 +370,7 @@
           "height": 110,
           "opacity": 1,
           "scale": 1,
-          "zIndex": 8,
+          "zIndex": 22,
           "content": "格子 3"
         },
         "act2_s04_plate_slot_4": {
@@ -374,7 +382,7 @@
           "height": 110,
           "opacity": 1,
           "scale": 1,
-          "zIndex": 8,
+          "zIndex": 22,
           "content": "格子 4"
         }
       }

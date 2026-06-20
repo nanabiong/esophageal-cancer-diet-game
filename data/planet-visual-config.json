@@ -14,20 +14,22 @@
   "motionSpeed": 1,
   "liveMotionScale": 0,
   "svgMotionScale": 0.4,
+  "frameInterval": 140,
   "foodOrbit": {
     "_note": "Selected food overview ring. x/y are offsets from the stage center.",
     "enabled": true,
-    "x": -700,
+    "x": -760,
     "y": 0,
     "radiusX": 900,
     "radiusY": 800,
     "slotSize": 200,
     "itemSize": 150,
-    "slotBackgroundImage": "",
+    "slotBackgroundImage": "assets/images/result/food-orbit-slot.png",
     "slotCount": 7,
     "pathSlotCount": 17,
     "startAngle": -78,
     "arcStep": 20,
+    "fps": 24,
     "speedDegPerSecond": 16
   }
 }

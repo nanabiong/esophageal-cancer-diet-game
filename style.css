@@ -2637,7 +2637,7 @@ button:disabled {
 
 .act2-comic-panel {
   position: relative;
-  overflow: hidden;
+  overflow: visible;
   min-width: 0;
   min-height: 0;
   padding: 0;
@@ -2661,7 +2661,7 @@ button:disabled {
 }
 
 .act2-comic-panel:hover {
-  transform: translateY(-4px);
+  transform: translateY(-4px) scale(1.025);
   background: #e4e4e0;
 }
 
@@ -2675,6 +2675,61 @@ button:disabled {
 
 .act2-comic-panel.act2-panel-enter-right {
   animation: act2PanelEnterRight 620ms cubic-bezier(0.65, 0, 0.22, 1) both;
+}
+
+.act2-comic-grid.is-leaving-left {
+  pointer-events: none;
+  animation: act2PlaceSelectLeaveLeft 760ms cubic-bezier(0.65, 0, 0.22, 1) both;
+}
+
+.act2-place-focus-transition {
+  overflow: visible;
+  border-color: transparent;
+  background: transparent;
+  box-shadow: none;
+  pointer-events: none;
+}
+
+.act2-place-focus-transition.is-entering-right {
+  animation: act2PlaceFocusEnterRight 760ms cubic-bezier(0.65, 0, 0.22, 1) both;
+}
+
+.act2-place-tooltip {
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 14px);
+  z-index: 12;
+  width: min(360px, 94vw);
+  padding: 14px 16px;
+  border: 3px solid #171717;
+  border-radius: 22px;
+  background: #fff8df;
+  box-shadow: 5px 5px 0 rgba(0, 0, 0, 0.18);
+  color: #171717;
+  font-family: YouYuan, "骞煎渾", "Microsoft YaHei", sans-serif;
+  line-height: 1.35;
+  opacity: 0;
+  pointer-events: none;
+  transform: translate(-50%, 8px) scale(0.96);
+  transition:
+    opacity 160ms ease,
+    transform 160ms ease;
+}
+
+.act2-comic-panel:hover .act2-place-tooltip {
+  opacity: 1;
+  transform: translate(-50%, 0) scale(1);
+}
+
+.act2-place-tooltip-title {
+  margin-bottom: 6px;
+  font-size: 22px;
+  font-weight: 900;
+}
+
+.act2-place-tooltip-body {
+  font-size: 17px;
+  font-weight: 700;
 }
 
 .act2-comic-panel-shot {
@@ -3462,6 +3517,30 @@ button:disabled {
   }
 }
 
+@keyframes act2PlaceSelectLeaveLeft {
+  from {
+    opacity: 1;
+    transform: translateX(0);
+  }
+
+  to {
+    opacity: 0;
+    transform: translateX(-120vw);
+  }
+}
+
+@keyframes act2PlaceFocusEnterRight {
+  from {
+    opacity: 1;
+    transform: translateX(120vw);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
 @keyframes act2ConveyorMove {
   from {
     transform: translateX(0);
@@ -3778,7 +3857,9 @@ button:disabled {
   opacity: 1;
   visibility: visible;
   pointer-events: auto;
-  transform: translate(-50%, -50%) scale(var(--result-food-orbit-scale, 1));
+  transform: translate3d(0, 0, 0) translate(-50%, -50%) scale(1);
+  transform-origin: center;
+  will-change: transform;
   animation: none;
   transition:
     box-shadow 180ms ease,
@@ -3790,6 +3871,14 @@ button:disabled {
     var(--result-food-orbit-slot-bg-image, none),
     radial-gradient(circle at 50% 50%, rgba(255, 250, 235, 0.82), rgba(255, 250, 235, 0.16) 62%, rgba(216, 216, 216, 0.7)),
     linear-gradient(#d8d8d8, #d8d8d8);
+}
+
+.result-food-orbit.has-slot-bg .result-food-orbit-slot,
+.result-food-orbit.has-slot-bg .result-food-orbit-slot.has-food-image {
+  border-color: transparent;
+  background-image: var(--result-food-orbit-slot-bg-image, none);
+  background-size: contain;
+  box-shadow: none;
 }
 
 .result-food-orbit-slot:not(.has-food-image) {

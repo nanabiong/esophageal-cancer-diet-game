@@ -6861,6 +6861,9 @@ function createResultFoodOrbit() {
   orbit.style.setProperty("--result-food-orbit-radius-y", `${radiusY}px`);
   orbit.style.setProperty("--result-food-orbit-slot-size", `${slotSize}px`);
   orbit.style.setProperty("--result-food-orbit-item-size", `${itemSize}px`);
+  if (config.slotBackgroundImage) {
+    orbit.style.setProperty("--result-food-orbit-slot-bg-image", `url("${config.slotBackgroundImage}")`);
+  }
 
   for (let index = 0; index < renderedSlotCount; index += 1) {
     const food = foods.length ? foods[index % foods.length] : null;

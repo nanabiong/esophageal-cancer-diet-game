@@ -23,6 +23,7 @@
     "radiusY": 800,
     "slotSize": 200,
     "itemSize": 150,
+    "slotBackgroundImage": "",
     "slotCount": 7,
     "pathSlotCount": 17,
     "startAngle": -78,

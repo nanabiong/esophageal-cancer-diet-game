@@ -3319,9 +3319,13 @@ button:disabled {
   height: var(--result-food-orbit-slot-size, 112px);
   border: 1.5px solid rgba(23, 23, 23, 0.82);
   border-radius: 999px;
-  background:
+  background-image:
+    var(--result-food-orbit-slot-bg-image, none),
     radial-gradient(circle at 34% 28%, rgba(255, 255, 255, 0.84), rgba(255, 255, 255, 0) 44%),
-    #d8d8d8;
+    linear-gradient(#d8d8d8, #d8d8d8);
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover, cover, cover;
   box-shadow:
     0 14px 28px rgba(92, 58, 30, 0.08),
     inset 0 -8px 16px rgba(0, 0, 0, 0.05);
@@ -3336,9 +3340,10 @@ button:disabled {
 }
 
 .result-food-orbit-slot.has-food-image {
-  background:
+  background-image:
+    var(--result-food-orbit-slot-bg-image, none),
     radial-gradient(circle at 50% 50%, rgba(255, 250, 235, 0.82), rgba(255, 250, 235, 0.16) 62%, rgba(216, 216, 216, 0.7)),
-    #d8d8d8;
+    linear-gradient(#d8d8d8, #d8d8d8);
 }
 
 .result-food-orbit-slot:not(.has-food-image) {

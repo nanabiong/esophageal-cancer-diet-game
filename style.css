@@ -1002,6 +1002,25 @@ button:disabled {
   background: #e2ded4;
 }
 
+.act1-breakfast-option.has-image:hover:not(:disabled),
+.act1-breakfast-option.has-image.is-selected,
+.act1-breakfast-option.has-image.is-travelling-to-microwave,
+.act1-breakfast-option.has-image.act1-carried-heat-food {
+  border-color: transparent;
+  background: transparent;
+  box-shadow: none;
+}
+
+.act1-breakfast-option.has-image:hover:not(:disabled) {
+  transform: none;
+}
+
+.act1-breakfast-option.has-image:hover:not(:disabled) > .asset-image,
+.act1-breakfast-option.has-image.is-selected > .asset-image {
+  transform: scale(1.12);
+  transform-origin: center;
+}
+
 .act1-breakfast-option:focus-visible {
   outline: 4px solid #171717;
   outline-offset: 4px;
@@ -1035,6 +1054,68 @@ button:disabled {
     #f2e4bd;
   box-shadow: 5px 5px 0 rgba(139, 28, 18, 0.18);
   animation: act1HeatFoodIdle 760ms ease-in-out infinite alternate;
+}
+
+.act1-breakfast-option.has-image:hover:not(:disabled),
+.act1-breakfast-option.has-image.is-selected,
+.act1-breakfast-option.has-image.is-travelling-to-microwave,
+.act1-breakfast-option.has-image.act1-carried-heat-food {
+  border-color: transparent;
+  background: transparent;
+  box-shadow: none;
+}
+
+.act1-breakfast-option.has-image:hover:not(:disabled),
+.act1-breakfast-option.has-image.is-selected {
+  transform: none;
+}
+
+.act1-breakfast-option.has-image > .asset-image {
+  transition: transform 180ms ease;
+  transform-origin: center;
+}
+
+.act1-breakfast-option.has-image:hover:not(:disabled) > .asset-image,
+.act1-breakfast-option.has-image.is-selected > .asset-image {
+  transform: scale(1.12);
+}
+
+.act1-breakfast-option.has-image,
+.act1-breakfast-option.has-loaded-asset-image,
+.act1-breakfast-option.has-image:hover,
+.act1-breakfast-option.has-loaded-asset-image:hover,
+.act1-breakfast-option.has-image:active,
+.act1-breakfast-option.has-loaded-asset-image:active,
+.act1-breakfast-option.has-image.is-selected,
+.act1-breakfast-option.has-loaded-asset-image.is-selected,
+.act1-breakfast-option.has-image.is-travelling-to-microwave,
+.act1-breakfast-option.has-loaded-asset-image.is-travelling-to-microwave,
+.act1-breakfast-option.has-image.act1-carried-heat-food,
+.act1-breakfast-option.has-loaded-asset-image.act1-carried-heat-food {
+  padding: 0 !important;
+  border-color: transparent !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.act1-breakfast-option.has-image::after,
+.act1-breakfast-option.has-loaded-asset-image::after {
+  display: none !important;
+}
+
+.act1-breakfast-option.has-loaded-asset-image:hover:not(:disabled),
+.act1-breakfast-option.has-loaded-asset-image.is-selected {
+  transform: none;
+}
+
+.act1-breakfast-option.has-loaded-asset-image > .asset-image {
+  transition: transform 180ms ease;
+  transform-origin: center;
+}
+
+.act1-breakfast-option.has-loaded-asset-image:hover:not(:disabled) > .asset-image,
+.act1-breakfast-option.has-loaded-asset-image.is-selected > .asset-image {
+  transform: scale(1.12);
 }
 
 .act1-breakfast-option.is-leaving {

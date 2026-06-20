@@ -1703,6 +1703,8 @@ function getAct1MicrowaveEntryConfig() {
     orthogonalStepDelay: config.orthogonalStepDelay ?? 520,
     targetCenterX: config.targetCenterX ?? 768,
     targetCenterY: config.targetCenterY ?? 469,
+    foodOffsetX: config.foodOffsetX ?? 0,
+    foodOffsetY: config.foodOffsetY ?? 0,
     targetScale: config.targetScale ?? 1.3
   };
 }
@@ -1724,8 +1726,8 @@ function playAct1BreakfastToHeatTransition(selectedElement) {
   const stage = act1Layouts?.stage || { width: DESIGN_WIDTH, height: DESIGN_HEIGHT };
   const targetWidth = selectedConfig.width * config.targetScale;
   const targetHeight = selectedConfig.height * config.targetScale;
-  const targetLeft = config.targetCenterX - targetWidth / 2;
-  const targetTop = config.targetCenterY - targetHeight / 2;
+  const targetLeft = config.targetCenterX + config.foodOffsetX - targetWidth / 2;
+  const targetTop = config.targetCenterY + config.foodOffsetY - targetHeight / 2;
 
   selectedElement.classList.add("is-travelling-to-microwave");
   selectedElement.style.zIndex = "30";

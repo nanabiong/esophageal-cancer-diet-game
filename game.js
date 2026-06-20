@@ -64,12 +64,14 @@ const PHASES = {
   RESULT_GALAXY_LOCATING: "result_galaxy_locating",
   RESULT_GALAXY: "result_galaxy",
   RESULT_ORBIT: "result_orbit",
+  RESULT_PLANET_ATLAS: "result_planet_atlas",
   RESULT_RISK_INTRO: "result_risk_intro"
 };
 const RESULT_STATES = {
   GALAXY_LOCATING: "result_state_00_galaxy_locating",
   DIET_GALAXY: "result_state_01_diet_galaxy",
   ORBIT_SCENE: "result_state_03_orbit_scene",
+  PLANET_ATLAS: "result_state_04_planet_atlas",
   RISK_INTRO: "result_state_02_risk_intro"
 };
 const PREVIEW_ENTRY_CONFIG = {
@@ -664,6 +666,9 @@ let hasAct3ExitStarted = false;
 let act3ExitProgress = 0;
 let resultGalaxyLayer = null;
 let resultOrbitLayer = null;
+let planetAtlasLayer = null;
+let planetAtlasFrame = null;
+let planetAtlasWheelLocked = false;
 let resultRiskLayer = null;
 let resultStatsOverlayLayer = null;
 let isResultOrbitPlanetSelected = false;
@@ -1050,6 +1055,7 @@ function initializeStage() {
   createHoverInfoTooltip();
   frame.addEventListener("click", handleStageClick);
   frame.addEventListener("wheel", handleStageWheel, { passive: false });
+  window.addEventListener("message", handlePlanetAtlasMessage);
   frameTrack.innerHTML = "";
   frameTrack.appendChild(frame);
   updateStageScale();
@@ -4688,6 +4694,11 @@ function handleStageWheel(event) {
     return;
   }
 
+  if (currentPhase === PHASES.RESULT_PLANET_ATLAS) {
+    event.preventDefault();
+    return;
+  }
+
   if (currentPhase === PHASES.RESULT_RISK_INTRO) {
     handleResultRiskIntroWheel(event);
   }
@@ -5991,6 +6002,10 @@ function enterGalaxyLocatingState() {
   if (RESULT_PLANET_ONLY_MODE) {
     currentPhase = PHASES.RESULT_GALAXY;
     currentState = RESULT_STATES.DIET_GALAXY;
+    window.setTimeout(() => {
+      ensurePlanetAtlasLayer();
+      postPlanetAtlasPayload();
+    }, 0);
   }
 
   console.log("Entered result_state_00_galaxy_locating", {
@@ -6032,6 +6047,10 @@ function enterResultGalaxyState() {
   clearResultOrbitNodeTimer();
   clearResultPlanetNodeZoomTimer();
   updateResultGalaxyProgress(1);
+  window.setTimeout(() => {
+    ensurePlanetAtlasLayer();
+    postPlanetAtlasPayload();
+  }, 0);
   console.log("Entered result_state_01_diet_galaxy", {
     playerChoices,
     playerRiskResult,
@@ -6526,18 +6545,127 @@ function handleResultGalaxyLocatingWheel(event) {
 function handleResultGalaxyWheel(event) {
   if (
     currentPhase !== PHASES.RESULT_GALAXY ||
+    planetAtlasWheelLocked ||
     event.deltaY <= 0
   ) {
     return;
   }
 
-  // The diet galaxy screen is the final in-flow result screen.
-  // Further result details stay available only through the debug overlay.
   event.preventDefault();
-  // RESULT OLD RISK INTRO START
-  // enterResultRiskIntroState();
-  // RESULT OLD RISK INTRO END
-  enterResultOrbitScene();
+  planetAtlasWheelLocked = true;
+  enterPlanetAtlasState();
+  window.setTimeout(() => {
+    planetAtlasWheelLocked = false;
+  }, 900);
+}
+
+function ensurePlanetAtlasLayer() {
+  if (planetAtlasLayer) {
+    return planetAtlasLayer;
+  }
+
+  planetAtlasLayer = document.createElement("section");
+  planetAtlasLayer.id = RESULT_STATES.PLANET_ATLAS;
+  planetAtlasLayer.className = "planet-atlas-host";
+  planetAtlasLayer.setAttribute("aria-label", "对照样本空间叙事图谱");
+
+  planetAtlasFrame = document.createElement("iframe");
+  planetAtlasFrame.className = "planet-atlas-frame";
+  planetAtlasFrame.src = "planet-atlas/index.html";
+  planetAtlasFrame.title = "对照样本空间叙事图谱";
+  planetAtlasFrame.setAttribute("allow", "fullscreen");
+  planetAtlasFrame.addEventListener("load", postPlanetAtlasPayload);
+  planetAtlasLayer.appendChild(planetAtlasFrame);
+  objectLayer.appendChild(planetAtlasLayer);
+  return planetAtlasLayer;
+}
+
+function enterPlanetAtlasState() {
+  const layer = ensurePlanetAtlasLayer();
+  currentPhase = PHASES.RESULT_PLANET_ATLAS;
+  currentState = RESULT_STATES.PLANET_ATLAS;
+  document.body.classList.add("planet-atlas-active");
+  updatePlayerRiskResult();
+  postPlanetAtlasPayload();
+  resultGalaxyLayer?.classList.add("is-atlas-behind");
+  window.requestAnimationFrame(() => layer.classList.add("is-visible"));
+}
+
+function returnFromPlanetAtlas() {
+  if (currentPhase !== PHASES.RESULT_PLANET_ATLAS) {
+    return;
+  }
+
+  currentPhase = PHASES.RESULT_GALAXY;
+  currentState = RESULT_STATES.DIET_GALAXY;
+  document.body.classList.remove("planet-atlas-active");
+  planetAtlasLayer?.classList.remove("is-visible");
+  resultGalaxyLayer?.classList.remove("is-atlas-behind");
+}
+
+function handlePlanetAtlasMessage(event) {
+  if (event.source !== planetAtlasFrame?.contentWindow || !event.data) {
+    return;
+  }
+
+  if (event.data.type === "PLANET_ATLAS_RETURN") {
+    returnFromPlanetAtlas();
+  }
+}
+
+function postPlanetAtlasPayload() {
+  if (!planetAtlasFrame?.contentWindow) {
+    return;
+  }
+
+  planetAtlasFrame.contentWindow.postMessage({
+    type: "PLANET_ATLAS_DATA",
+    payload: buildPlanetAtlasPayload()
+  }, window.location.origin);
+}
+
+function buildPlanetAtlasPayload() {
+  const selectedFoods = collectResultSelectedFoods();
+  const selectedChoiceIds = new Set(selectedFoods.map((food) => food.id).filter(Boolean));
+
+  const collectIds = (value) => {
+    if (Array.isArray(value)) {
+      value.forEach(collectIds);
+      return;
+    }
+    if (!value || typeof value !== "object") {
+      return;
+    }
+    Object.entries(value).forEach(([key, child]) => {
+      if (/Id$/.test(key) && typeof child === "string") {
+        selectedChoiceIds.add(child);
+      }
+      collectIds(child);
+    });
+  };
+  collectIds(playerChoices);
+
+  const risk = playerRiskResult || {};
+  const dimensions = risk.dimensions || {};
+  return {
+    selectedChoiceIds: [...selectedChoiceIds],
+    selectedFoodNames: selectedFoods.map((food) => food.label).filter(Boolean),
+    player: {
+      province: risk.province || null,
+      riskLevel: risk.riskLevel || null,
+      totalRiskIndex: risk.totalRiskIndex ?? null,
+      sensoryRiskIndex: dimensions.sensory?.riskIndex ?? null,
+      rhythmRiskIndex: dimensions.rhythm?.riskIndex ?? null,
+      specificityRiskIndex: dimensions.specificity?.riskIndex ?? null,
+      dangerRiskIndex: dimensions.danger?.riskIndex ?? null,
+      sensoryEndpoint: dimensions.sensory?.endpoint ?? null,
+      rhythmEndpoint: dimensions.rhythm?.endpoint ?? null,
+      specificityEndpoint: dimensions.specificity?.endpoint ?? null,
+      dangerEndpoint: dimensions.danger?.endpoint ?? null,
+      eatingSpeedLevel: risk.behavior?.eatingSpeedLevel ?? null,
+      regularity: risk.behavior?.regularity ?? null
+    }
+  };
 }
 
 function handleResultRiskIntroWheel(event) {

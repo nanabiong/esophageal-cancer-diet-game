@@ -1,0 +1,2583 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>对照样本空间叙事图谱</title>
+    <style>
+        :root {
+            --paper: #faf3ef;
+            --paper-soft: #fff8f4;
+            --ink: #111111;
+            --muted: #777064;
+            --line: #111111;
+            --panel: #ffffff;
+            --shadow: 4px 4px 0 rgba(0, 0, 0, 1);
+            --brown: #6d3f28;
+            --ring-blue: #cddaf6;
+            --orbit-orange: #cddaf6;
+            --low-map: #FEF5E4;
+            --mid-map: #FFF0C8;
+            --high-map: #FEE498;
+            --low-point: #74D188;
+            --mid-point: #FFC1DF;
+            --high-point: #FF4800;
+            --planet-shift: 12.5vw;
+            --ui-left: 52px;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            overflow: hidden;
+            background: var(--paper);
+            color: var(--ink);
+            font-family: "Microsoft YaHei", "PingFang SC", "Noto Sans SC", Arial, sans-serif;
+        }
+
+        #canvas-container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            background:
+                linear-gradient(rgba(109,63,40,0.04) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(109,63,40,0.04) 1px, transparent 1px),
+                radial-gradient(circle at 67% 47%, rgba(255,255,255,0.84), transparent 34%),
+                linear-gradient(135deg, #fffaf7 0%, var(--paper) 54%, #f5e6dc 100%);
+            background-size: 30px 30px, 30px 30px, auto, auto;
+        }
+
+        #canvas-container canvas {
+            position: absolute;
+            inset: 0;
+            z-index: 3;
+            transform: translateX(var(--planet-shift));
+            transform-origin: center center;
+        }
+
+        .brand {
+            position: absolute;
+            top: 34px;
+            left: var(--ui-left);
+            width: min(410px, calc(100vw - 84px));
+            z-index: 4;
+            color: var(--brown);
+            transition: opacity 0.42s ease, transform 0.42s ease;
+        }
+
+        .brand-kicker {
+            display: inline-block;
+            padding: 4px 8px;
+            margin-bottom: 10px;
+            background: #fff;
+            border: 1px solid var(--brown);
+            border-radius: 999px;
+            box-shadow: 2px 2px 0 rgba(109,63,40,0.95);
+            font: 700 11px/1.1 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+            letter-spacing: 0.08em;
+        }
+
+        .brand h1 {
+            margin: 0 0 16px;
+            max-width: 390px;
+            font-size: clamp(24px, 3vw, 42px);
+            line-height: 1.08;
+            font-weight: 900;
+        }
+
+        .brand p {
+            width: min(360px, calc(100vw - 64px));
+            margin: 0 0 9px;
+            color: var(--muted);
+            font-size: 12px;
+            line-height: 1.75;
+        }
+
+        .atlas-search {
+            position: relative;
+            width: min(300px, 100%);
+            margin-top: 18px;
+        }
+
+        .atlas-search input {
+            width: 100%;
+            height: 38px;
+            padding: 0 14px;
+            border: 1px solid var(--brown);
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.78);
+            color: var(--brown);
+            box-shadow: 3px 3px 0 rgba(109,63,40,0.72);
+            outline: none;
+            font: 700 12px/1 "Microsoft YaHei", sans-serif;
+        }
+
+        .atlas-search input::placeholder {
+            color: rgba(109,63,40,0.58);
+        }
+
+        #legend {
+            width: min(380px, 100%);
+            padding: 0;
+            background: transparent;
+            border: 0;
+            border-radius: 8px;
+            box-shadow: none;
+            transition: opacity 0.35s ease, transform 0.35s ease;
+            display: flex;
+            justify-content: flex-start;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 4px 10px;
+            margin: 0 0 16px;
+        }
+
+        .legend-title {
+            margin: 0 2px 0 0;
+            font: 900 10px/1.2 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+            letter-spacing: 0.04em;
+        }
+
+        .legend-title:first-child {
+            margin-top: 0;
+        }
+
+        .legend-break {
+            flex-basis: 100%;
+            height: 0;
+        }
+
+        .legend-row {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            min-height: 16px;
+            font-size: 10px;
+            color: #3b352d;
+        }
+
+        .legend-color {
+            width: 10px;
+            height: 10px;
+            border: 0;
+            border-radius: 2px;
+            flex: 0 0 auto;
+        }
+
+        .legend-color.point {
+            border-radius: 50%;
+            border-color: transparent;
+        }
+
+        #zone-dock {
+            position: absolute;
+            left: var(--ui-left);
+            bottom: 98px;
+            z-index: 5;
+            width: 310px;
+            height: 260px;
+            transform: scale(1.5);
+            transform-origin: left bottom;
+            transition: opacity 0.35s ease, transform 0.35s ease, filter 0.35s ease;
+        }
+
+        #zone-dock::before {
+            content: "";
+            position: absolute;
+            left: 50px;
+            bottom: -12px;
+            width: 210px;
+            height: 210px;
+            border-radius: 50%;
+            background:
+                radial-gradient(circle, rgba(255,255,255,0.62) 0 3px, transparent 3.4px),
+                #FEE498;
+            background-size: 12px 12px;
+            border: 16px solid #EDC445;
+            box-shadow: inset 0 0 0 1px rgba(109,63,40,0.42), 4px 4px 0 rgba(109,63,40,0.92);
+            opacity: 0.86;
+        }
+
+        .zone-button {
+            position: absolute;
+            width: 88px;
+            height: 88px;
+            border: 0;
+            border-radius: 0;
+            padding: 0;
+            background: transparent;
+            color: var(--brown);
+            box-shadow: none;
+            text-align: center;
+            cursor: pointer;
+            font-size: 10px;
+            font-weight: 900;
+            transition: transform 0.16s ease, box-shadow 0.16s ease, background 0.16s ease;
+            display: grid;
+            place-items: center;
+            overflow: visible;
+        }
+
+        .zone-button::before {
+            display: none;
+        }
+
+        .zone-icon {
+            position: absolute;
+            inset: -18px;
+            border-radius: 0;
+            background-image: var(--zone-icon);
+            background-position: center;
+            background-size: contain;
+            background-repeat: no-repeat;
+            z-index: 1;
+        }
+
+        .zone-button strong {
+            position: relative;
+            z-index: 2;
+            width: max-content;
+            min-width: 86px;
+            max-width: 150px;
+            padding: 4px 9px;
+            border-radius: 999px;
+            background: rgba(255, 248, 236, 0.9);
+            line-height: 1.15;
+            white-space: nowrap;
+            opacity: 0;
+            transform: translateY(4px);
+            transition: opacity 0.16s ease, transform 0.16s ease;
+        }
+
+        .zone-button span {
+            position: relative;
+            z-index: 2;
+            display: block;
+            margin-top: 2px;
+            color: rgba(109,63,40,0.68);
+            font: 700 10px/1.2 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+            letter-spacing: 0.03em;
+            opacity: 0;
+            transform: translateY(4px);
+            transition: opacity 0.16s ease, transform 0.16s ease;
+        }
+
+        .zone-button:hover,
+        .zone-button.active {
+            background: transparent;
+            transform: translate(-2px, -2px);
+            box-shadow: none;
+        }
+
+        .zone-button:hover strong,
+        .zone-button:hover span,
+        .zone-button:focus-visible strong,
+        .zone-button:focus-visible span,
+        .zone-button.active strong,
+        .zone-button.active span {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        #info-panel {
+            position: absolute;
+            left: 38px;
+            bottom: 28px;
+            z-index: 6;
+            width: min(390px, calc(100vw - 64px));
+            padding: 18px;
+            background: #fff;
+            border: 1px solid var(--brown);
+            border-radius: 8px;
+            box-shadow: 4px 4px 0 rgba(109,63,40,0.9);
+            opacity: 0;
+            transform: translateY(10px);
+            pointer-events: none;
+            transition: opacity 0.35s ease, transform 0.35s ease;
+        }
+
+        #info-panel.visible {
+            opacity: 1;
+            transform: translateY(0);
+            pointer-events: auto;
+        }
+
+        .location-toggle {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin: 0 0 8px;
+            color: var(--brown);
+            font-size: 13px;
+            font-weight: 900;
+        }
+
+        .location-switch {
+            position: relative;
+            width: 64px;
+            height: 16px;
+            border: 1px solid var(--brown);
+            border-radius: 999px;
+            background: #ffd8df;
+            box-shadow: inset 0 0 0 2px rgba(255,255,255,0.55);
+            cursor: pointer;
+        }
+
+        .location-switch::after {
+            content: "";
+            position: absolute;
+            top: -5px;
+            left: -2px;
+            width: 24px;
+            height: 24px;
+            border: 1px solid var(--brown);
+            border-radius: 50%;
+            background: #fff8ec;
+            box-shadow: 2px 2px 0 rgba(109,63,40,0.45);
+            transition: left 0.2s ease;
+        }
+
+        .location-switch.active::after {
+            left: 40px;
+        }
+
+        #info-title {
+            margin: 0 0 9px;
+            font-size: 23px;
+            line-height: 1.2;
+            font-weight: 900;
+        }
+
+        #info-desc {
+            margin: 0;
+            color: #474136;
+            font-size: 13px;
+            line-height: 1.65;
+        }
+
+        .risk-sentence {
+            margin: 14px 0 0;
+            color: #474136;
+            font-size: 13px;
+            line-height: 1.65;
+        }
+
+        .risk-tag {
+            border: 0;
+            padding: 0;
+            background: transparent;
+            color: #c3381f;
+            font: inherit;
+            font-weight: 900;
+            text-decoration: underline;
+            text-decoration-thickness: 1px;
+            text-underline-offset: 3px;
+            cursor: pointer;
+            transition: color 0.18s ease;
+        }
+
+        .risk-tag.is-pinned {
+            color: #F8A364;
+        }
+
+        .food-orbit-layer {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            opacity: 0;
+            transform: translateX(var(--planet-shift));
+            transform-origin: center center;
+            transition: opacity 0.25s ease;
+        }
+
+        #food-orbit-back {
+            z-index: 2;
+        }
+
+        #food-orbit {
+            z-index: 5;
+        }
+
+        .food-orbit-layer.visible {
+            opacity: 1;
+        }
+
+        .food-orbit-layer svg {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            overflow: visible;
+        }
+
+        .orbit-path-shadow,
+        .orbit-path {
+            fill: none;
+            stroke-linecap: round;
+            vector-effect: non-scaling-stroke;
+            display: block;
+        }
+
+        .orbit-path-shadow {
+            stroke: #7a3c22;
+            opacity: 0.92;
+        }
+
+        .orbit-path {
+            stroke: var(--orbit-orange);
+        }
+
+        .orbit-back {
+            opacity: 1;
+        }
+
+        .orbit-back.orbit-path-shadow {
+            stroke-width: 80;
+        }
+
+        .orbit-back.orbit-path {
+            stroke-width: 74;
+        }
+
+        .orbit-front {
+            opacity: 1;
+        }
+
+        .orbit-front.orbit-path-shadow {
+            stroke-width: 80;
+        }
+
+        .orbit-front.orbit-path {
+            stroke-width: 74;
+        }
+
+        #orbit-foods {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+        }
+
+        .orbit-food {
+            position: absolute;
+            width: 320px;
+            height: 320px;
+            margin: -160px 0 0 -160px;
+            border-radius: 50%;
+            border: 0;
+            background: transparent;
+            color: var(--brown);
+            box-shadow: none;
+            display: grid;
+            place-items: center;
+            text-align: center;
+            font-size: 10px;
+            font-weight: 900;
+            line-height: 1.2;
+            opacity: 0;
+            transform: scale(0.7);
+            pointer-events: auto;
+            cursor: help;
+            transition: filter 0.18s ease, opacity 0.18s ease, transform 0.18s ease, background 0.18s ease;
+        }
+
+        .orbit-food img {
+            position: relative;
+            z-index: 1;
+            width: 260px;
+            height: 260px;
+            object-fit: contain;
+            pointer-events: none;
+            filter: drop-shadow(2px 3px 0 rgba(109,63,40,0.24));
+        }
+
+        .orbit-food span {
+            padding: 0 8px;
+        }
+
+        .orbit-food.selected {
+            background: transparent;
+            box-shadow: none;
+            filter: none;
+        }
+
+        .orbit-food::before {
+            content: "";
+            position: absolute;
+            left: calc(50% + 2px);
+            top: calc(50% - 2px);
+            width: 210px;
+            height: 210px;
+            border-radius: 50%;
+            background: #FAC4DE;
+            opacity: 0;
+            transform: translate(-50%, -50%) scale(0.82);
+            transition: opacity 0.24s ease, transform 0.32s ease;
+            pointer-events: none;
+        }
+
+        .orbit-food.selected::before {
+            opacity: 1;
+            transform: translate(-50%, -50%) scale(1);
+        }
+
+        .orbit-food.dimmed {
+            opacity: 0.22 !important;
+            filter: grayscale(0.6);
+        }
+
+        .orbit-food.highlight {
+            opacity: 1 !important;
+            transform: scale(1.08);
+            filter: drop-shadow(0 0 10px rgba(255,255,255,0.95));
+        }
+
+        #btn-back {
+            position: absolute;
+            top: 28px;
+            right: 30px;
+            z-index: 7;
+            padding: 9px 16px;
+            border: 1px solid var(--brown);
+            border-radius: 999px;
+            background: #fff;
+            color: var(--brown);
+            box-shadow: 3px 3px 0 rgba(109,63,40,0.9);
+            font: 900 12px/1 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+            cursor: pointer;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.25s ease, transform 0.16s ease, box-shadow 0.16s ease;
+        }
+
+        #btn-back.visible {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        #btn-back:hover {
+            transform: translate(-2px, -2px);
+            box-shadow: 5px 5px 0 rgba(109,63,40,0.9);
+        }
+
+        body.region-active .brand {
+            opacity: 0;
+            transform: translateY(-12px);
+            pointer-events: none;
+        }
+
+        body.region-active #zone-dock {
+            opacity: 0;
+            transform: translateY(16px) scale(1.38);
+            filter: blur(1px);
+            pointer-events: none;
+        }
+
+        body.region-active #legend {
+            opacity: 0;
+            transform: translateY(12px);
+            pointer-events: none;
+        }
+
+        body.region-active #info-panel {
+            transform: translateY(0);
+        }
+
+        #tooltip {
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 9;
+            width: min(360px, calc(100vw - 28px));
+            padding: 14px;
+            background: #fff;
+            border: 2px solid var(--ink);
+            border-radius: 8px;
+            box-shadow: 6px 6px 0 #000;
+            pointer-events: auto;
+            opacity: 0;
+            transform: translateY(6px);
+            transition: opacity 0.16s ease, transform 0.16s ease;
+        }
+
+        #tooltip.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        #province-tooltip {
+            position: absolute;
+            z-index: 8;
+            padding: 6px 9px;
+            border: 1px solid var(--brown);
+            border-radius: 999px;
+            background: rgba(255, 248, 236, 0.92);
+            color: var(--brown);
+            box-shadow: 2px 2px 0 rgba(109,63,40,0.45);
+            font-size: 12px;
+            font-weight: 900;
+            pointer-events: none;
+            opacity: 0;
+            transform: translateY(4px);
+            transition: opacity 0.12s ease, transform 0.12s ease;
+        }
+
+        #province-tooltip.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        #dish-tooltip {
+            position: fixed;
+            left: 0;
+            top: 0;
+            z-index: 10;
+            width: min(330px, calc(100vw - 28px));
+            padding: 14px 16px;
+            border: 1px solid #7a4a2f;
+            border-radius: 10px;
+            background: rgba(255, 252, 240, 0.95);
+            color: #5f3a27;
+            box-shadow: none;
+            pointer-events: none;
+            opacity: 0;
+            transform: translateY(6px);
+            transition: opacity 0.12s ease, transform 0.12s ease;
+        }
+
+        #dish-tooltip.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        #dish-tooltip-title {
+            display: block;
+            margin: 0 0 8px;
+            color: #111;
+            font-size: 18px;
+            line-height: 1.25;
+            font-weight: 900;
+        }
+
+        #dish-tooltip-body {
+            margin: 0;
+            color: #5f5750;
+            font-size: 13px;
+            line-height: 1.62;
+        }
+
+        .tooltip-close {
+            position: absolute;
+            top: 8px;
+            right: 10px;
+            width: 22px;
+            height: 22px;
+            display: grid;
+            place-items: center;
+            border: 2px solid var(--ink);
+            border-radius: 999px;
+            background: var(--paper-soft);
+            cursor: pointer;
+            font-weight: 900;
+            line-height: 1;
+        }
+
+        #tt-name {
+            margin: 0 32px 5px 0;
+            font-size: 16px;
+            line-height: 1.25;
+            font-weight: 900;
+        }
+
+        #tt-group {
+            margin: 0 0 10px;
+            color: var(--muted);
+            font-size: 12px;
+            line-height: 1.45;
+        }
+
+        .tooltip-body {
+            display: grid;
+            grid-template-columns: 145px 1fr;
+            gap: 11px;
+            align-items: center;
+            border-top: 1px dashed #c9c0ad;
+            border-bottom: 1px dashed #c9c0ad;
+            padding: 10px 0;
+        }
+
+        #radar {
+            width: 145px;
+            height: 145px;
+        }
+
+        #tt-risk {
+            margin: 0 0 8px;
+            font-size: 13px;
+            line-height: 1.45;
+            font-weight: 900;
+        }
+
+        #tt-endpoints {
+            display: grid;
+            gap: 5px;
+            margin: 0;
+            padding: 0;
+            list-style: none;
+            color: #3e382f;
+            font-size: 11px;
+            line-height: 1.35;
+        }
+
+        #tt-detail {
+            margin: 10px 0 0;
+            color: #4f473d;
+            font-size: 12px;
+            line-height: 1.55;
+        }
+
+        #loading {
+            position: absolute;
+            inset: 0;
+            z-index: 3;
+            display: grid;
+            place-items: center;
+            pointer-events: none;
+            color: #5d554a;
+            font: 900 12px/1 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+            letter-spacing: 0.08em;
+            transition: opacity 0.3s ease;
+        }
+
+        #error {
+            position: absolute;
+            top: 98px;
+            left: 32px;
+            z-index: 12;
+            display: none;
+            max-width: 460px;
+            padding: 14px 16px;
+            background: #fff;
+            border: 2px solid #b42318;
+            border-radius: 8px;
+            box-shadow: 4px 4px 0 #b42318;
+            color: #7a271a;
+            font-size: 13px;
+            line-height: 1.6;
+        }
+
+        @media (max-width: 760px) {
+            :root { --planet-shift: 0vw; }
+            .brand { top: 18px; left: 18px; }
+            .brand h1 { font-size: 26px; }
+            .brand p:nth-of-type(n + 2) { display: none; }
+            #zone-dock { left: 18px; bottom: 74px; transform: scale(0.72); transform-origin: left bottom; }
+            #legend, #info-panel { left: 18px; bottom: 18px; width: calc(100vw - 36px); }
+            #btn-back { top: 18px; right: 18px; }
+            .tooltip-body { grid-template-columns: 1fr; }
+        }
+    </style>
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+                "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+            }
+        }
+    </script>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+</head>
+<body>
+    <div id="canvas-container"></div>
+    <div id="loading">LOADING REFERENCE ATLAS</div>
+    <div id="error"></div>
+
+    <header class="brand">
+        <div class="brand-kicker">REFERENCE PLAYER ATLAS</div>
+        <h1>对照样本<br>空间叙事图谱</h1>
+        <section id="legend" aria-label="食管癌发病率图例">
+            <div class="legend-title">食管癌发病率</div>
+            <div class="legend-row"><div class="legend-color" style="background:var(--low-map)"></div><span>低位区间 low</span></div>
+            <div class="legend-row"><div class="legend-color" style="background:var(--mid-map)"></div><span>中高位区间 midHigh</span></div>
+            <div class="legend-row"><div class="legend-color" style="background:var(--high-map)"></div><span>高位区间 high</span></div>
+            <div class="legend-break"></div>
+            <div class="legend-title">测试者风险</div>
+            <div class="legend-row"><div class="legend-color point" style="background:var(--low-point)"></div><span>低危</span></div>
+            <div class="legend-row"><div class="legend-color point" style="background:var(--mid-point)"></div><span>中危</span></div>
+            <div class="legend-row"><div class="legend-color point" style="background:var(--high-point)"></div><span>高危</span></div>
+        </section>
+        <p>拖动右侧星球查看中国饮食文化区与食管癌发病率图层，悬浮彩色点查看参考玩家画像。</p>
+        <p>点击下方分区星体进入区域叙事视角；返回全景后可继续切换其他文化区。</p>
+        <form class="atlas-search" id="atlas-search">
+            <input id="atlas-search-input" type="search" autocomplete="off" placeholder="搜索省份 / 分区 / 风险标签">
+        </form>
+    </header>
+
+    <nav id="zone-dock" aria-label="饮食文化区导航"></nav>
+
+    <section id="info-panel" aria-live="polite">
+        <div class="location-toggle">
+            <span>显示我的位置</span>
+            <button class="location-switch" id="location-switch" type="button" aria-label="显示我的位置" aria-pressed="false"></button>
+        </div>
+        <h2 id="info-title"></h2>
+        <p id="info-desc"></p>
+        <p class="risk-sentence">
+            该饮食文化区主要受到
+            <button class="risk-tag" id="tag-1" type="button"></button>
+            和
+            <button class="risk-tag" id="tag-2" type="button"></button>
+            的威胁
+        </p>
+    </section>
+
+    <div id="food-orbit-back" class="food-orbit-layer" aria-hidden="true">
+        <svg viewBox="0 0 1200 700" preserveAspectRatio="none">
+            <path id="orbit-back-shadow" class="orbit-path-shadow orbit-back" pathLength="1"></path>
+            <path id="orbit-back-path" class="orbit-path orbit-back" pathLength="1"></path>
+        </svg>
+    </div>
+
+    <div id="food-orbit" class="food-orbit-layer" aria-hidden="true">
+        <svg viewBox="0 0 1200 700" preserveAspectRatio="none">
+            <path id="orbit-front-shadow" class="orbit-path-shadow orbit-front" pathLength="1"></path>
+            <path id="orbit-front-path" class="orbit-path orbit-front" pathLength="1"></path>
+        </svg>
+        <div id="orbit-foods"></div>
+    </div>
+
+    <button id="btn-back" type="button">全景</button>
+
+    <div id="tooltip">
+        <button class="tooltip-close" id="close-tooltip" type="button">×</button>
+        <h3 id="tt-name"></h3>
+        <p id="tt-group"></p>
+        <div class="tooltip-body">
+            <canvas id="radar" width="145" height="145"></canvas>
+            <div>
+                <p id="tt-risk"></p>
+                <ul id="tt-endpoints"></ul>
+            </div>
+        </div>
+        <p id="tt-detail"></p>
+    </div>
+    <div id="province-tooltip"></div>
+    <div id="dish-tooltip" aria-hidden="true">
+        <strong id="dish-tooltip-title"></strong>
+        <p id="dish-tooltip-body"></p>
+    </div>
+
+    <script type="module">
+        import * as THREE from 'three';
+        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+        const config = {
+            globeRadius: 100,
+            playerIconSize: 3.6,
+            colors: {
+                map: { low: '#FEF5E4', midHigh: '#FFF0C8', high: '#FEE498', unknown: '#faf3ef' },
+                points: { low: '#74D188', medium: '#FFC1DF', high: '#FF4800' },
+                riskText: { low: '低危', medium: '中危', high: '高危' }
+            },
+            endpoints: {
+                sensoryEndpoint: { L: '温和型 L', V: '刺激型 V' },
+                rhythmEndpoint: { O: '仪式型 O', D: '冲刺型 D' },
+                specificityEndpoint: { C: '柔软型 C', K: '硬核型 K' },
+                dangerEndpoint: { A: '新鲜派 A', G: '边缘派 G' }
+            },
+            zones: {
+                '北方高盐肉食区': {
+                    desc: '整合东北、草原、西北、黄河流域、京津、齐鲁、青藏等北方/高原饮食传统；常见高盐、热汤面食、酱卤、肉乳、风干/腌制食品。长期偏咸与腌制加工的饮食叙事，会和盐分、亚硝基化合物以及反复热刺激联系起来，形成更持续的食管负担。',
+                    tags: [
+                        { name: '高盐饮食', dim: 'sensoryEndpoint', val: 'V' },
+                        { name: '硬质饮食', dim: 'specificityEndpoint', val: 'K' }
+                    ]
+                },
+                '江淮腌制熏腊区': {
+                    desc: '整合长江中游与长江下游/江南；常见咸货、腌腊、熏制、淡水水产与米食。腌制、熏制和隔夜储存会让“咸、陈、烟火气”的风味更突出，也更容易被放进亚硝基化合物、霉变与反复刺激的风险叙事中。',
+                    tags: [
+                        { name: '腌制饮食', dim: 'sensoryEndpoint', val: 'V' },
+                        { name: '霉变饮食', dim: 'dangerEndpoint', val: 'G' }
+                    ]
+                },
+                '西南辛辣发酵区': {
+                    desc: '整合西南饮食文化圈；常见麻辣、火锅、酸辣、泡菜、发酵与腌熏食品。辛辣香料本身更多是风味线索，但当它和滚烫汤底、快速进食、腌发酵食品叠加时，会被表达为对食管黏膜的热刺激与盐腌刺激。',
+                    tags: [
+                        { name: '辛辣饮食', dim: 'sensoryEndpoint', val: 'V' },
+                        { name: '热烫饮食', dim: 'specificityEndpoint', val: 'K' }
+                    ]
+                },
+                '沿海高嘌呤区': {
+                    desc: '整合东南沿海饮食文化圈；常见海鲜、鲜食、生腌/卤味、烧腊、早茶点心与聚餐节律。鲜食与高蛋白菜品本身不是单一结论，但与加工肉类、饮酒、快节奏进食或重口调味相遇时，会构成更复合的食管风险叙事。',
+                    tags: [
+                        { name: '加工肉类', dim: 'dangerEndpoint', val: 'G' },
+                        { name: '快速进食', dim: 'rhythmEndpoint', val: 'D' }
+                    ]
+                }
+            }
+        };
+
+        const playerIconPaths = {
+            low: 'assets/player/lowrisk.png',
+            medium: 'assets/player/midrisk.png',
+            high: 'assets/player/highrisk.png'
+        };
+        const playerIconTextures = {};
+        const textureLoader = new THREE.TextureLoader();
+        Object.entries(playerIconPaths).forEach(([riskLevel, path]) => {
+            const texture = textureLoader.load(path);
+            texture.colorSpace = THREE.SRGBColorSpace;
+            playerIconTextures[riskLevel] = texture;
+        });
+
+        const zoneFoods = {
+            '北方高盐肉食区': [
+                { id: 'act1_s01_breakfast_baguetteCheese', name: '法棍配奶酪', image: 'assets/dishes/baguette_cheese.png', riskTags: ['硬质饮食'] },
+                { id: 'act2_food_huobao_youyu', name: '火爆鱿鱼', image: 'assets/dishes/huobao_youyu.png', riskTags: ['辛辣饮食', '高盐饮食'] },
+                { id: 'act2_food_jiang_niurou', name: '酱牛肉片', image: 'assets/dishes/jiang_niurou.png', riskTags: ['高盐饮食'] },
+                { id: 'crispy_meat_cartilage', name: '带肉脆骨', image: 'assets/dishes/crispy_meat_cartilage.png', riskTags: ['硬质饮食'] }
+            ],
+            '江淮腌制熏腊区': [
+                { id: 'act1_s01_breakfast_overnightPizza', name: '隔夜披萨', image: 'assets/dishes/overnight_pizza.png', riskTags: ['霉变饮食'] },
+                { id: 'act2_food_qingjiao_larou', name: '青椒炒腊肉', image: 'assets/dishes/qingjiao_larou.png', riskTags: ['腌制饮食'] },
+                { id: 'small_sausage', name: '肥肠', image: 'assets/dishes/small_sausage.png', riskTags: ['腌制饮食', '高盐饮食'] },
+                { id: 'act2_food_paocai_niurou_xinlamian', name: '泡菜牛肉辛拉面', image: 'assets/dishes/paocai_niurou_xinlamian.png', riskTags: ['腌制饮食', '辛辣饮食'] }
+            ],
+            '西南辛辣发酵区': [
+                { id: 'act1_s01_breakfast_hotPorridge', name: '热气腾腾的粥', image: 'assets/dishes/hot_porridge.png', riskTags: ['热烫饮食'] },
+                { id: 'act2_food_koushuiji', name: '口水鸡', image: 'assets/dishes/koushuiji.png', riskTags: ['辛辣饮食'] },
+                { id: 'act2_food_shaguo_zhou', name: '砂锅粥', image: 'assets/dishes/shaguo_zhou.png', riskTags: ['热烫饮食'] },
+                { id: 'spicy_hot_oden', name: '辣锅', image: 'assets/dishes/spicy_hot_oden.png', riskTags: ['辛辣饮食', '热烫饮食'] }
+            ],
+            '沿海高嘌呤区': [
+                { id: 'act1_s01_breakfast_eggHamSandwich', name: '鸡蛋火腿三明治', image: 'assets/dishes/egg_ham_sandwich.png', riskTags: ['加工肉类'] },
+                { id: 'act2_food_zhaxiao_rouwan', name: '炸小肉丸', image: 'assets/dishes/zhaxiao_rouwan.png', riskTags: ['油炸饮食'] },
+                { id: 'act2_food_hanbao_zhaji', name: '汉堡炸鸡', image: 'assets/dishes/hanbao_zhaji.png', riskTags: ['油炸饮食'] },
+                { id: 'luncheon_meat', name: '午餐肉', image: 'assets/dishes/luncheon_meat.png', riskTags: ['加工肉类'] },
+                { id: 'fried_bean_curd_stick', name: '油条', image: 'assets/dishes/fried_bean_curd_stick.png', riskTags: ['油炸饮食'] }
+            ]
+        };
+
+        const dishHoverCopy = {
+            '隔夜披萨': {
+                title: '隔夜披萨',
+                body: '芝士冷却后更浓，饼底带着发酵香气，咬下去仍有油润满足感，像把昨夜的热量重新唤醒。但隔夜存放增加霉变饮食风险，霉菌及其毒素会刺激食管黏膜，长期反复暴露可能推高食管癌风险。'
+            },
+            '法棍配奶酪': {
+                title: '法棍配奶酪',
+                body: '法棍外壳脆硬，奶酪咸香浓郁，越嚼越有麦香和乳香，像一份很有质感的早餐。但这类硬质饮食容易摩擦食管黏膜，若进食过快或长期频繁选择，反复微损伤会增加食管癌相关风险。'
+            },
+            '热气腾腾的粥': {
+                title: '热气腾腾的粥',
+                body: '热粥米香绵密，入口软糯，带着刚出锅的暖意，很适合早晨唤醒胃口，也让人忍不住趁热吞咽。但热烫饮食会直接灼伤食管黏膜，长期反复用高温食物刺激，是食管癌风险因素之一。'
+            },
+            '鸡蛋火腿三明治': {
+                title: '鸡蛋火腿三明治',
+                body: '嫩蛋和火腿夹在面包里，咸香柔软、方便顶饱，是很稳定也很省事的早餐选择。火腿属于加工肉类，盐分和加工成分会增加食管黏膜负担，长期高频摄入会让风险在日常中累积。'
+            },
+            '青椒炒腊肉': {
+                title: '青椒炒腊肉',
+                body: '腊肉被煸出油香，青椒吸进咸鲜味，入口有烟熏、脂香和微辣交叠的满足感。腌制饮食常伴随高盐与亚硝酸盐，容易刺激食管黏膜，长期偏好会让食管癌风险在日常中累积。'
+            },
+            '口水鸡': {
+                title: '口水鸡',
+                body: '嫩鸡浸在红油里，花椒香、辣椒香和蒜香一起铺开，鲜辣开胃，越吃越想夹下一口。辛辣饮食会反复刺激食管黏膜，若长期高频选择，可能让食管处在慢性损伤状态。'
+            },
+            '炸小肉丸': {
+                title: '炸小肉丸',
+                body: '小肉丸外壳焦香酥脆，咬开后肉汁和油香一起散开，很适合当作重口味配菜，也很容易一口接一口。油炸饮食在高温下产生的刺激性物质，会增加食管黏膜炎性负担和长期风险。'
+            },
+            '火爆鱿鱼': {
+                title: '火爆鱿鱼',
+                body: '鱿鱼脆弹，锅气和辣香冲得很足，咸鲜味也很快占满口腔，是一盘存在感很强的下饭菜。但它同时带有辛辣饮食和高盐饮食标签，双重刺激会让食管黏膜反复受损，累积食管癌风险。'
+            },
+            '酱牛肉': {
+                title: '酱牛肉',
+                body: '酱牛肉纹理紧实，卤香和肉香沉稳，切片后越嚼越有咸鲜回甘，很适合慢慢配饭。高盐饮食会让食管长期处在刺激环境中，反复摄入可能加重黏膜损伤并提高相关风险。'
+            },
+            '砂锅粥': {
+                title: '砂锅粥',
+                body: '砂锅粥米粒熬到绵密，热气裹着鲜香，入口温热顺滑，很容易一勺接一勺，越烫越觉得舒服。热烫饮食会反复灼伤食管黏膜，长期偏好高温入口会增加食管癌风险。'
+            },
+            '汉堡炸鸡': {
+                title: '汉堡炸鸡',
+                body: '炸鸡外皮酥脆，汉堡饱满多汁，油香和酱料让人很快获得满足感，是很直接的快乐组合。油炸饮食会带来高温加工产生的刺激物，长期高频摄入会增加食管黏膜负担。'
+            },
+            '泡菜牛肉辛拉面': {
+                title: '泡菜牛肉辛拉面',
+                body: '泡菜酸辣、牛肉咸香，面汤浓烈滚烫，一口下去很有冲击力，越吃越容易被重口味牵着走。它同时涉及腌制饮食和辛辣饮食，盐分、发酵酸辣和刺激感会共同增加食管黏膜损伤。'
+            },
+            '腊肠': {
+                title: '腊肠',
+                body: '腊肠在锅里越煮越香，甜咸油润，切面带着浓厚肉香，很容易让汤底更有味，也让人停不下来。它属于腌制饮食，高盐和加工腌制成分会刺激食管黏膜，长期摄入会累积风险。'
+            },
+            '午餐肉': {
+                title: '午餐肉',
+                body: '午餐肉粉红柔软，煮后边缘微卷，咸香很快融进汤里，是火锅里稳定又讨巧的配角。它属于加工肉类，盐分和加工成分会增加食管负担，长期高频摄入不宜。'
+            },
+            '油条': {
+                title: '油条',
+                body: '油条吸满汤汁后外软内韧，咬开时有油香和锅底味一起涌出来，很有满足感，也很会吸收重口味。它属于油炸饮食，高温油炸产物会刺激食管黏膜，增加长期炎性负担。'
+            },
+            '带肉脆骨': {
+                title: '带肉脆骨',
+                body: '带肉脆骨肉香浓，嚼起来咔嚓有劲，口感很突出，也很容易让人反复咀嚼，越嚼越有存在感。硬质饮食可能摩擦食管黏膜，长期频繁造成微损伤，会增加相关风险。'
+            },
+            '辣锅': {
+                title: '辣锅',
+                body: '辣锅红汤翻滚，香料和辣椒味很快包住食材，越煮越浓烈上头，食物也因此更有冲击力。辛辣汤底会直接刺激食管黏膜，所有进入辣锅的食材都应额外叠加辛辣饮食风险。'
+            }
+        };
+        dishHoverCopy['酱牛肉片'] = dishHoverCopy['酱牛肉'];
+        dishHoverCopy['肥肠'] = dishHoverCopy['腊肠'];
+
+        const zoneIconPaths = {
+            '北方高盐肉食区': 'assets/zone01.png',
+            '江淮腌制熏腊区': 'assets/zone02.png',
+            '西南辛辣发酵区': 'assets/zone03.png',
+            '沿海高嘌呤区': 'assets/zone04.png'
+        };
+
+        const selectedChoiceIds = new Set(window.PLANET_SELECTED_CHOICE_IDS || []);
+        const selectedFoodNames = new Set(window.PLANET_SELECTED_FOOD_NAMES || []);
+        let showPlayerSelections = false;
+        let hostPlayerData = null;
+        let hostReturnLocked = false;
+        const tileSvgSize = { width: 1980, height: 1307 };
+        const provinceTiles = [
+            { province: '新疆', x: 0.5, y: 0.5, w: 599, h: 657, fill: '#FFF0C8' },
+            { province: '西藏', x: 0.5, y: 658.5, w: 545, h: 648, fill: '#FFF0C8' },
+            { province: '贵州', x: 907.5, y: 1032.5, w: 260, h: 274, fill: '#FFF0C8' },
+            { province: '山西', x: 1340.5, y: 301.5, w: 158, h: 357, fill: '#FFF0C8' },
+            { province: '山东', x: 1832.5, y: 303.5, w: 147, h: 355, fill: '#FFF0C8' },
+            { province: '广西', x: 1168.5, y: 1032.5, w: 279, h: 274, fill: '#FFF0C8' },
+            { province: '广东', x: 1448.5, y: 1032.5, w: 303, h: 274, fill: '#FFF0C8' },
+            { province: '青海', x: 597.5, y: 406.5, w: 481, h: 252, fill: '#FEF5E4' },
+            { province: '宁夏', x: 1079.5, y: 406.5, w: 66, h: 251, fill: '#FEF5E4' },
+            { province: '浙江', x: 1752.5, y: 882.5, w: 227, h: 151, fill: '#FEF5E4' },
+            { province: '福建', x: 1752.5, y: 1032.5, w: 227, h: 159, fill: '#FFF0C8' },
+            { province: '黑龙江', x: 1340.5, y: 2.5, w: 639, h: 145, fill: '#FEF5E4' },
+            { province: '吉林', x: 1340.5, y: 231.5, w: 639, h: 71, fill: '#FEF5E4' },
+            { province: '辽宁', x: 1340.5, y: 148.5, w: 639, h: 84, fill: '#FEF5E4' },
+            { province: '重庆', x: 950.5, y: 658.5, w: 55, h: 189, fill: '#FEE498' },
+            { province: '陕西', x: 1146.5, y: 406.5, w: 193, h: 251, fill: '#FEF5E4' },
+            { province: '河北', x: 1499.5, y: 303.5, w: 278, h: 175, fill: '#FEE498' },
+            { province: '海南', x: 1752.5, y: 1193.5, w: 227, h: 113, fill: '#FFF0C8' },
+            { province: '河南', x: 1499.5, y: 479.5, w: 332, h: 178, fill: '#FEE498' },
+            { province: '云南', x: 546.5, y: 1031.5, w: 360, h: 274, fill: '#FFF0C8' },
+            { province: '四川', x: 546.5, y: 659.5, w: 403, h: 375, fill: '#FEE498' },
+            { province: '江苏', x: 1752.5, y: 703.5, w: 227, h: 178, fill: '#FEE498' },
+            { province: '湖北', x: 1006.5, y: 658.5, w: 441, h: 189, fill: '#FFF0C8' },
+            { province: '上海', x: 1752.5, y: 658.5, w: 227, h: 44, fill: '#FEE498' },
+            { province: '安徽', x: 1448.5, y: 658.5, w: 303, h: 193, fill: '#FEE498' },
+            { province: '江西', x: 1448.5, y: 848.5, w: 303, h: 185, fill: '#FFF0C8' },
+            { province: '湖南', x: 950.5, y: 848.5, w: 497, h: 186, fill: '#FFF0C8' },
+            { province: '甘肃', x: 600.5, y: 317.5, w: 739, h: 88, fill: '#FEF5E4' },
+            { province: '北京', x: 1778.5, y: 303.5, w: 53, h: 94, fill: '#FFF0C8' },
+            { province: '天津', x: 1778.5, y: 398.5, w: 53, h: 80, fill: '#FFF0C8' },
+            { province: '内蒙古', x: 600.5, y: 4.5, w: 739, h: 312, fill: '#FFF0C8' }
+        ];
+        const layout = {
+            globeX: 118,
+            homeTargetX: 118,
+            focusTargetX: 118,
+            homeCamera: { x: 38, y: 0, z: 305 }
+        };
+
+        const polarCaps = {
+            ratio: 0.085,
+            color: '#cddaf6',
+            dot: 'rgba(255,255,255,0.32)'
+        };
+
+        const orbitModel = {
+            cx: 600,
+            cy: 350,
+            // 星环手动调参区：
+            // rx / ry 控制星环横向与纵向半径，数值越小越贴近星球。
+            // rotate 控制屏幕上的倾斜方向与角度，正数/负数可翻转左高右低。
+            // frontStart / frontEnd 控制前景可见半圈的起止位置，也就是接口藏到哪里。
+            // ringWidth / ringOutlineWidth 控制蓝色主体和棕色外描边的粗细。
+            rx: 440,
+            ry: 170,
+            rotate: THREE.MathUtils.degToRad(15),
+            frontStart: 0.8,
+            frontEnd: 2.5,
+            ringWidth: 110,
+            ringOutlineWidth: 113
+        };
+        const zoneDockMotion = {
+            cx: 155,
+            cy: 167,
+            r: 111,
+            angle: -Math.PI * 0.72,
+            speed: 0.00016,
+            buttonSize: 88
+        };
+
+        let scene, camera, renderer, controls, globe, occluder, outerOccluder, halo, outline, innerOutline, mapOverlay, orbitRingGroup;
+        let visualRules = null;
+        let playersData = [];
+        let provinceFeatures = new Map();
+        let provinceCenters = new Map();
+        let atlasProvincePolygons = new Map();
+        let provinceTileMap = new Map();
+        let groupCenters = new Map();
+        let mapCanvasSize = 4096;
+        let currentProvinceFilter = null;
+        const atlasTransform = {
+            centerLng: 105,
+            centerLat: 35,
+            scale: 2.35
+        };
+        let activeRegion = null;
+        let pinnedRiskTag = null;
+        let hoveredObj = null;
+        let tooltipLocked = false;
+        let lastPointerEvent = null;
+        let driftEnabled = true;
+        let driftAngle = 0;
+        let driftVelocity = 0.00022;
+        const driftLimit = 0.26;
+        let lastZoneDockTime = performance.now();
+        let regionDrag = {
+            active: false,
+            lastX: 0,
+            lastY: 0
+        };
+
+        const raycaster = new THREE.Raycaster();
+        const mouse = new THREE.Vector2();
+
+        init();
+
+        function init() {
+            const container = document.getElementById('canvas-container');
+            scene = new THREE.Scene();
+            camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 1, 1200);
+            camera.position.set(layout.homeCamera.x, layout.homeCamera.y, layout.homeCamera.z);
+
+            renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+            container.appendChild(renderer.domElement);
+
+            controls = new OrbitControls(camera, renderer.domElement);
+            controls.enableDamping = true;
+            controls.dampingFactor = 0.05;
+            controls.enablePan = false;
+            controls.enableRotate = true;
+            controls.enableZoom = true;
+            controls.minDistance = 145;
+            controls.maxDistance = 390;
+            controls.minPolarAngle = 0.12;
+            controls.maxPolarAngle = Math.PI - 0.12;
+            controls.target.set(layout.globeX, 0, 0);
+            camera.lookAt(layout.globeX, 0, 0);
+
+            scene.add(new THREE.AmbientLight(0xffffff, 1.25));
+            const dirLight = new THREE.DirectionalLight(0xffffff, 0.65);
+            dirLight.position.set(70, 80, 95);
+            scene.add(dirLight);
+
+            createBaseGlobe();
+            createOrbitRing();
+            bindEvents();
+            renderZoneDock();
+            loadDataAndBuild();
+            animate();
+        }
+
+        function createBaseGlobe() {
+            const geometry = new THREE.SphereGeometry(config.globeRadius, 96, 96);
+            const material = new THREE.MeshStandardMaterial({
+                color: 0xffffff,
+                roughness: 0.9,
+                metalness: 0,
+                transparent: false,
+                opacity: 1
+            });
+            globe = new THREE.Mesh(geometry, material);
+            const homeRotation = globeRotationForAtlasPoint(mapCanvasSize / 2, mapCanvasSize / 4);
+            globe.rotation.y = homeRotation.y;
+            globe.rotation.x = homeRotation.x;
+            globe.position.x = layout.globeX;
+            scene.add(globe);
+
+            occluder = new THREE.Mesh(
+                new THREE.SphereGeometry(config.globeRadius + 0.05, 96, 96),
+                new THREE.MeshBasicMaterial({
+                    color: 0xb8b19f,
+                    colorWrite: false,
+                    depthWrite: true,
+                    depthTest: true
+                })
+            );
+            occluder.renderOrder = -1;
+            globe.add(occluder);
+
+            halo = new THREE.Mesh(
+                new THREE.SphereGeometry(config.globeRadius * 1.035, 96, 96),
+                new THREE.MeshBasicMaterial({
+                    color: 0xffffff,
+                    transparent: true,
+                    opacity: 0.16,
+                    side: THREE.BackSide
+                })
+            );
+            globe.add(halo);
+
+            outline = new THREE.Mesh(
+                new THREE.SphereGeometry(config.globeRadius * 1.052, 96, 96),
+                new THREE.MeshBasicMaterial({
+                    color: 0x6d3f28,
+                    side: THREE.BackSide,
+                    transparent: false,
+                    depthWrite: false,
+                    depthTest: true
+                })
+            );
+            outline.position.x = layout.globeX;
+            outline.renderOrder = -2;
+            scene.add(outline);
+
+            innerOutline = new THREE.Mesh(
+                new THREE.SphereGeometry(config.globeRadius * 1.048, 96, 96),
+                new THREE.MeshBasicMaterial({
+                    color: 0xcddaf6,
+                    side: THREE.BackSide,
+                    transparent: false,
+                    depthWrite: false,
+                    depthTest: true
+                })
+            );
+            innerOutline.position.x = layout.globeX;
+            innerOutline.renderOrder = -1.5;
+            scene.add(innerOutline);
+
+            outerOccluder = new THREE.Mesh(
+                new THREE.SphereGeometry(config.globeRadius * 1.058, 96, 96),
+                new THREE.MeshBasicMaterial({
+                    color: 0xffffff,
+                    colorWrite: false,
+                    depthWrite: true,
+                    depthTest: true
+                })
+            );
+            outerOccluder.position.x = layout.globeX;
+            outerOccluder.renderOrder = 7;
+            outerOccluder.visible = false;
+            scene.add(outerOccluder);
+        }
+
+        function createOrbitRing() {
+            orbitRingGroup = new THREE.Group();
+            orbitRingGroup.position.set(layout.globeX, 0, 0);
+            orbitRingGroup.rotation.set(
+                THREE.MathUtils.degToRad(80),
+                0,
+                THREE.MathUtils.degToRad(34)
+            );
+            orbitRingGroup.visible = false;
+            const ringRadius = 124;
+            const border = new THREE.Mesh(
+                new THREE.TorusGeometry(ringRadius, 8.7, 18, 240),
+                new THREE.MeshBasicMaterial({
+                    color: 0x6d3f28,
+                    depthTest: true,
+                    depthWrite: false
+                })
+            );
+            const body = new THREE.Mesh(
+                new THREE.TorusGeometry(ringRadius, 8.25, 18, 240),
+                new THREE.MeshBasicMaterial({
+                    color: 0xcddaf6,
+                    depthTest: true,
+                    depthWrite: false
+                })
+            );
+            border.renderOrder = 8;
+            body.renderOrder = 9;
+            border.geometry.setDrawRange(0, 0);
+            body.geometry.setDrawRange(0, 0);
+            orbitRingGroup.add(border, body);
+            orbitRingGroup.userData.border = border;
+            orbitRingGroup.userData.body = body;
+            scene.add(orbitRingGroup);
+            orbitRingGroup.visible = false;
+        }
+
+        function bindEvents() {
+            window.addEventListener('resize', onWindowResize);
+            window.addEventListener('message', handleHostMessage);
+            window.addEventListener('wheel', handleHostReturnWheel, { passive: false, capture: true });
+            window.addEventListener('pointerdown', onPointerDown);
+            window.addEventListener('pointermove', onPointerMove);
+            window.addEventListener('pointerup', onPointerUp);
+            window.addEventListener('pointercancel', onPointerUp);
+            window.addEventListener('click', onClick);
+            document.getElementById('btn-back').addEventListener('click', resetView);
+            document.getElementById('location-switch').addEventListener('click', (event) => {
+                const button = event.currentTarget;
+                const active = !button.classList.contains('active');
+                showPlayerSelections = active;
+                button.classList.toggle('active', active);
+                button.setAttribute('aria-pressed', String(active));
+                refreshSelectedOrbitFoods();
+            });
+            document.getElementById('close-tooltip').addEventListener('click', (event) => {
+                event.stopPropagation();
+                hideTooltip(true);
+            });
+            document.getElementById('atlas-search').addEventListener('submit', handleSearch);
+            [document.getElementById('tag-1'), document.getElementById('tag-2')].forEach(tag => {
+                tag.addEventListener('mouseenter', () => {
+                    applyRiskTagFilter(tag);
+                });
+                tag.addEventListener('mouseleave', () => {
+                    if (pinnedRiskTag) {
+                        applyRiskTagFilter(pinnedRiskTag);
+                    } else {
+                        restoreRiskTagFilterBase();
+                    }
+                });
+                tag.addEventListener('click', (event) => {
+                    event.preventDefault();
+                    event.stopPropagation();
+
+                    if (pinnedRiskTag === tag) {
+                        clearPinnedRiskTag();
+                        return;
+                    }
+
+                    pinnedRiskTag?.classList.remove('is-pinned');
+                    pinnedRiskTag = tag;
+                    pinnedRiskTag.classList.add('is-pinned');
+                    applyRiskTagFilter(pinnedRiskTag);
+                });
+            });
+        }
+
+        function applyRiskTagFilter(tag) {
+            if (!tag) return;
+            highlightPoints(tag.dataset.dim, tag.dataset.val);
+            highlightOrbitFoods(tag.innerText);
+        }
+
+        function restoreRiskTagFilterBase() {
+            activeRegion ? highlightRegion(activeRegion) : resetPointsColor();
+            resetOrbitFoodHighlight();
+        }
+
+        function clearPinnedRiskTag() {
+            pinnedRiskTag?.classList.remove('is-pinned');
+            pinnedRiskTag = null;
+            restoreRiskTagFilterBase();
+        }
+
+        function handleHostMessage(event) {
+            if (event.origin !== window.location.origin || event.data?.type !== 'PLANET_ATLAS_DATA') return;
+            const payload = event.data.payload || {};
+            selectedChoiceIds.clear();
+            selectedFoodNames.clear();
+            (payload.selectedChoiceIds || []).forEach(id => selectedChoiceIds.add(id));
+            (payload.selectedFoodNames || []).forEach(name => selectedFoodNames.add(name));
+            hostPlayerData = payload.player || null;
+            refreshSelectedOrbitFoods();
+        }
+
+        function refreshSelectedOrbitFoods() {
+            document.querySelectorAll('.orbit-food').forEach(node => {
+                const selected = selectedChoiceIds.has(node.dataset.id) || selectedFoodNames.has(node.dataset.name);
+                node.classList.toggle('selected', showPlayerSelections && selected);
+            });
+        }
+
+        function handleHostReturnWheel(event) {
+            if (window.self === window.top || activeRegion || event.deltaY >= -12 || hostReturnLocked) return;
+            event.preventDefault();
+            event.stopImmediatePropagation();
+            hostReturnLocked = true;
+            window.parent.postMessage({ type: 'PLANET_ATLAS_RETURN' }, window.location.origin);
+            window.setTimeout(() => {
+                hostReturnLocked = false;
+            }, 900);
+        }
+
+        function renderZoneDock() {
+            const dock = document.getElementById('zone-dock');
+            dock.innerHTML = '';
+            Object.keys(config.zones).forEach((name, index) => {
+                const button = document.createElement('button');
+                button.type = 'button';
+                button.className = 'zone-button';
+                button.dataset.zone = name;
+                button.style.setProperty('--zone-icon', `url("${zoneIconPaths[name] || ''}")`);
+                button.innerHTML = `<i class="zone-icon" aria-hidden="true"></i><strong>${name}</strong><span>ZONE ${String(index + 1).padStart(2, '0')}</span>`;
+                button.addEventListener('click', () => focusOnRegion(name));
+                dock.appendChild(button);
+            });
+            updateZoneDockMotion(true);
+        }
+
+        function updateZoneDockMotion(force = false) {
+            const buttons = [...document.querySelectorAll('.zone-button')];
+            if (!buttons.length) return;
+            const now = performance.now();
+            const delta = Math.min(48, now - lastZoneDockTime);
+            lastZoneDockTime = now;
+            if (!activeRegion && driftEnabled && controls?.enabled && !force) {
+                zoneDockMotion.angle += zoneDockMotion.speed * delta;
+            }
+            const step = (Math.PI * 2) / buttons.length;
+            buttons.forEach((button, index) => {
+                const angle = zoneDockMotion.angle + step * index;
+                const x = zoneDockMotion.cx + Math.cos(angle) * zoneDockMotion.r - zoneDockMotion.buttonSize / 2;
+                const y = zoneDockMotion.cy + Math.sin(angle) * zoneDockMotion.r - zoneDockMotion.buttonSize / 2;
+                button.style.left = `${x.toFixed(2)}px`;
+                button.style.top = `${y.toFixed(2)}px`;
+            });
+        }
+
+        function handleSearch(event) {
+            event.preventDefault();
+            const input = document.getElementById('atlas-search-input');
+            const query = input.value.trim();
+            if (!query) return;
+
+            const zoneName = Object.keys(config.zones).find(name => name.includes(query) || query.includes(name.slice(0, 2)));
+            if (zoneName) {
+                focusOnRegion(zoneName);
+                return;
+            }
+
+            const tag = Object.values(config.zones)
+                .flatMap(zone => zone.tags)
+                .find(item => item.name.includes(query) || query.includes(item.name));
+            if (tag) {
+                highlightPoints(tag.dim, tag.val);
+                highlightOrbitFoods(tag.name);
+                return;
+            }
+
+            const province = [...provinceFeatures.keys()].find(name => name.includes(query) || query.includes(name));
+            if (province) {
+                highlightProvince(province);
+            }
+        }
+
+        async function loadDataAndBuild() {
+            try {
+                const [playersRes, rulesRes] = await Promise.all([
+                    fetch('./data/referencePlayers.json'),
+                    fetch('./data/visualRules.json')
+                ]);
+                if (!playersRes.ok) throw new Error('参考玩家数据请求失败');
+
+                const rawPlayers = await playersRes.json();
+                visualRules = rulesRes.ok ? await rulesRes.json() : { provinceRules: [], groupMapping: [], thresholds: [] };
+
+                provinceTileMap = buildProvinceTileMap();
+                provinceFeatures = new Map(provinceTiles.map(tile => [tile.province, tile]));
+                provinceCenters = buildProvinceCenters();
+                playersData = normalizePlayers(Array.isArray(rawPlayers) ? rawPlayers : (rawPlayers.referencePlayers || []));
+                if (!playersData.length) throw new Error('referencePlayers.json 中没有可用参考玩家');
+
+                groupCenters = buildGroupCenters(playersData);
+                const mapTexture = createMapTexture(visualRules.provinceRules || []);
+                addMapOverlay(mapTexture);
+                generatePlayerPoints();
+
+                gsap.to('#loading', { opacity: 0, duration: 0.35, onComplete: () => {
+                    document.getElementById('loading').style.display = 'none';
+                }});
+            } catch (error) {
+                showError(error);
+            }
+        }
+
+        function normalizePlayers(players) {
+            const ruleByProvince = new Map((visualRules.provinceRules || []).map(rule => [rule.province, rule]));
+            const groupMap = new Map((visualRules.groupMapping || []).map(row => [row.oldGroup11, row.newGroup4]));
+
+            return players.map((player, index) => {
+                const rule = ruleByProvince.get(player.province);
+                const provinceGroup = rule?.provinceGroup || groupMap.get(player.provinceGroup) || player.provinceGroup;
+                return {
+                    ...player,
+                    index,
+                    provinceGroup11: player.provinceGroup,
+                    provinceGroup,
+                    provinceCancerRiskLevel: rule?.provinceCancerRiskLevel || player.provinceCancerRiskLevel,
+                    riskLevel: riskLevelFromTotal(Number(player.totalRiskIndex), player.riskLevel),
+                    sensoryEndpoint: Number(player.sensoryRiskIndex) >= 56 ? 'V' : 'L',
+                    rhythmEndpoint: Number(player.rhythmRiskIndex) >= 43 ? 'D' : 'O',
+                    specificityEndpoint: Number(player.specificityRiskIndex) >= 51 ? 'K' : 'C',
+                    dangerEndpoint: Number(player.dangerRiskIndex) >= 17 ? 'G' : 'A'
+                };
+            });
+        }
+
+        function riskLevelFromTotal(total, fallback) {
+            if (Number.isNaN(total)) return fallback || 'low';
+            if (total < 33) return 'low';
+            if (total < 42) return 'medium';
+            return 'high';
+        }
+
+        function buildProvinceTileMap() {
+            const canvasH = mapCanvasSize / 2;
+            const capH = canvasH * polarCaps.ratio;
+            const usableH = canvasH - capH * 2;
+            return new Map(provinceTiles.map(tile => [tile.province, {
+                ...tile,
+                atlasX: tile.x / tileSvgSize.width * mapCanvasSize,
+                atlasY: capH + tile.y / tileSvgSize.height * usableH,
+                atlasW: tile.w / tileSvgSize.width * mapCanvasSize,
+                atlasH: tile.h / tileSvgSize.height * usableH
+            }]));
+        }
+
+        function buildProvinceCenters() {
+            const centers = new Map();
+            provinceTileMap.forEach((tile, name) => {
+                centers.set(name, [
+                    tile.atlasX + tile.atlasW / 2,
+                    tile.atlasY + tile.atlasH / 2
+                ]);
+            });
+            return centers;
+        }
+
+        function buildGroupCenters(players) {
+            const groups = new Map();
+            players.forEach(player => {
+                const center = provinceCenters.get(player.province);
+                if (!center) return;
+                if (!groups.has(player.provinceGroup)) groups.set(player.provinceGroup, { lng: 0, lat: 0, count: 0 });
+                const group = groups.get(player.provinceGroup);
+                group.lng += center[0];
+                group.lat += center[1];
+                group.count += 1;
+            });
+
+            const centers = new Map();
+            groups.forEach((group, name) => {
+                centers.set(name, [group.lng / group.count, group.lat / group.count]);
+            });
+            return centers;
+        }
+
+        function createMapTexture(provinceRules, provinceFilter = null) {
+            const canvas = document.createElement('canvas');
+            canvas.width = mapCanvasSize;
+            canvas.height = mapCanvasSize / 2;
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = '#FFF5E4';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            const visibleTiles = provinceTiles.filter(tile => !provinceFilter || provinceFilter.has(tile.province));
+            atlasProvincePolygons = new Map();
+            ctx.save();
+            if (!provinceFilter) {
+                drawPolarCaps(ctx, canvas);
+            }
+
+            visibleTiles.forEach(tile => {
+                const rect = provinceTileMap.get(tile.province);
+                if (!rect) return;
+                atlasProvincePolygons.set(tile.province, tileToAtlasPolygons(rect));
+                ctx.fillStyle = tile.fill;
+                ctx.fillRect(rect.atlasX, rect.atlasY, rect.atlasW, rect.atlasH);
+                drawDotPattern(ctx, rect, tile.fill);
+            });
+            drawTileBorders(ctx, visibleTiles);
+            ctx.restore();
+
+            const texture = new THREE.CanvasTexture(canvas);
+            texture.colorSpace = THREE.SRGBColorSpace;
+            texture.needsUpdate = true;
+            return texture;
+        }
+
+        function drawPolarCaps(ctx, canvas) {
+            const capH = canvas.height * polarCaps.ratio;
+            [
+                { x: 0, y: 0, w: canvas.width, h: capH },
+                { x: 0, y: canvas.height - capH, w: canvas.width, h: capH }
+            ].forEach(rect => {
+                ctx.fillStyle = polarCaps.color;
+                ctx.fillRect(rect.x, rect.y, rect.w, rect.h);
+                drawDotPattern(ctx, rect, polarCaps.color);
+            });
+        }
+
+        function drawDotPattern(ctx, rect, fill) {
+            const dotColor = fill === '#FEF5E4'
+                ? 'rgba(238, 213, 133, 0.38)'
+                : (fill === polarCaps.color ? polarCaps.dot : 'rgba(255,255,255,0.38)');
+            const gap = 15;
+            const radius = 3.6;
+            ctx.save();
+            ctx.beginPath();
+            ctx.rect(rect.atlasX, rect.atlasY, rect.atlasW, rect.atlasH);
+            ctx.clip();
+            ctx.fillStyle = dotColor;
+            const startX = rect.atlasX + 8;
+            const startY = rect.atlasY + 8;
+            for (let y = startY; y < rect.atlasY + rect.atlasH; y += gap) {
+                const offset = Math.round((y - startY) / gap) % 2 ? gap / 2 : 0;
+                for (let x = startX + offset; x < rect.atlasX + rect.atlasW; x += gap) {
+                    ctx.beginPath();
+                    ctx.arc(x, y, radius, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            }
+            ctx.restore();
+        }
+
+        function drawTileBorders(ctx, visibleTiles) {
+            const lines = new Map();
+            const addLine = (x1, y1, x2, y2) => {
+                const values = [x1, y1, x2, y2].map(value => Math.round(value * 10) / 10);
+                const forward = values.join(',');
+                const reverse = [values[2], values[3], values[0], values[1]].join(',');
+                const key = forward < reverse ? forward : reverse;
+                if (!lines.has(key)) lines.set(key, values);
+            };
+
+            visibleTiles.forEach(tile => {
+                const rect = provinceTileMap.get(tile.province);
+                if (!rect) return;
+                const x0 = rect.atlasX;
+                const y0 = rect.atlasY;
+                const x1 = rect.atlasX + rect.atlasW;
+                const y1 = rect.atlasY + rect.atlasH;
+                addLine(x0, y0, x1, y0);
+                addLine(x1, y0, x1, y1);
+                addLine(x1, y1, x0, y1);
+                addLine(x0, y1, x0, y0);
+            });
+
+            ctx.save();
+            ctx.strokeStyle = '#72120B';
+            ctx.lineWidth = 1.4;
+            ctx.lineCap = 'butt';
+            lines.forEach(([x1, y1, x2, y2]) => {
+                ctx.beginPath();
+                ctx.moveTo(x1, y1);
+                ctx.lineTo(x2, y2);
+                ctx.stroke();
+            });
+            ctx.restore();
+        }
+
+        function tileToAtlasPolygons(tile) {
+            const x0 = tile.atlasX;
+            const y0 = tile.atlasY;
+            const x1 = tile.atlasX + tile.atlasW;
+            const y1 = tile.atlasY + tile.atlasH;
+            return [[[
+                [x0, y0],
+                [x1, y0],
+                [x1, y1],
+                [x0, y1],
+                [x0, y0]
+            ]]];
+        }
+
+        function atlasProjection(canvas) {
+            return d3.geoTransform({
+                point(lng, lat) {
+                    const mapped = amplifyGeo(lng, lat);
+                    const x = (mapped.lng + 180) / 360 * canvas.width;
+                    const y = (90 - mapped.lat) / 180 * canvas.height;
+                    this.stream.point(x, y);
+                }
+            });
+        }
+
+        function updateMapForRegion(regionName = null) {
+            currentProvinceFilter = regionName
+                ? new Set((visualRules.provinceRules || []).filter(rule => rule.provinceGroup === regionName).map(rule => rule.province))
+                : null;
+            const mapTexture = createMapTexture(visualRules.provinceRules || [], currentProvinceFilter);
+            addMapOverlay(mapTexture);
+        }
+
+        function addMapOverlay(texture) {
+            if (mapOverlay) globe.remove(mapOverlay);
+            const geometry = new THREE.SphereGeometry(config.globeRadius + 0.25, 96, 96);
+            const material = new THREE.MeshBasicMaterial({
+                map: texture,
+                transparent: false,
+                opacity: 1,
+                depthWrite: true,
+                depthTest: true
+            });
+            mapOverlay = new THREE.Mesh(geometry, material);
+            mapOverlay.renderOrder = 1;
+            globe.add(mapOverlay);
+        }
+
+        function generatePlayerPoints() {
+            const grouped = d3.group(playersData, player => player.province);
+            grouped.forEach((provincePlayers, province) => {
+                const atlasPolygons = atlasProvincePolygons.get(province);
+                const positions = placePlayersInProvince(provincePlayers, atlasPolygons, province);
+                provincePlayers.forEach((player, localIndex) => {
+                    const atlasPoint = positions[localIndex] || provinceCenters.get(player.province) || [mapCanvasSize / 2, mapCanvasSize / 4];
+                    const pos = getPositionFromAtlasPoint(atlasPoint[0], atlasPoint[1], config.globeRadius + 1.9);
+                    const colorHex = config.colors.points[player.riskLevel] || '#ffffff';
+                    const dotMat = new THREE.SpriteMaterial({
+                        map: playerIconTextures[player.riskLevel] || playerIconTextures.medium,
+                        color: 0xffffff,
+                        transparent: true,
+                        opacity: 0.98,
+                        depthTest: true,
+                        depthWrite: false
+                    });
+                    const dotMesh = new THREE.Sprite(dotMat);
+                    dotMesh.position.copy(pos);
+                    setPlayerPointScale(dotMesh, 1);
+                    dotMesh.renderOrder = 2;
+                    dotMesh.userData = { ...player, atlasX: atlasPoint[0], atlasY: atlasPoint[1], originalColor: colorHex, baseSize: config.playerIconSize, isPlayerPoint: true };
+                    globe.add(dotMesh);
+                });
+            });
+        }
+
+        function placePlayersInProvince(players, atlasPolygons, province) {
+            const center = provinceCenters.get(province) || [mapCanvasSize / 2, mapCanvasSize / 4];
+            if (!atlasPolygons) return players.map((_, i) => jitterAround(center, `${province}-${i}`, 18));
+
+            const bounds = atlasBounds(atlasPolygons);
+            const placed = [];
+            const minDistance = players.length <= 2 ? 42 : players.length <= 4 ? 34 : 26;
+
+            players.forEach((player, i) => {
+                let accepted = null;
+                const distanceSteps = [minDistance, minDistance * 0.75, minDistance * 0.55, minDistance * 0.38];
+                for (const requiredDistance of distanceSteps) {
+                    for (let attempt = 0; attempt < 900; attempt++) {
+                        const rnd = seededPair(`${player.playerId || province}-${requiredDistance}-${attempt}`);
+                        const inset = Math.min(28, Math.max(8, Math.min(bounds.maxX - bounds.minX, bounds.maxY - bounds.minY) * 0.08));
+                        const x = bounds.minX + inset + rnd[0] * Math.max(1, bounds.maxX - bounds.minX - inset * 2);
+                        const y = bounds.minY + inset + rnd[1] * Math.max(1, bounds.maxY - bounds.minY - inset * 2);
+                        if (!pointInAtlasPolygons([x, y], atlasPolygons)) continue;
+                        const ok = placed.every(([px, py]) => Math.hypot(x - px, y - py) >= requiredDistance);
+                        if (ok) {
+                            accepted = [x, y];
+                            break;
+                        }
+                    }
+                    if (accepted) break;
+                }
+                if (!accepted) accepted = findInsideNearCenter(atlasPolygons, center, `${province}-${i}`) || center;
+                placed.push(accepted);
+            });
+
+            return placed;
+        }
+
+        function jitterAround(center, seed, spread) {
+            const rnd = seededPair(seed);
+            return [center[0] + (rnd[0] - 0.5) * spread, center[1] + (rnd[1] - 0.5) * spread];
+        }
+
+        function findInsideNearCenter(atlasPolygons, center, seed) {
+            if (pointInAtlasPolygons(center, atlasPolygons)) return center;
+            for (let i = 0; i < 240; i++) {
+                const candidate = jitterAround(center, `${seed}-${i}`, 18 + i * 0.35);
+                if (pointInAtlasPolygons(candidate, atlasPolygons)) return candidate;
+            }
+            return null;
+        }
+
+        function seededPair(seed) {
+            let hash = 2166136261;
+            for (let i = 0; i < seed.length; i++) {
+                hash ^= seed.charCodeAt(i);
+                hash = Math.imul(hash, 16777619);
+            }
+            const a = ((hash >>> 0) % 10000) / 10000;
+            hash = Math.imul(hash ^ 0x9e3779b9, 16777619);
+            const b = ((hash >>> 0) % 10000) / 10000;
+            return [a, b];
+        }
+
+        function getPositionFromLatLng(lat, lng, radius) {
+            const phi = THREE.MathUtils.degToRad(90 - lat);
+            const theta = THREE.MathUtils.degToRad(lng + 180);
+            return new THREE.Vector3(
+                -(radius * Math.sin(phi) * Math.cos(theta)),
+                radius * Math.cos(phi),
+                radius * Math.sin(phi) * Math.sin(theta)
+            );
+        }
+
+        function atlasPointFromGeo(lng, lat) {
+            const mapped = amplifyGeo(lng, lat);
+            return [
+                (mapped.lng + 180) / 360 * mapCanvasSize,
+                (90 - mapped.lat) / 180 * (mapCanvasSize / 2)
+            ];
+        }
+
+        function featureToAtlasPolygons(feature) {
+            const polygons = feature.geometry.type === 'Polygon'
+                ? [feature.geometry.coordinates]
+                : feature.geometry.coordinates;
+            return polygons.map(polygon => polygon.map(ring => ring.map(([lng, lat]) => atlasPointFromGeo(lng, lat))));
+        }
+
+        function atlasBounds(polygons) {
+            const bounds = { minX: Infinity, minY: Infinity, maxX: -Infinity, maxY: -Infinity };
+            polygons.forEach(polygon => {
+                polygon.forEach(ring => {
+                    ring.forEach(([x, y]) => {
+                        bounds.minX = Math.min(bounds.minX, x);
+                        bounds.minY = Math.min(bounds.minY, y);
+                        bounds.maxX = Math.max(bounds.maxX, x);
+                        bounds.maxY = Math.max(bounds.maxY, y);
+                    });
+                });
+            });
+            return bounds;
+        }
+
+        function pointInAtlasPolygons(point, polygons) {
+            return polygons.some(polygon => {
+                const inOuter = pointInRing(point, polygon[0]);
+                const inHole = polygon.slice(1).some(ring => pointInRing(point, ring));
+                return inOuter && !inHole;
+            });
+        }
+
+        function pointInRing(point, ring) {
+            const [x, y] = point;
+            let inside = false;
+            for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+                const [xi, yi] = ring[i];
+                const [xj, yj] = ring[j];
+                const intersect = ((yi > y) !== (yj > y)) &&
+                    (x < (xj - xi) * (y - yi) / ((yj - yi) || 1e-9) + xi);
+                if (intersect) inside = !inside;
+            }
+            return inside;
+        }
+
+        function amplifyGeo(lng, lat) {
+            return {
+                lng: atlasTransform.centerLng + (lng - atlasTransform.centerLng) * atlasTransform.scale,
+                lat: atlasTransform.centerLat + (lat - atlasTransform.centerLat) * atlasTransform.scale
+            };
+        }
+
+        function globeRotationForMappedCenter(lng, lat) {
+            return {
+                y: -Math.PI / 2 - THREE.MathUtils.degToRad(lng),
+                x: THREE.MathUtils.degToRad(lat)
+            };
+        }
+
+        function getPositionFromMappedGeo(lng, lat, radius) {
+            const mapped = amplifyGeo(lng, lat);
+            return getPositionFromLatLng(mapped.lat, mapped.lng, radius);
+        }
+
+        function getPositionFromAtlasPoint(x, y, radius) {
+            const mappedLng = x / mapCanvasSize * 360 - 180;
+            const mappedLat = 90 - y / (mapCanvasSize / 2) * 180;
+            return getPositionFromLatLng(mappedLat, mappedLng, radius);
+        }
+
+        function globeRotationForAtlasPoint(x, y) {
+            const mappedLng = x / mapCanvasSize * 360 - 180;
+            const mappedLat = 90 - y / (mapCanvasSize / 2) * 180;
+            return globeRotationForMappedCenter(mappedLng, mappedLat);
+        }
+
+        function provinceAtAtlasPoint(x, y) {
+            for (const [province, tile] of provinceTileMap.entries()) {
+                if (currentProvinceFilter && !currentProvinceFilter.has(province)) continue;
+                const inX = x >= tile.atlasX && x <= tile.atlasX + tile.atlasW;
+                const inY = y >= tile.atlasY && y <= tile.atlasY + tile.atlasH;
+                if (inX && inY) return province;
+            }
+            return null;
+        }
+
+        function onPointerDown(event) {
+            if (!activeRegion || event.button !== 0) return;
+            if (event.target.closest('#tooltip') || event.target.closest('#zone-dock') || event.target.closest('#info-panel') || event.target.closest('#btn-back')) return;
+            regionDrag.active = true;
+            regionDrag.lastX = event.clientX;
+            regionDrag.lastY = event.clientY;
+            try {
+                renderer.domElement.setPointerCapture?.(event.pointerId);
+            } catch (error) {
+                // Drag still works through the window listeners.
+            }
+        }
+
+        function onPointerUp(event) {
+            regionDrag.active = false;
+            try {
+                renderer?.domElement?.releasePointerCapture?.(event.pointerId);
+            } catch (error) {
+                // Ignore stale pointer captures.
+            }
+        }
+
+        function onPointerMove(event) {
+            lastPointerEvent = event;
+            if (regionDrag.active && activeRegion) {
+                const dx = event.clientX - regionDrag.lastX;
+                const dy = event.clientY - regionDrag.lastY;
+                globe.rotation.y += dx * 0.005;
+                globe.rotation.x += dy * 0.0035;
+                globe.rotation.x = THREE.MathUtils.clamp(globe.rotation.x, -1.25, 1.25);
+                regionDrag.lastX = event.clientX;
+                regionDrag.lastY = event.clientY;
+            }
+            if (event.target.closest('.orbit-food')) {
+                if (hoveredObj) setPlayerPointScale(hoveredObj, 1);
+                hoveredObj = null;
+                document.body.style.cursor = 'help';
+                hideProvinceTooltip();
+                if (!tooltipLocked) hideTooltip();
+                return;
+            }
+            updatePointerNdc(event);
+            if (!globe) return;
+
+            raycaster.setFromCamera(mouse, camera);
+            const dots = globe.children.filter(child => child.userData?.isPlayerPoint);
+            const intersects = raycaster.intersectObjects(dots);
+
+            if (intersects.length > 0) {
+                const object = intersects[0].object;
+                if (hoveredObj !== object) {
+                    if (hoveredObj) setPlayerPointScale(hoveredObj, 1);
+                    hoveredObj = object;
+                    setPlayerPointScale(hoveredObj, 1.65);
+                    document.body.style.cursor = 'pointer';
+                }
+                if (!tooltipLocked) showTooltip(event, hoveredObj.userData);
+                hideProvinceTooltip();
+            } else {
+                if (hoveredObj) setPlayerPointScale(hoveredObj, 1);
+                hoveredObj = null;
+                handleProvinceHover(event);
+                if (!tooltipLocked) hideTooltip();
+            }
+        }
+
+        function updatePointerNdc(event) {
+            const rect = renderer?.domElement?.getBoundingClientRect();
+            const width = rect?.width || window.innerWidth;
+            const height = rect?.height || window.innerHeight;
+            const left = rect?.left || 0;
+            const top = rect?.top || 0;
+            mouse.x = ((event.clientX - left) / width) * 2 - 1;
+            mouse.y = -((event.clientY - top) / height) * 2 + 1;
+        }
+
+        function handleProvinceHover(event) {
+            if (!mapOverlay) {
+                document.body.style.cursor = 'default';
+                hideProvinceTooltip();
+                return;
+            }
+            raycaster.setFromCamera(mouse, camera);
+            const hits = raycaster.intersectObject(mapOverlay);
+            const uv = hits[0]?.uv;
+            if (!uv) {
+                document.body.style.cursor = 'default';
+                hideProvinceTooltip();
+                return;
+            }
+            const atlasX = uv.x * mapCanvasSize;
+            const atlasY = (1 - uv.y) * (mapCanvasSize / 2);
+            const province = provinceAtAtlasPoint(atlasX, atlasY);
+            if (!province) {
+                document.body.style.cursor = 'default';
+                hideProvinceTooltip();
+                return;
+            }
+            document.body.style.cursor = 'help';
+            showProvinceTooltip(event, province);
+        }
+
+        function showProvinceTooltip(event, province) {
+            const tooltip = document.getElementById('province-tooltip');
+            tooltip.textContent = province;
+            tooltip.classList.add('visible');
+            tooltip.style.left = `${Math.min(event.clientX + 14, window.innerWidth - tooltip.offsetWidth - 12)}px`;
+            tooltip.style.top = `${Math.min(event.clientY + 14, window.innerHeight - tooltip.offsetHeight - 12)}px`;
+        }
+
+        function hideProvinceTooltip() {
+            document.getElementById('province-tooltip').classList.remove('visible');
+        }
+
+        function onClick(event) {
+            if (event.target.closest('#tooltip') || event.target.closest('#zone-dock') || event.target.closest('#info-panel') || event.target.closest('#btn-back')) return;
+            if (hoveredObj) {
+                tooltipLocked = true;
+                showTooltip(lastPointerEvent || event, hoveredObj.userData);
+            }
+        }
+
+        function focusOnRegion(regionName) {
+            const center = groupCenters.get(regionName);
+            if (!center) return;
+            clearPinnedRiskTag();
+            activeRegion = regionName;
+            driftEnabled = false;
+            controls.enabled = false;
+            document.body.classList.add('region-active');
+
+            document.querySelectorAll('.zone-button').forEach(button => {
+                button.classList.toggle('active', button.dataset.zone === regionName);
+            });
+            document.getElementById('legend').style.opacity = 0;
+            document.getElementById('zone-dock').style.opacity = 0;
+            document.getElementById('btn-back').classList.add('visible');
+            hideFoodOrbit();
+            updateMapForRegion(regionName);
+
+            const zone = config.zones[regionName] || { desc: '', tags: [] };
+            const regionCount = playersData.filter(player => player.provinceGroup === regionName).length;
+            const infoPanel = document.getElementById('info-panel');
+            document.getElementById('info-title').innerText = `${regionName} · ${regionCount} 位`;
+            document.getElementById('info-desc').innerText = zone.desc;
+            setTag(document.getElementById('tag-1'), zone.tags[0]);
+            setTag(document.getElementById('tag-2'), zone.tags[1]);
+            infoPanel.classList.add('visible');
+            highlightRegion(regionName);
+            renderFoodOrbit(regionName);
+
+            const frame = getRegionFrame(regionName);
+            const target = new THREE.Vector3(layout.focusTargetX, 0, 0);
+            const regionAtlasCenter = groupCenters.get(regionName) || [mapCanvasSize / 2, mapCanvasSize / 4];
+            const targetRotation = globeRotationForAtlasPoint(regionAtlasCenter[0], regionAtlasCenter[1]);
+            const distance = 250;
+            const lookTarget = { x: controls.target.x, y: controls.target.y, z: controls.target.z };
+            gsap.to(globe.rotation, {
+                x: targetRotation.x,
+                y: targetRotation.y,
+                z: 0,
+                duration: 1.45,
+                ease: 'power2.inOut'
+            });
+            gsap.to(lookTarget, {
+                x: target.x,
+                y: target.y,
+                z: target.z,
+                duration: 1.45,
+                ease: 'power2.inOut',
+                onUpdate: () => controls.target.set(lookTarget.x, lookTarget.y, lookTarget.z)
+            });
+            gsap.to(camera.position, {
+                x: target.x,
+                y: target.y,
+                z: distance,
+                duration: 1.45,
+                ease: 'power2.inOut',
+                onUpdate: () => camera.lookAt(lookTarget.x, lookTarget.y, lookTarget.z),
+                onComplete: () => {
+                    controls.target.set(layout.globeX, 0, 0);
+                    controls.enabled = false;
+                    showFoodOrbit();
+                }
+            });
+        }
+
+        function getRegionFrame(regionName) {
+            const dots = globe.children.filter(dot => dot.userData?.isPlayerPoint && dot.userData.provinceGroup === regionName && isDotFacingCamera(dot));
+            if (!dots.length) {
+                const center = groupCenters.get(regionName) || [mapCanvasSize / 2, mapCanvasSize / 4];
+                const pos = getPositionFromAtlasPoint(center[0], center[1], config.globeRadius);
+                return { center: new THREE.Vector3(pos.x, pos.y, 0), radius: 60 };
+            }
+            const center = new THREE.Vector3();
+            const worldPositions = dots.map(dot => {
+                const p = new THREE.Vector3();
+                dot.getWorldPosition(p);
+                return p;
+            });
+            worldPositions.forEach(position => center.add(position));
+            center.divideScalar(dots.length);
+            let radius = 36;
+            worldPositions.forEach(position => {
+                radius = Math.max(radius, center.distanceTo(position) + 12);
+            });
+            return { center, radius };
+        }
+
+        function isDotFacingCamera(dot) {
+            const world = new THREE.Vector3();
+            const globeCenter = new THREE.Vector3();
+            dot.getWorldPosition(world);
+            globe.getWorldPosition(globeCenter);
+            const normal = world.clone().sub(globeCenter).normalize();
+            const toCamera = camera.position.clone().sub(world).normalize();
+            return normal.dot(toCamera) > 0.03;
+        }
+
+        function setPlayerPointScale(dot, multiplier = 1) {
+            const size = dot.userData?.baseSize || config.playerIconSize;
+            dot.scale.set(size * multiplier, size * multiplier, 1);
+        }
+
+        function setTag(element, tag) {
+            if (!tag) return;
+            element.innerText = tag.name;
+            element.dataset.dim = tag.dim;
+            element.dataset.val = tag.val;
+        }
+
+        function highlightRegion(regionName) {
+            globe.children.forEach(dot => {
+                if (!dot.userData?.isPlayerPoint) return;
+                const active = dot.userData.provinceGroup === regionName;
+                dot.visible = active;
+                dot.material.opacity = 1;
+                dot.material.color.set('#ffffff');
+                setPlayerPointScale(dot, active ? 1.28 : 1);
+            });
+        }
+
+        function highlightPoints(dimension, targetValue) {
+            globe.children.forEach(dot => {
+                if (!dot.userData?.isPlayerPoint) return;
+                const active = dot.userData[dimension] === targetValue;
+                if (activeRegion && dot.userData.provinceGroup !== activeRegion) {
+                    dot.visible = false;
+                    return;
+                }
+                dot.visible = true;
+                dot.material.opacity = active ? 1 : 0.14;
+                dot.material.color.set(active ? '#ffffff' : '#8c8477');
+                setPlayerPointScale(dot, active ? 1.85 : 0.8);
+            });
+        }
+
+        function highlightProvince(province) {
+            activeRegion = null;
+            document.body.classList.remove('region-active');
+            hideFoodOrbit();
+            updateMapForRegion(null);
+            document.querySelectorAll('.zone-button').forEach(button => button.classList.remove('active'));
+            document.getElementById('info-panel').classList.remove('visible');
+            document.getElementById('btn-back').classList.remove('visible');
+            globe.children.forEach(dot => {
+                if (!dot.userData?.isPlayerPoint) return;
+                const active = dot.userData.province === province;
+                dot.visible = true;
+                dot.material.opacity = active ? 1 : 0.14;
+                dot.material.color.set(active ? '#ffffff' : '#8c8477');
+                setPlayerPointScale(dot, active ? 1.85 : 0.75);
+            });
+        }
+
+        function renderFoodOrbit(regionName) {
+            buildOrbitPaths();
+            hideDishTooltip();
+            const container = document.getElementById('orbit-foods');
+            container.innerHTML = '';
+            const foods = zoneFoods[regionName] || [];
+            const angles = getOrbitFoodAngles(foods.length);
+            foods.forEach((food, index) => {
+                const node = document.createElement('div');
+                node.className = 'orbit-food';
+                node.dataset.id = food.id;
+                node.dataset.name = food.name;
+                node.dataset.tags = food.riskTags.join('|');
+                node.dataset.angle = String(angles[index]);
+                const hoverCopy = dishHoverCopy[food.name];
+                if (hoverCopy) {
+                    node.dataset.hoverTitle = hoverCopy.title;
+                    node.dataset.hoverBody = hoverCopy.body;
+                    node.addEventListener('mouseenter', showDishTooltip);
+                    node.addEventListener('mousemove', moveDishTooltip);
+                    node.addEventListener('mouseleave', hideDishTooltip);
+                }
+                node.setAttribute('aria-label', food.name);
+                if (food.image) {
+                    const img = document.createElement('img');
+                    img.src = food.image;
+                    img.alt = food.name;
+                    node.appendChild(img);
+                } else {
+                    const label = document.createElement('span');
+                    label.textContent = food.name;
+                    node.appendChild(label);
+                }
+                if (
+                    showPlayerSelections &&
+                    (selectedChoiceIds.has(food.id) || selectedFoodNames.has(food.name))
+                ) {
+                    node.classList.add('selected');
+                }
+                container.appendChild(node);
+            });
+            syncOrbitFoodPositions();
+        }
+
+        function showDishTooltip(event) {
+            const node = event.currentTarget;
+            const title = node.dataset.hoverTitle;
+            const body = node.dataset.hoverBody;
+            if (!title || !body) return;
+            document.getElementById('dish-tooltip-title').textContent = title;
+            document.getElementById('dish-tooltip-body').textContent = body;
+            const tooltip = document.getElementById('dish-tooltip');
+            tooltip.classList.add('visible');
+            tooltip.setAttribute('aria-hidden', 'false');
+            moveDishTooltip(event);
+        }
+
+        function moveDishTooltip(event) {
+            const tooltip = document.getElementById('dish-tooltip');
+            if (!tooltip.classList.contains('visible')) return;
+            const gap = 16;
+            const tooltipWidth = tooltip.offsetWidth;
+            const tooltipHeight = tooltip.offsetHeight;
+            const maxLeft = window.innerWidth - tooltipWidth - 14;
+            const maxTop = window.innerHeight - tooltipHeight - 14;
+            const preferredLeft = event.clientX + gap;
+            const flippedLeft = event.clientX - tooltipWidth - gap;
+            const preferredTop = event.clientY + gap;
+            const flippedTop = event.clientY - tooltipHeight - gap;
+            const left = preferredLeft > maxLeft ? flippedLeft : preferredLeft;
+            const top = preferredTop > maxTop ? flippedTop : preferredTop;
+            tooltip.style.left = `${Math.max(14, Math.min(left, maxLeft))}px`;
+            tooltip.style.top = `${Math.max(14, Math.min(top, maxTop))}px`;
+        }
+
+        function hideDishTooltip() {
+            const tooltip = document.getElementById('dish-tooltip');
+            tooltip.classList.remove('visible');
+            tooltip.setAttribute('aria-hidden', 'true');
+        }
+
+        function getOrbitFoodAngles(count) {
+            return count === 5
+                ? [2.48, 2.05, 1.62, 1.19, 0.76]
+                : [2.42, 1.86, 1.3, 0.74];
+        }
+
+        function syncOrbitFoodPositions() {
+            const nodes = document.querySelectorAll('.orbit-food');
+            nodes.forEach(node => {
+                const angle = Number(node.dataset.angle || 0);
+                const point = ellipsePoint(angle);
+                node.style.pointerEvents = '';
+                const x = (point.x / 1200) * window.innerWidth;
+                const y = (point.y / 700) * window.innerHeight;
+                node.style.left = `${x.toFixed(1)}px`;
+                node.style.top = `${y.toFixed(1)}px`;
+            });
+        }
+
+        function orbitWorldPoint(angle, radius = 124) {
+            const point = new THREE.Vector3(Math.cos(angle) * radius, Math.sin(angle) * radius, 0);
+            orbitRingGroup.updateMatrixWorld(true);
+            return point.applyMatrix4(orbitRingGroup.matrixWorld);
+        }
+
+        function projectToScreen(worldPoint) {
+            const projected = worldPoint.clone().project(camera);
+            return {
+                x: (projected.x * 0.5 + 0.5) * window.innerWidth,
+                y: (-projected.y * 0.5 + 0.5) * window.innerHeight
+            };
+        }
+
+        function buildOrbitPaths() {
+            const rightJoin = orbitModel.frontStart;
+            const leftJoin = orbitModel.frontEnd;
+            const backPath = ellipseArcPath(leftJoin, Math.PI * 2 + rightJoin);
+            const frontPath = ellipseArcPath(rightJoin, leftJoin);
+            const paths = [
+                ['orbit-back-shadow', backPath, orbitModel.ringOutlineWidth],
+                ['orbit-back-path', backPath, orbitModel.ringWidth],
+                ['orbit-front-shadow', frontPath, orbitModel.ringOutlineWidth],
+                ['orbit-front-path', frontPath, orbitModel.ringWidth]
+            ];
+
+            paths.forEach(([id, path, width]) => {
+                const element = document.getElementById(id);
+                element.setAttribute('d', path);
+                element.style.strokeWidth = width;
+            });
+        }
+
+        function ellipseArcPath(start, end) {
+            const startPoint = ellipsePoint(start);
+            const endPoint = ellipsePoint(end);
+            const delta = Math.abs(end - start);
+            const largeArc = delta % (Math.PI * 2) > Math.PI ? 1 : 0;
+            const sweep = end >= start ? 1 : 0;
+            const rotation = THREE.MathUtils.radToDeg(orbitModel.rotate);
+            return [
+                `M ${startPoint.x.toFixed(1)} ${startPoint.y.toFixed(1)}`,
+                `A ${orbitModel.rx.toFixed(1)} ${orbitModel.ry.toFixed(1)} ${rotation.toFixed(2)} ${largeArc} ${sweep} ${endPoint.x.toFixed(1)} ${endPoint.y.toFixed(1)}`
+            ].join(' ');
+        }
+
+        function ellipsePoint(angle) {
+            const cosA = Math.cos(angle);
+            const sinA = Math.sin(angle);
+            const cosR = Math.cos(orbitModel.rotate);
+            const sinR = Math.sin(orbitModel.rotate);
+            return {
+                x: orbitModel.cx + orbitModel.rx * cosA * cosR - orbitModel.ry * sinA * sinR,
+                y: orbitModel.cy + orbitModel.rx * cosA * sinR + orbitModel.ry * sinA * cosR
+            };
+        }
+
+        function showFoodOrbit() {
+            document.getElementById('food-orbit-back').classList.add('visible');
+            const orbit = document.getElementById('food-orbit');
+            orbit.classList.add('visible');
+            if (orbitRingGroup) orbitRingGroup.visible = false;
+            if (outerOccluder) outerOccluder.visible = false;
+            const orbitPaths = ['#orbit-back-shadow', '#orbit-back-path', '#orbit-front-shadow', '#orbit-front-path'];
+            gsap.killTweensOf([...orbitPaths, '.orbit-food']);
+            gsap.set(orbitPaths, { strokeDasharray: 'none', strokeDashoffset: 0 });
+            gsap.set('.orbit-food', { opacity: 0, scale: 0.7 });
+            gsap.to('.orbit-food', {
+                opacity: 1,
+                scale: 1,
+                duration: 0.38,
+                ease: 'back.out(1.7)',
+                stagger: 0.12,
+                delay: 0.18
+            });
+        }
+
+        function hideFoodOrbit() {
+            document.getElementById('food-orbit-back').classList.remove('visible');
+            const orbit = document.getElementById('food-orbit');
+            orbit.classList.remove('visible');
+            if (orbitRingGroup) orbitRingGroup.visible = false;
+            if (outerOccluder) outerOccluder.visible = false;
+            resetOrbitFoodHighlight();
+            hideDishTooltip();
+        }
+
+        function highlightOrbitFoods(riskTagName) {
+            const foods = document.querySelectorAll('.orbit-food');
+            if (!foods.length) return;
+            foods.forEach(food => {
+                const active = food.dataset.tags.split('|').includes(riskTagName);
+                food.classList.toggle('highlight', active);
+                food.classList.toggle('dimmed', !active);
+            });
+        }
+
+        function resetOrbitFoodHighlight() {
+            document.querySelectorAll('.orbit-food').forEach(food => {
+                food.classList.remove('highlight', 'dimmed');
+            });
+        }
+
+        function resetPointsColor() {
+            globe.children.forEach(dot => {
+                if (!dot.userData?.isPlayerPoint) return;
+                dot.visible = true;
+                dot.material.color.set('#ffffff');
+                dot.material.opacity = 0.98;
+                setPlayerPointScale(dot, 1);
+            });
+        }
+
+        function resetView() {
+            clearPinnedRiskTag();
+            activeRegion = null;
+            tooltipLocked = false;
+            document.body.classList.remove('region-active');
+            hideTooltip(true);
+            resetPointsColor();
+            document.querySelectorAll('.zone-button').forEach(button => button.classList.remove('active'));
+            document.getElementById('legend').style.opacity = 1;
+            document.getElementById('zone-dock').style.opacity = 1;
+            document.getElementById('btn-back').classList.remove('visible');
+            document.getElementById('info-panel').classList.remove('visible');
+            hideFoodOrbit();
+            updateMapForRegion(null);
+            const homeRotation = globeRotationForAtlasPoint(mapCanvasSize / 2, mapCanvasSize / 4);
+            gsap.to(globe.rotation, {
+                x: homeRotation.x,
+                y: homeRotation.y,
+                z: 0,
+                duration: 1.35,
+                ease: 'power2.inOut'
+            });
+            driftAngle = 0;
+
+            gsap.to(camera.position, {
+                x: layout.homeCamera.x,
+                y: layout.homeCamera.y,
+                z: layout.homeCamera.z,
+                duration: 1.35,
+                ease: 'power2.inOut',
+                onUpdate: () => camera.lookAt(layout.globeX, 0, 0),
+                onComplete: () => {
+                    controls.target.set(layout.globeX, 0, 0);
+                    controls.enabled = true;
+                    driftEnabled = true;
+                }
+            });
+            gsap.to(controls.target, { x: layout.globeX, y: 0, z: 0, duration: 1.35, ease: 'power2.inOut' });
+        }
+
+        function showTooltip(event, data) {
+            const tooltip = document.getElementById('tooltip');
+            tooltip.classList.add('visible');
+            const left = Math.min(event.clientX + 16, window.innerWidth - tooltip.offsetWidth - 14);
+            const top = Math.min(event.clientY + 16, window.innerHeight - tooltip.offsetHeight - 14);
+            tooltip.style.left = `${Math.max(14, left)}px`;
+            tooltip.style.top = `${Math.max(14, top)}px`;
+
+            document.getElementById('tt-name').innerText = data.playerCode || '';
+            document.getElementById('tt-group').innerText = `${data.province} · ${data.provinceGroup}`;
+            const riskColor = config.colors.points[data.riskLevel] || '#111111';
+            document.getElementById('tt-risk').innerHTML =
+                `总体风险判定：<span style="color:${riskColor}">${config.colors.riskText[data.riskLevel] || data.riskLevel}</span><br>总风险指数 ${Number(data.totalRiskIndex).toFixed(1)} / 100`;
+            document.getElementById('tt-endpoints').innerHTML = `
+                <li>感官：${config.endpoints.sensoryEndpoint[data.sensoryEndpoint] || data.sensoryEndpoint}</li>
+                <li>节律：${config.endpoints.rhythmEndpoint[data.rhythmEndpoint] || data.rhythmEndpoint}</li>
+                <li>特异：${config.endpoints.specificityEndpoint[data.specificityEndpoint] || data.specificityEndpoint}</li>
+                <li>危险：${config.endpoints.dangerEndpoint[data.dangerEndpoint] || data.dangerEndpoint}</li>
+            `;
+            document.getElementById('tt-detail').innerText =
+                `进食速度：${speedName(data.eatingSpeedLevel)}；进食规律性：${regularityName(data.regularity)}。`;
+            drawRadar(data);
+        }
+
+        function hideTooltip(force = false) {
+            if (force) tooltipLocked = false;
+            document.getElementById('tooltip').classList.remove('visible');
+        }
+
+        function drawRadar(data) {
+            const canvas = document.getElementById('radar');
+            const ctx = canvas.getContext('2d');
+            const w = canvas.width;
+            const h = canvas.height;
+            const cx = w / 2;
+            const cy = h / 2;
+            const r = 48;
+            const axes = [
+                { label: '感官', value: Number(data.sensoryRiskIndex), endpoint: data.sensoryEndpoint },
+                { label: '节律', value: Number(data.rhythmRiskIndex), endpoint: data.rhythmEndpoint },
+                { label: '特异', value: Number(data.specificityRiskIndex), endpoint: data.specificityEndpoint },
+                { label: '危险', value: Number(data.dangerRiskIndex), endpoint: data.dangerEndpoint }
+            ];
+
+            ctx.clearRect(0, 0, w, h);
+            ctx.lineWidth = 1.5;
+            ctx.strokeStyle = '#111111';
+            ctx.fillStyle = '#fff8ea';
+
+            [0.33, 0.66, 1].forEach(scale => {
+                ctx.beginPath();
+                axes.forEach((_, i) => {
+                    const p = radarPoint(i, r * scale, cx, cy, axes.length);
+                    if (i === 0) ctx.moveTo(p.x, p.y); else ctx.lineTo(p.x, p.y);
+                });
+                ctx.closePath();
+                ctx.fill();
+                ctx.stroke();
+            });
+
+            axes.forEach((axis, i) => {
+                const end = radarPoint(i, r, cx, cy, axes.length);
+                ctx.beginPath();
+                ctx.moveTo(cx, cy);
+                ctx.lineTo(end.x, end.y);
+                ctx.stroke();
+
+                const label = radarPoint(i, r + 19, cx, cy, axes.length);
+                ctx.fillStyle = '#111111';
+                ctx.font = '900 11px Microsoft YaHei, sans-serif';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(`${axis.label}${axis.endpoint}`, label.x, label.y);
+            });
+
+            ctx.beginPath();
+            axes.forEach((axis, i) => {
+                const p = radarPoint(i, r * Math.max(0, Math.min(100, axis.value)) / 100, cx, cy, axes.length);
+                if (i === 0) ctx.moveTo(p.x, p.y); else ctx.lineTo(p.x, p.y);
+            });
+            ctx.closePath();
+            ctx.fillStyle = 'rgba(255, 72, 0, 0.22)';
+            ctx.strokeStyle = '#FF4800';
+            ctx.lineWidth = 3;
+            ctx.fill();
+            ctx.stroke();
+        }
+
+        function radarPoint(index, radius, cx, cy, count) {
+            const angle = -Math.PI / 2 + index * (Math.PI * 2 / count);
+            return { x: cx + Math.cos(angle) * radius, y: cy + Math.sin(angle) * radius };
+        }
+
+        function speedName(speed) {
+            if (speed === 'fast') return '快速进食';
+            if (speed === 'medium') return '中速进食';
+            if (speed === 'slow') return '慢速进食';
+            return '未记录';
+        }
+
+        function regularityName(value) {
+            if (value === 'regular') return '相对规律';
+            if (value === 'irregular') return '不规律';
+            return '未记录';
+        }
+
+        function normalizeProvinceName(name) {
+            return String(name || '')
+                .replace(/特别行政区|自治区|维吾尔|壮族|回族|省|市|地区/g, '')
+                .trim();
+        }
+
+        function showError(error) {
+            console.error(error);
+            document.getElementById('loading').style.display = 'none';
+            const errorBox = document.getElementById('error');
+            errorBox.style.display = 'block';
+            errorBox.innerText = `加载失败：${error.message}。请使用本地服务访问页面，例如当前项目的 http://127.0.0.1:8000/。`;
+        }
+
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+            applyDefaultDrift();
+            updateZoneDockMotion();
+            if (halo) halo.material.opacity = 0.13 + Math.sin(performance.now() * 0.0012) * 0.025;
+            controls.update();
+            syncOrbitFoodPositions();
+            renderer.render(scene, camera);
+        }
+
+        function applyDefaultDrift() {
+            if (!driftEnabled || activeRegion || !controls.enabled) return;
+            globe.rotation.y += 0.00045;
+        }
+    </script>
+</body>
+</html>

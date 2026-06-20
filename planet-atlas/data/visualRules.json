@@ -1,0 +1,465 @@
+﻿{
+    "provinceRules":  [
+                          {
+                              "provinceGroup11":  "东南沿海饮食文化圈",
+                              "provinceCancerRiskLevel":  "midHigh",
+                              "targetMeanTotalRisk":  35.4,
+                              "generationNotes":  "四区版：沿海高嘌呤区；保留省份食管癌风险层级与个体波动。",
+                              "quota":  7,
+                              "province":  "广东",
+                              "provinceGroup":  "沿海高嘌呤区"
+                          },
+                          {
+                              "provinceGroup11":  "黄河下游/齐鲁饮食文化圈",
+                              "provinceCancerRiskLevel":  "midHigh",
+                              "targetMeanTotalRisk":  38.5,
+                              "generationNotes":  "四区版：北方高盐肉食区；保留省份食管癌风险层级与个体波动。",
+                              "quota":  6,
+                              "province":  "山东",
+                              "provinceGroup":  "北方高盐肉食区"
+                          },
+                          {
+                              "provinceGroup11":  "黄河中游饮食文化圈",
+                              "provinceCancerRiskLevel":  "high",
+                              "targetMeanTotalRisk":  52.5,
+                              "generationNotes":  "四区版：北方高盐肉食区；保留省份食管癌风险层级与个体波动。",
+                              "quota":  6,
+                              "province":  "河南",
+                              "provinceGroup":  "北方高盐肉食区"
+                          },
+                          {
+                              "provinceGroup11":  "京津饮食文化圈",
+                              "provinceCancerRiskLevel":  "high",
+                              "targetMeanTotalRisk":  49.6,
+                              "generationNotes":  "四区版：北方高盐肉食区；保留省份食管癌风险层级与个体波动。",
+                              "quota":  5,
+                              "province":  "河北",
+                              "provinceGroup":  "北方高盐肉食区"
+                          },
+                          {
+                              "provinceGroup11":  "长江下游/江南饮食文化圈",
+                              "provinceCancerRiskLevel":  "high",
+                              "targetMeanTotalRisk":  41.7,
+                              "generationNotes":  "四区版：江淮腌制熏腊区；保留省份食管癌风险层级与个体波动。",
+                              "quota":  5,
+                              "province":  "江苏",
+                              "provinceGroup":  "江淮腌制熏腊区"
+                          },
+                          {
+                              "provinceGroup11":  "西南饮食文化圈",
+                              "provinceCancerRiskLevel":  "high",
+                              "targetMeanTotalRisk":  52.6,
+                              "generationNotes":  "四区版：西南辛辣发酵区；保留省份食管癌风险层级与个体波动。",
+                              "quota":  5,
+                              "province":  "四川",
+                              "provinceGroup":  "西南辛辣发酵区"
+                          },
+                          {
+                              "provinceGroup11":  "长江下游/江南饮食文化圈",
+                              "provinceCancerRiskLevel":  "low",
+                              "targetMeanTotalRisk":  27.6,
+                              "generationNotes":  "四区版：江淮腌制熏腊区；保留省份食管癌风险层级与个体波动。",
+                              "quota":  4,
+                              "province":  "浙江",
+                              "provinceGroup":  "江淮腌制熏腊区"
+                          },
+                          {
+                              "provinceGroup11":  "长江下游/江南饮食文化圈",
+                              "provinceCancerRiskLevel":  "high",
+                              "targetMeanTotalRisk":  44.1,
+                              "generationNotes":  "四区版：江淮腌制熏腊区；保留省份食管癌风险层级与个体波动。",
+                              "quota":  4,
+                              "province":  "安徽",
+                              "provinceGroup":  "江淮腌制熏腊区"
+                          },
+                          {
+                              "provinceGroup11":  "长江中游饮食文化圈",
+                              "provinceCancerRiskLevel":  "midHigh",
+                              "targetMeanTotalRisk":  41,
+                              "generationNotes":  "四区版：江淮腌制熏腊区；保留省份食管癌风险层级与个体波动。",
+                              "quota":  4,
+                              "province":  "湖北",
+                              "provinceGroup":  "江淮腌制熏腊区"
+                          },
+                          {
+                              "provinceGroup11":  "长江中游饮食文化圈",
+                              "provinceCancerRiskLevel":  "midHigh",
+                              "targetMeanTotalRisk":  43,
+                              "generationNotes":  "四区版：江淮腌制熏腊区；保留省份食管癌风险层级与个体波动。",
+                              "quota":  4,
+                              "province":  "湖南",
+                              "provinceGroup":  "江淮腌制熏腊区"
+                          },
+                          {
+                              "provinceGroup11":  "西南饮食文化圈",
+                              "provinceCancerRiskLevel":  "midHigh",
+                              "targetMeanTotalRisk":  38.4,
+                              "generationNotes":  "四区版：西南辛辣发酵区；保留省份食管癌风险层级与个体波动。",
+                              "quota":  4,
+                              "province":  "广西",
+                              "provinceGroup":  "西南辛辣发酵区"
+                          },
+                          {
+                              "provinceGroup11":  "黄河中游饮食文化圈",
+                              "provinceCancerRiskLevel":  "high",
+                              "targetMeanTotalRisk":  48.2,
+                              "generationNotes":  "四区版：北方高盐肉食区；保留省份食管癌风险层级与个体波动。",
+                              "quota":  3,
+                              "province":  "山西",
+                              "provinceGroup":  "北方高盐肉食区"
+                          },
+                          {
+                              "provinceGroup11":  "东北饮食文化圈",
+                              "provinceCancerRiskLevel":  "low",
+                              "targetMeanTotalRisk":  26.3,
+                              "generationNotes":  "四区版：北方高盐肉食区；保留省份食管癌风险层级与个体波动。",
+                              "quota":  3,
+                              "province":  "辽宁",
+                              "provinceGroup":  "北方高盐肉食区"
+                          },
+                          {
+                              "provinceGroup11":  "东北饮食文化圈",
+                              "provinceCancerRiskLevel":  "low",
+                              "targetMeanTotalRisk":  30.5,
+                              "generationNotes":  "四区版：北方高盐肉食区；保留省份食管癌风险层级与个体波动。",
+                              "quota":  3,
+                              "province":  "黑龙江",
+                              "provinceGroup":  "北方高盐肉食区"
+                          },
+                          {
+                              "provinceGroup11":  "东南沿海饮食文化圈",
+                              "provinceCancerRiskLevel":  "midHigh",
+                              "targetMeanTotalRisk":  37.7,
+                              "generationNotes":  "四区版：沿海高嘌呤区；保留省份食管癌风险层级与个体波动。",
+                              "quota":  3,
+                              "province":  "福建",
+                              "provinceGroup":  "沿海高嘌呤区"
+                          },
+                          {
+                              "provinceGroup11":  "长江中游饮食文化圈",
+                              "provinceCancerRiskLevel":  "midHigh",
+                              "targetMeanTotalRisk":  40.7,
+                              "generationNotes":  "四区版：江淮腌制熏腊区；保留省份食管癌风险层级与个体波动。",
+                              "quota":  3,
+                              "province":  "江西",
+                              "provinceGroup":  "江淮腌制熏腊区"
+                          },
+                          {
+                              "provinceGroup11":  "西南饮食文化圈",
+                              "provinceCancerRiskLevel":  "midHigh",
+                              "targetMeanTotalRisk":  46.2,
+                              "generationNotes":  "四区版：西南辛辣发酵区；保留省份食管癌风险层级与个体波动。",
+                              "quota":  3,
+                              "province":  "重庆",
+                              "provinceGroup":  "西南辛辣发酵区"
+                          },
+                          {
+                              "provinceGroup11":  "西南饮食文化圈",
+                              "provinceCancerRiskLevel":  "midHigh",
+                              "targetMeanTotalRisk":  44.6,
+                              "generationNotes":  "四区版：西南辛辣发酵区；保留省份食管癌风险层级与个体波动。",
+                              "quota":  3,
+                              "province":  "贵州",
+                              "provinceGroup":  "西南辛辣发酵区"
+                          },
+                          {
+                              "provinceGroup11":  "西南饮食文化圈",
+                              "provinceCancerRiskLevel":  "midHigh",
+                              "targetMeanTotalRisk":  43.6,
+                              "generationNotes":  "四区版：西南辛辣发酵区；保留省份食管癌风险层级与个体波动。",
+                              "quota":  3,
+                              "province":  "云南",
+                              "provinceGroup":  "西南辛辣发酵区"
+                          },
+                          {
+                              "provinceGroup11":  "黄河中游饮食文化圈",
+                              "provinceCancerRiskLevel":  "midHigh",
+                              "targetMeanTotalRisk":  43.2,
+                              "generationNotes":  "四区版：北方高盐肉食区；保留省份食管癌风险层级与个体波动。",
+                              "quota":  3,
+                              "province":  "陕西",
+                              "provinceGroup":  "北方高盐肉食区"
+                          },
+                          {
+                              "provinceGroup11":  "京津饮食文化圈",
+                              "provinceCancerRiskLevel":  "low",
+                              "targetMeanTotalRisk":  24.8,
+                              "generationNotes":  "四区版：北方高盐肉食区；保留省份食管癌风险层级与个体波动。",
+                              "quota":  2,
+                              "province":  "北京",
+                              "provinceGroup":  "北方高盐肉食区"
+                          },
+                          {
+                              "provinceGroup11":  "京津饮食文化圈",
+                              "provinceCancerRiskLevel":  "low",
+                              "targetMeanTotalRisk":  23.2,
+                              "generationNotes":  "四区版：北方高盐肉食区；保留省份食管癌风险层级与个体波动。",
+                              "quota":  2,
+                              "province":  "天津",
+                              "provinceGroup":  "北方高盐肉食区"
+                          },
+                          {
+                              "provinceGroup11":  "中北草原饮食文化圈",
+                              "provinceCancerRiskLevel":  "midHigh",
+                              "targetMeanTotalRisk":  33.5,
+                              "generationNotes":  "四区版：北方高盐肉食区；保留省份食管癌风险层级与个体波动。",
+                              "quota":  2,
+                              "province":  "内蒙古",
+                              "provinceGroup":  "北方高盐肉食区"
+                          },
+                          {
+                              "provinceGroup11":  "东北饮食文化圈",
+                              "provinceCancerRiskLevel":  "low",
+                              "targetMeanTotalRisk":  26.9,
+                              "generationNotes":  "四区版：北方高盐肉食区；保留省份食管癌风险层级与个体波动。",
+                              "quota":  2,
+                              "province":  "吉林",
+                              "provinceGroup":  "北方高盐肉食区"
+                          },
+                          {
+                              "provinceGroup11":  "长江下游/江南饮食文化圈",
+                              "provinceCancerRiskLevel":  "low",
+                              "targetMeanTotalRisk":  23.6,
+                              "generationNotes":  "四区版：江淮腌制熏腊区；保留省份食管癌风险层级与个体波动。",
+                              "quota":  2,
+                              "province":  "上海",
+                              "provinceGroup":  "江淮腌制熏腊区"
+                          },
+                          {
+                              "provinceGroup11":  "东南沿海饮食文化圈",
+                              "provinceCancerRiskLevel":  "low",
+                              "targetMeanTotalRisk":  24.6,
+                              "generationNotes":  "四区版：沿海高嘌呤区；保留省份食管癌风险层级与个体波动。",
+                              "quota":  2,
+                              "province":  "海南",
+                              "provinceGroup":  "沿海高嘌呤区"
+                          },
+                          {
+                              "provinceGroup11":  "西北饮食文化圈",
+                              "provinceCancerRiskLevel":  "low",
+                              "targetMeanTotalRisk":  24.2,
+                              "generationNotes":  "四区版：北方高盐肉食区；保留省份食管癌风险层级与个体波动。",
+                              "quota":  2,
+                              "province":  "甘肃",
+                              "provinceGroup":  "北方高盐肉食区"
+                          },
+                          {
+                              "provinceGroup11":  "西北饮食文化圈",
+                              "provinceCancerRiskLevel":  "midHigh",
+                              "targetMeanTotalRisk":  41.2,
+                              "generationNotes":  "四区版：北方高盐肉食区；保留省份食管癌风险层级与个体波动。",
+                              "quota":  2,
+                              "province":  "新疆",
+                              "provinceGroup":  "北方高盐肉食区"
+                          },
+                          {
+                              "provinceGroup11":  "青藏高原饮食文化圈",
+                              "provinceCancerRiskLevel":  "midHigh",
+                              "targetMeanTotalRisk":  32.6,
+                              "generationNotes":  "四区版：北方高盐肉食区；保留省份食管癌风险层级与个体波动。",
+                              "quota":  1,
+                              "province":  "西藏",
+                              "provinceGroup":  "北方高盐肉食区"
+                          },
+                          {
+                              "provinceGroup11":  "青藏高原饮食文化圈",
+                              "provinceCancerRiskLevel":  "low",
+                              "targetMeanTotalRisk":  25.3,
+                              "generationNotes":  "四区版：北方高盐肉食区；保留省份食管癌风险层级与个体波动。",
+                              "quota":  1,
+                              "province":  "青海",
+                              "provinceGroup":  "北方高盐肉食区"
+                          },
+                          {
+                              "provinceGroup11":  "西北饮食文化圈",
+                              "provinceCancerRiskLevel":  "low",
+                              "targetMeanTotalRisk":  27.3,
+                              "generationNotes":  "四区版：北方高盐肉食区；保留省份食管癌风险层级与个体波动。",
+                              "quota":  1,
+                              "province":  "宁夏",
+                              "provinceGroup":  "北方高盐肉食区"
+                          }
+                      ],
+    "groupMapping":  [
+                         {
+                             "coveredProvincesInSample":  "辽宁, 黑龙江, 吉林",
+                             "newGroup4":  "北方高盐肉食区",
+                             "oldGroup11":  "东北饮食文化圈",
+                             "mergeReason":  "整合东北、草原、西北、黄河流域、京津、齐鲁、青藏等北方/高原饮食传统；以高盐、热汤面食、酱卤、肉乳、风干/腌制食品为主要风险叙事。"
+                         },
+                         {
+                             "coveredProvincesInSample":  "内蒙古",
+                             "newGroup4":  "北方高盐肉食区",
+                             "oldGroup11":  "中北草原饮食文化圈",
+                             "mergeReason":  "整合东北、草原、西北、黄河流域、京津、齐鲁、青藏等北方/高原饮食传统；以高盐、热汤面食、酱卤、肉乳、风干/腌制食品为主要风险叙事。"
+                         },
+                         {
+                             "coveredProvincesInSample":  "甘肃, 新疆, 宁夏",
+                             "newGroup4":  "北方高盐肉食区",
+                             "oldGroup11":  "西北饮食文化圈",
+                             "mergeReason":  "整合东北、草原、西北、黄河流域、京津、齐鲁、青藏等北方/高原饮食传统；以高盐、热汤面食、酱卤、肉乳、风干/腌制食品为主要风险叙事。"
+                         },
+                         {
+                             "coveredProvincesInSample":  "河南, 山西, 陕西",
+                             "newGroup4":  "北方高盐肉食区",
+                             "oldGroup11":  "黄河中游饮食文化圈",
+                             "mergeReason":  "整合东北、草原、西北、黄河流域、京津、齐鲁、青藏等北方/高原饮食传统；以高盐、热汤面食、酱卤、肉乳、风干/腌制食品为主要风险叙事。"
+                         },
+                         {
+                             "coveredProvincesInSample":  "河北, 北京, 天津",
+                             "newGroup4":  "北方高盐肉食区",
+                             "oldGroup11":  "京津饮食文化圈",
+                             "mergeReason":  "整合东北、草原、西北、黄河流域、京津、齐鲁、青藏等北方/高原饮食传统；以高盐、热汤面食、酱卤、肉乳、风干/腌制食品为主要风险叙事。"
+                         },
+                         {
+                             "coveredProvincesInSample":  "山东",
+                             "newGroup4":  "北方高盐肉食区",
+                             "oldGroup11":  "黄河下游/齐鲁饮食文化圈",
+                             "mergeReason":  "整合东北、草原、西北、黄河流域、京津、齐鲁、青藏等北方/高原饮食传统；以高盐、热汤面食、酱卤、肉乳、风干/腌制食品为主要风险叙事。"
+                         },
+                         {
+                             "coveredProvincesInSample":  "西藏, 青海",
+                             "newGroup4":  "北方高盐肉食区",
+                             "oldGroup11":  "青藏高原饮食文化圈",
+                             "mergeReason":  "整合东北、草原、西北、黄河流域、京津、齐鲁、青藏等北方/高原饮食传统；以高盐、热汤面食、酱卤、肉乳、风干/腌制食品为主要风险叙事。"
+                         },
+                         {
+                             "coveredProvincesInSample":  "湖北, 湖南, 江西",
+                             "newGroup4":  "江淮腌制熏腊区",
+                             "oldGroup11":  "长江中游饮食文化圈",
+                             "mergeReason":  "整合长江中游与长江下游/江南；以咸货、腌腊、熏制、淡水水产与米食为主要风险叙事。"
+                         },
+                         {
+                             "coveredProvincesInSample":  "江苏, 浙江, 安徽, 上海",
+                             "newGroup4":  "江淮腌制熏腊区",
+                             "oldGroup11":  "长江下游/江南饮食文化圈",
+                             "mergeReason":  "整合长江中游与长江下游/江南；以咸货、腌腊、熏制、淡水水产与米食为主要风险叙事。"
+                         },
+                         {
+                             "coveredProvincesInSample":  "四川, 广西, 重庆, 贵州, 云南",
+                             "newGroup4":  "西南辛辣发酵区",
+                             "oldGroup11":  "西南饮食文化圈",
+                             "mergeReason":  "整合西南饮食文化圈；以麻辣、火锅、酸辣、泡菜、发酵与腌熏食品为主要风险叙事。"
+                         },
+                         {
+                             "coveredProvincesInSample":  "广东, 福建, 海南",
+                             "newGroup4":  "沿海高嘌呤区",
+                             "oldGroup11":  "东南沿海饮食文化圈",
+                             "mergeReason":  "整合东南沿海饮食文化圈；以海鲜、鲜食、生腌/卤味、烧腊、早茶点心等为主要风险叙事。"
+                         }
+                     ],
+    "thresholds":  [
+                       {
+                           "label":  "low",
+                           "metric":  "totalRiskIndex",
+                           "condition":  "\u003c33",
+                           "displayName":  "低危"
+                       },
+                       {
+                           "label":  "medium",
+                           "metric":  "totalRiskIndex",
+                           "condition":  "\u003e=33 and \u003c42",
+                           "displayName":  "中危"
+                       },
+                       {
+                           "label":  "high",
+                           "metric":  "totalRiskIndex",
+                           "condition":  "\u003e=42",
+                           "displayName":  "高危"
+                       },
+                       {
+                           "label":  "L",
+                           "metric":  "sensoryRiskIndex",
+                           "condition":  "\u003c56",
+                           "displayName":  "Low-wave / 温和型"
+                       },
+                       {
+                           "label":  "V",
+                           "metric":  "sensoryRiskIndex",
+                           "condition":  "\u003e=56",
+                           "displayName":  "Voltage / 刺激型"
+                       },
+                       {
+                           "label":  "O",
+                           "metric":  "rhythmRiskIndex",
+                           "condition":  "\u003c43",
+                           "displayName":  "Order / 仪式型"
+                       },
+                       {
+                           "label":  "D",
+                           "metric":  "rhythmRiskIndex",
+                           "condition":  "\u003e=43",
+                           "displayName":  "Dash / 冲刺型"
+                       },
+                       {
+                           "label":  "C",
+                           "metric":  "specificityRiskIndex",
+                           "condition":  "\u003c51",
+                           "displayName":  "Cloud / 柔软型"
+                       },
+                       {
+                           "label":  "K",
+                           "metric":  "specificityRiskIndex",
+                           "condition":  "\u003e=51",
+                           "displayName":  "Kernel / Knock / 硬核型"
+                       },
+                       {
+                           "label":  "A",
+                           "metric":  "dangerRiskIndex",
+                           "condition":  "\u003c17",
+                           "displayName":  "Adventure / 新鲜派"
+                       },
+                       {
+                           "label":  "G",
+                           "metric":  "dangerRiskIndex",
+                           "condition":  "\u003e=17",
+                           "displayName":  "Glitch / 边缘派"
+                       }
+                   ],
+    "frontendNotes":  [
+                          {
+                              "item":  "建议展示文案",
+                              "note":  "你在 100 位参考玩家中的位置 / 你的风险值高于 X% 的对照样本"
+                          },
+                          {
+                              "item":  "不要展示",
+                              "note":  "sourceType、mock、模拟等内部字段"
+                          },
+                          {
+                              "item":  "玩家数据接入",
+                              "note":  "真实玩家保存同样字段结构；sourceType = real"
+                          },
+                          {
+                              "item":  "省份字段",
+                              "note":  "province 只记录，不参与当前风险分数计算"
+                          },
+                          {
+                              "item":  "饮食分区字段",
+                              "note":  "provinceGroup 已归并为 4 个项目分区：北方高盐肉食区、江淮腌制熏腊区、西南辛辣发酵区、沿海高嘌呤区"
+                          },
+                          {
+                              "item":  "旧 11 区映射",
+                              "note":  "见 group_mapping 工作表；JS 文件中也导出 DIET_ZONE_11_TO_4"
+                          },
+                          {
+                              "item":  "总风险阈值",
+                              "note":  "low \u003c 33；medium \u003e=33 且 \u003c42；high \u003e=42"
+                          },
+                          {
+                              "item":  "感官端点",
+                              "note":  "sensoryRiskIndex \u003e=56 为 V，否则 L"
+                          },
+                          {
+                              "item":  "节律端点",
+                              "note":  "rhythmRiskIndex \u003e=43 为 D，否则 O"
+                          },
+                          {
+                              "item":  "特异端点",
+                              "note":  "specificityRiskIndex \u003e=51 为 K，否则 C"
+                          },
+                          {
+                              "item":  "危险端点",
+                              "note":  "dangerRiskIndex \u003e=17 为 G，否则 A"
+                          }
+                      ]
+}

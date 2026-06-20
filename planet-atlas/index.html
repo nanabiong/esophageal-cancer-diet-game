@@ -24,6 +24,10 @@
             --planet-shift: 12.5vw;
             --ui-left: 52px;
             --brand-left: 120px;
+            --game-font-family: YouYuan, "幼圆", "Microsoft YaHei", sans-serif;
+            --atlas-hover-title-size: 22px;
+            --atlas-hover-body-size: 17px;
+            --atlas-popup-size: 28px;
         }
 
         * { box-sizing: border-box; }
@@ -33,7 +37,12 @@
             overflow: hidden;
             background: transparent;
             color: var(--ink);
-            font-family: "Microsoft YaHei", "PingFang SC", "Noto Sans SC", Arial, sans-serif;
+            font-family: var(--game-font-family);
+        }
+
+        button,
+        input {
+            font-family: var(--game-font-family);
         }
 
         #canvas-container {
@@ -53,38 +62,38 @@
 
         .brand {
             position: absolute;
-            top: 34px;
+            top: 100px;
             left: var(--brand-left);
-            width: min(410px, calc(100vw - 84px));
+            width: min(640px, calc(100vw - 84px));
             z-index: 4;
             color: var(--brown);
             transition: opacity 0.42s ease, transform 0.42s ease;
         }
 
         .brand p {
-            width: min(360px, calc(100vw - 64px));
-            margin: 0 0 9px;
+            width: min(600px, calc(100vw - 64px));
+            margin: 0 0 14px;
             color: var(--muted);
-            font-size: 12px;
-            line-height: 1.75;
+            font-size: var(--atlas-hover-body-size);
+            line-height: 1.65;
         }
 
         .atlas-search {
             position: relative;
-            width: min(300px, 100%);
+            width: min(540px, 100%);
             margin-top: 18px;
         }
 
         .atlas-search input {
             width: 100%;
-            height: 38px;
-            padding: 0 14px;
+            height: 46px;
+            padding: 0 16px;
             border: 1px solid var(--brown);
             border-radius: 999px;
             background: rgba(255, 255, 255, 0.78);
             color: var(--brown);
             outline: none;
-            font: 700 12px/1 "Microsoft YaHei", sans-serif;
+            font: 400 var(--atlas-hover-body-size)/1 var(--game-font-family);
         }
 
         .atlas-search input::placeholder {
@@ -92,7 +101,7 @@
         }
 
         #legend {
-            width: min(380px, 100%);
+            width: min(620px, 100%);
             padding: 0;
             background: transparent;
             border: 0;
@@ -102,13 +111,13 @@
             justify-content: flex-start;
             align-items: center;
             flex-wrap: wrap;
-            gap: 4px 10px;
-            margin: 0 0 16px;
+            gap: 8px 16px;
+            margin: 0 0 22px;
         }
 
         .legend-title {
             margin: 0 2px 0 0;
-            font: 900 10px/1.2 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+            font: 900 var(--atlas-hover-body-size)/1.3 var(--game-font-family);
             letter-spacing: 0.04em;
         }
 
@@ -124,9 +133,9 @@
         .legend-row {
             display: flex;
             align-items: center;
-            gap: 5px;
-            min-height: 16px;
-            font-size: 10px;
+            gap: 8px;
+            min-height: 24px;
+            font-size: var(--atlas-hover-body-size);
             color: #3b352d;
         }
 
@@ -183,7 +192,7 @@
             color: var(--brown);
             text-align: center;
             cursor: pointer;
-            font-size: 10px;
+            font-size: var(--atlas-hover-body-size);
             font-weight: 900;
             transition: transform 0.16s ease, background 0.16s ease;
             display: grid;
@@ -207,18 +216,23 @@
         }
 
         .zone-button strong {
-            position: relative;
+            position: absolute;
+            left: 50%;
+            top: 50%;
             z-index: 2;
             width: max-content;
             min-width: 86px;
-            max-width: 150px;
+            max-width: 220px;
             padding: 4px 9px;
             border-radius: 999px;
-            background: rgba(255, 248, 236, 0.9);
+            border: 1px solid var(--brown);
+            background: #ffffff;
             line-height: 1.15;
+            font-size: var(--atlas-hover-body-size);
+            font-weight: 400;
             white-space: nowrap;
             opacity: 0;
-            transform: translateY(4px);
+            transform: translate(-50%, calc(-50% + 4px));
             transition: opacity 0.16s ease, transform 0.16s ease;
         }
 
@@ -231,7 +245,7 @@
         .zone-button:hover strong,
         .zone-button:focus-visible strong {
             opacity: 1;
-            transform: translateY(0);
+            transform: translate(-50%, -50%);
         }
 
         #info-panel {
@@ -239,8 +253,8 @@
             left: 38px;
             bottom: 28px;
             z-index: 6;
-            width: min(390px, calc(100vw - 64px));
-            padding: 18px;
+            width: min(520px, calc(100vw - 64px));
+            padding: 22px 24px;
             background: #fff;
             border: 1px solid var(--brown);
             border-radius: 8px;
@@ -259,10 +273,10 @@
         .location-toggle {
             display: inline-flex;
             align-items: center;
-            gap: 8px;
-            margin: 0 0 8px;
+            gap: 10px;
+            margin: 0 0 12px;
             color: var(--brown);
-            font-size: 13px;
+            font-size: var(--atlas-hover-body-size);
             font-weight: 900;
         }
 
@@ -294,23 +308,23 @@
         }
 
         #info-title {
-            margin: 0 0 9px;
-            font-size: 23px;
-            line-height: 1.2;
+            margin: 0 0 12px;
+            font-size: var(--atlas-hover-title-size);
+            line-height: 1.3;
             font-weight: 900;
         }
 
         #info-desc {
             margin: 0;
             color: #474136;
-            font-size: 13px;
+            font-size: var(--atlas-hover-body-size);
             line-height: 1.65;
         }
 
         .risk-sentence {
-            margin: 14px 0 0;
+            margin: 16px 0 0;
             color: #474136;
-            font-size: 13px;
+            font-size: var(--atlas-hover-body-size);
             line-height: 1.65;
         }
 
@@ -421,7 +435,7 @@
             display: grid;
             place-items: center;
             text-align: center;
-            font-size: 10px;
+            font-size: var(--atlas-popup-size);
             font-weight: 900;
             line-height: 1.2;
             opacity: 0;
@@ -484,12 +498,12 @@
             top: 28px;
             right: 30px;
             z-index: 7;
-            padding: 9px 16px;
+            padding: 12px 22px;
             border: 1px solid var(--brown);
             border-radius: 999px;
             background: #fff;
             color: var(--brown);
-            font: 900 12px/1 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+            font: 900 var(--atlas-popup-size)/1 var(--game-font-family);
             cursor: pointer;
             opacity: 0;
             pointer-events: none;
@@ -533,8 +547,8 @@
             top: 0;
             left: 0;
             z-index: 9;
-            width: min(360px, calc(100vw - 28px));
-            padding: 14px;
+            width: min(560px, calc(100vw - 28px));
+            padding: 16px 18px;
             background: #fff;
             border: 2px solid var(--ink);
             border-radius: 8px;
@@ -552,12 +566,12 @@
         #province-tooltip {
             position: absolute;
             z-index: 8;
-            padding: 6px 9px;
+            padding: 8px 12px;
             border: 1px solid var(--brown);
             border-radius: 999px;
             background: rgba(255, 248, 236, 0.92);
             color: var(--brown);
-            font-size: 12px;
+            font-size: var(--atlas-hover-body-size);
             font-weight: 900;
             pointer-events: none;
             opacity: 0;
@@ -575,8 +589,8 @@
             left: 0;
             top: 0;
             z-index: 10;
-            width: min(330px, calc(100vw - 28px));
-            padding: 14px 16px;
+            width: min(460px, calc(100vw - 28px));
+            padding: 16px 18px;
             border: 1px solid #7a4a2f;
             border-radius: 10px;
             background: rgba(255, 252, 240, 0.95);
@@ -596,7 +610,7 @@
             display: block;
             margin: 0 0 8px;
             color: #111;
-            font-size: 18px;
+            font-size: var(--atlas-hover-title-size);
             line-height: 1.25;
             font-weight: 900;
         }
@@ -604,29 +618,31 @@
         #dish-tooltip-body {
             margin: 0;
             color: #5f5750;
-            font-size: 13px;
-            line-height: 1.62;
+            font-size: var(--atlas-hover-body-size);
+            line-height: 1.55;
         }
 
         .tooltip-close {
             position: absolute;
             top: 8px;
             right: 10px;
-            width: 22px;
-            height: 22px;
+            width: 34px;
+            height: 34px;
             display: grid;
             place-items: center;
             border: 2px solid var(--ink);
             border-radius: 999px;
             background: var(--paper-soft);
             cursor: pointer;
+            font-family: var(--game-font-family);
+            font-size: var(--atlas-hover-body-size);
             font-weight: 900;
             line-height: 1;
         }
 
         #tt-name {
-            margin: 0 32px 5px 0;
-            font-size: 16px;
+            margin: 0 44px 8px 0;
+            font-size: 21px;
             line-height: 1.25;
             font-weight: 900;
         }
@@ -634,14 +650,14 @@
         #tt-group {
             margin: 0 0 10px;
             color: var(--muted);
-            font-size: 12px;
+            font-size: 16px;
             line-height: 1.45;
         }
 
         .tooltip-body {
             display: grid;
-            grid-template-columns: 145px 1fr;
-            gap: 11px;
+            grid-template-columns: 220px 1fr;
+            gap: 16px;
             align-items: center;
             border-top: 1px dashed #c9c0ad;
             border-bottom: 1px dashed #c9c0ad;
@@ -649,13 +665,13 @@
         }
 
         #radar {
-            width: 145px;
-            height: 145px;
+            width: 220px;
+            height: 220px;
         }
 
         #tt-risk {
             margin: 0 0 8px;
-            font-size: 13px;
+            font-size: 16px;
             line-height: 1.45;
             font-weight: 900;
         }
@@ -667,14 +683,14 @@
             padding: 0;
             list-style: none;
             color: #3e382f;
-            font-size: 11px;
+            font-size: 16px;
             line-height: 1.35;
         }
 
         #tt-detail {
             margin: 10px 0 0;
             color: #4f473d;
-            font-size: 12px;
+            font-size: 16px;
             line-height: 1.55;
         }
 
@@ -686,7 +702,7 @@
             place-items: center;
             pointer-events: none;
             color: #5d554a;
-            font: 900 12px/1 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+            font: 900 var(--atlas-popup-size)/1 var(--game-font-family);
             letter-spacing: 0.08em;
             transition: opacity 0.3s ease;
         }
@@ -697,13 +713,13 @@
             left: 32px;
             z-index: 12;
             display: none;
-            max-width: 460px;
-            padding: 14px 16px;
+            max-width: 720px;
+            padding: 20px 24px;
             background: #fff;
             border: 2px solid #b42318;
             border-radius: 8px;
             color: #7a271a;
-            font-size: 13px;
+            font-size: var(--atlas-popup-size);
             line-height: 1.6;
         }
 
@@ -792,7 +808,7 @@
         <h3 id="tt-name"></h3>
         <p id="tt-group"></p>
         <div class="tooltip-body">
-            <canvas id="radar" width="145" height="145"></canvas>
+            <canvas id="radar" width="220" height="220"></canvas>
             <div>
                 <p id="tt-risk"></p>
                 <ul id="tt-endpoints"></ul>
@@ -2413,7 +2429,7 @@
             const h = canvas.height;
             const cx = w / 2;
             const cy = h / 2;
-            const r = 48;
+            const r = 65;
             const axes = [
                 { label: '感官', value: Number(data.sensoryRiskIndex), endpoint: data.sensoryEndpoint },
                 { label: '节律', value: Number(data.rhythmRiskIndex), endpoint: data.rhythmEndpoint },
@@ -2444,9 +2460,9 @@
                 ctx.lineTo(end.x, end.y);
                 ctx.stroke();
 
-                const label = radarPoint(i, r + 19, cx, cy, axes.length);
+                const label = radarPoint(i, r + 21, cx, cy, axes.length);
                 ctx.fillStyle = '#111111';
-                ctx.font = '900 11px Microsoft YaHei, sans-serif';
+                ctx.font = '600 16px YouYuan, 幼圆, Microsoft YaHei, sans-serif';
                 ctx.textAlign = 'center';
                 ctx.textBaseline = 'middle';
                 ctx.fillText(`${axis.label}${axis.endpoint}`, label.x, label.y);

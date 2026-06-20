@@ -22,7 +22,7 @@
         "act2_food_huobao_youyu",
         "act2_food_jiang_niurou"
       ],
-      "duration": 26000
+      "duration": 13000
     },
     "bottom": {
       "choiceIds": [
@@ -32,7 +32,7 @@
         "act2_food_paocai_niurou_xinlamian",
         "act2_food_baimifan"
       ],
-      "duration": 30000
+      "duration": 16000
     }
   },
   "introSequence": {
@@ -195,6 +195,32 @@
           "height": 220,
           "zIndex": 18
         },
+        "plateSlots": [
+          {
+            "offsetX": 140,
+            "offsetY": 11,
+            "width": 80,
+            "height": 80
+          },
+          {
+            "offsetX": 220,
+            "offsetY": 11,
+            "width": 80,
+            "height": 80
+          },
+          {
+            "offsetX": 95,
+            "offsetY": 85,
+            "width": 80,
+            "height": 75
+          },
+          {
+            "offsetX": 170,
+            "offsetY": 85,
+            "width": 110,
+            "height": 82
+          }
+        ],
         "dropArea": {
           "x": 120,
           "y": 40,
@@ -533,7 +559,29 @@
           "width": 190,
           "height": 126,
           "zIndex": 28
-        }
+        },
+        "floatingEffects": [
+          {
+            "id": "left",
+            "x": 311,
+            "y": 214,
+            "width": 484,
+            "height": 256,
+            "zIndex": 26,
+            "image": "assets/images/act2/lunch/solo-effect-left.png",
+            "animation": "float"
+          },
+          {
+            "id": "right",
+            "x": 1116,
+            "y": 17,
+            "width": 407,
+            "height": 325,
+            "zIndex": 26,
+            "image": "assets/images/act2/lunch/solo-effect-right.png",
+            "animation": "flash"
+          }
+        ]
       },
       "objects": {
         "act2_s05_comic_focus": {

@@ -1733,12 +1733,14 @@ function setAct1CarriedFoodScale(element, scale) {
 
 function playAct1BreakfastToHeatTransition(selectedElement) {
   const config = getAct1MicrowaveEntryConfig();
+  const heatState = getAct1StateConfig(ACT1_STATES.MICROWAVE_HEAT);
   const selectedConfig = getAct1StateConfig(ACT1_STATES.BREAKFAST_CHOICE)
     .objects?.[selectedElement.dataset.objectId];
 
   objectLayer.querySelectorAll(".act1-breakfast-frame").forEach((element) => {
     element.classList.add("is-leaving-up");
   });
+  appendAct1StateObjectsFromRight(heatState, config.duration);
 
   if (!selectedConfig) {
     window.setTimeout(enterAct1MicrowaveHeat, config.duration);
@@ -1763,9 +1765,30 @@ function playAct1BreakfastToHeatTransition(selectedElement) {
   }, config.duration);
 }
 
+function appendAct1StateObjectsFromRight(state, duration) {
+  Object.entries(state.objects || {}).forEach(([objectId, objectConfig]) => {
+    if (document.getElementById(objectId)) {
+      return;
+    }
+
+    const element = createAct1ObjectElement(objectId, objectConfig);
+
+    element.style.transitionDuration = `${duration}ms`;
+    element.classList.add("act1-scene-entering-right");
+    updateAct1ObjectLayout(element, objectConfig);
+    objectLayer.appendChild(element);
+    window.requestAnimationFrame(() => {
+      window.requestAnimationFrame(() => {
+        element.classList.remove("act1-scene-entering-right");
+      });
+    });
+  });
+}
+
 function enterAct1MicrowaveHeat() {
   const state = getAct1StateConfig(ACT1_STATES.MICROWAVE_HEAT);
   const carriedFood = objectLayer.querySelector(".act1-breakfast-option.is-travelling-to-microwave");
+  const heatObjectIds = new Set(Object.keys(state.objects || {}));
 
   currentPhase = PHASES.ACT1_HEATING;
   currentState = ACT1_STATES.MICROWAVE_HEAT;
@@ -1778,7 +1801,7 @@ function enterAct1MicrowaveHeat() {
   hideHoverInfoTooltip();
   updateStageHeader("\u7b2c\u4e00\u5e55\u4f4e\u4fdd\u771f\u539f\u578b", "\u65e9\u6668\u2014\u2014\u5fae\u6ce2\u52a0\u70ed");
   objectLayer.querySelectorAll(".act1-scene-object").forEach((element) => {
-    if (element === carriedFood) {
+    if (element === carriedFood || heatObjectIds.has(element.id)) {
       return;
     }
 
@@ -1792,6 +1815,10 @@ function enterAct1MicrowaveHeat() {
   }
 
   Object.entries(state.objects || {}).forEach(([objectId, objectConfig]) => {
+    if (document.getElementById(objectId)) {
+      return;
+    }
+
     const element = createAct1ObjectElement(objectId, objectConfig);
 
     updateAct1ObjectLayout(element, objectConfig);

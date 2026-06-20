@@ -12,7 +12,6 @@
             --muted: #777064;
             --line: #111111;
             --panel: #ffffff;
-            --shadow: 4px 4px 0 rgba(0, 0, 0, 1);
             --brown: #6d3f28;
             --ring-blue: #cddaf6;
             --orbit-orange: #cddaf6;
@@ -24,6 +23,7 @@
             --high-point: #FF4800;
             --planet-shift: 12.5vw;
             --ui-left: 52px;
+            --brand-left: 120px;
         }
 
         * { box-sizing: border-box; }
@@ -31,7 +31,7 @@
         body {
             margin: 0;
             overflow: hidden;
-            background: var(--paper);
+            background: transparent;
             color: var(--ink);
             font-family: "Microsoft YaHei", "PingFang SC", "Noto Sans SC", Arial, sans-serif;
         }
@@ -40,12 +40,7 @@
             position: relative;
             width: 100vw;
             height: 100vh;
-            background:
-                linear-gradient(rgba(109,63,40,0.04) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(109,63,40,0.04) 1px, transparent 1px),
-                radial-gradient(circle at 67% 47%, rgba(255,255,255,0.84), transparent 34%),
-                linear-gradient(135deg, #fffaf7 0%, var(--paper) 54%, #f5e6dc 100%);
-            background-size: 30px 30px, 30px 30px, auto, auto;
+            background: transparent;
         }
 
         #canvas-container canvas {
@@ -59,31 +54,11 @@
         .brand {
             position: absolute;
             top: 34px;
-            left: var(--ui-left);
+            left: var(--brand-left);
             width: min(410px, calc(100vw - 84px));
             z-index: 4;
             color: var(--brown);
             transition: opacity 0.42s ease, transform 0.42s ease;
-        }
-
-        .brand-kicker {
-            display: inline-block;
-            padding: 4px 8px;
-            margin-bottom: 10px;
-            background: #fff;
-            border: 1px solid var(--brown);
-            border-radius: 999px;
-            box-shadow: 2px 2px 0 rgba(109,63,40,0.95);
-            font: 700 11px/1.1 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-            letter-spacing: 0.08em;
-        }
-
-        .brand h1 {
-            margin: 0 0 16px;
-            max-width: 390px;
-            font-size: clamp(24px, 3vw, 42px);
-            line-height: 1.08;
-            font-weight: 900;
         }
 
         .brand p {
@@ -108,7 +83,6 @@
             border-radius: 999px;
             background: rgba(255, 255, 255, 0.78);
             color: var(--brown);
-            box-shadow: 3px 3px 0 rgba(109,63,40,0.72);
             outline: none;
             font: 700 12px/1 "Microsoft YaHei", sans-serif;
         }
@@ -123,7 +97,6 @@
             background: transparent;
             border: 0;
             border-radius: 8px;
-            box-shadow: none;
             transition: opacity 0.35s ease, transform 0.35s ease;
             display: flex;
             justify-content: flex-start;
@@ -195,7 +168,7 @@
                 #FEE498;
             background-size: 12px 12px;
             border: 16px solid #EDC445;
-            box-shadow: inset 0 0 0 1px rgba(109,63,40,0.42), 4px 4px 0 rgba(109,63,40,0.92);
+            outline: 1px solid var(--brown);
             opacity: 0.86;
         }
 
@@ -208,12 +181,11 @@
             padding: 0;
             background: transparent;
             color: var(--brown);
-            box-shadow: none;
             text-align: center;
             cursor: pointer;
             font-size: 10px;
             font-weight: 900;
-            transition: transform 0.16s ease, box-shadow 0.16s ease, background 0.16s ease;
+            transition: transform 0.16s ease, background 0.16s ease;
             display: grid;
             place-items: center;
             overflow: visible;
@@ -250,32 +222,14 @@
             transition: opacity 0.16s ease, transform 0.16s ease;
         }
 
-        .zone-button span {
-            position: relative;
-            z-index: 2;
-            display: block;
-            margin-top: 2px;
-            color: rgba(109,63,40,0.68);
-            font: 700 10px/1.2 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-            letter-spacing: 0.03em;
-            opacity: 0;
-            transform: translateY(4px);
-            transition: opacity 0.16s ease, transform 0.16s ease;
-        }
-
         .zone-button:hover,
         .zone-button.active {
             background: transparent;
             transform: translate(-2px, -2px);
-            box-shadow: none;
         }
 
         .zone-button:hover strong,
-        .zone-button:hover span,
-        .zone-button:focus-visible strong,
-        .zone-button:focus-visible span,
-        .zone-button.active strong,
-        .zone-button.active span {
+        .zone-button:focus-visible strong {
             opacity: 1;
             transform: translateY(0);
         }
@@ -290,7 +244,6 @@
             background: #fff;
             border: 1px solid var(--brown);
             border-radius: 8px;
-            box-shadow: 4px 4px 0 rgba(109,63,40,0.9);
             opacity: 0;
             transform: translateY(10px);
             pointer-events: none;
@@ -320,7 +273,6 @@
             border: 1px solid var(--brown);
             border-radius: 999px;
             background: #ffd8df;
-            box-shadow: inset 0 0 0 2px rgba(255,255,255,0.55);
             cursor: pointer;
         }
 
@@ -334,7 +286,6 @@
             border: 1px solid var(--brown);
             border-radius: 50%;
             background: #fff8ec;
-            box-shadow: 2px 2px 0 rgba(109,63,40,0.45);
             transition: left 0.2s ease;
         }
 
@@ -467,7 +418,6 @@
             border: 0;
             background: transparent;
             color: var(--brown);
-            box-shadow: none;
             display: grid;
             place-items: center;
             text-align: center;
@@ -488,7 +438,6 @@
             height: 260px;
             object-fit: contain;
             pointer-events: none;
-            filter: drop-shadow(2px 3px 0 rgba(109,63,40,0.24));
         }
 
         .orbit-food span {
@@ -497,7 +446,6 @@
 
         .orbit-food.selected {
             background: transparent;
-            box-shadow: none;
             filter: none;
         }
 
@@ -529,7 +477,6 @@
         .orbit-food.highlight {
             opacity: 1 !important;
             transform: scale(1.08);
-            filter: drop-shadow(0 0 10px rgba(255,255,255,0.95));
         }
 
         #btn-back {
@@ -542,12 +489,11 @@
             border-radius: 999px;
             background: #fff;
             color: var(--brown);
-            box-shadow: 3px 3px 0 rgba(109,63,40,0.9);
             font: 900 12px/1 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
             cursor: pointer;
             opacity: 0;
             pointer-events: none;
-            transition: opacity 0.25s ease, transform 0.16s ease, box-shadow 0.16s ease;
+            transition: opacity 0.25s ease, transform 0.16s ease;
         }
 
         #btn-back.visible {
@@ -557,7 +503,6 @@
 
         #btn-back:hover {
             transform: translate(-2px, -2px);
-            box-shadow: 5px 5px 0 rgba(109,63,40,0.9);
         }
 
         body.region-active .brand {
@@ -593,7 +538,6 @@
             background: #fff;
             border: 2px solid var(--ink);
             border-radius: 8px;
-            box-shadow: 6px 6px 0 #000;
             pointer-events: auto;
             opacity: 0;
             transform: translateY(6px);
@@ -613,7 +557,6 @@
             border-radius: 999px;
             background: rgba(255, 248, 236, 0.92);
             color: var(--brown);
-            box-shadow: 2px 2px 0 rgba(109,63,40,0.45);
             font-size: 12px;
             font-weight: 900;
             pointer-events: none;
@@ -638,7 +581,6 @@
             border-radius: 10px;
             background: rgba(255, 252, 240, 0.95);
             color: #5f3a27;
-            box-shadow: none;
             pointer-events: none;
             opacity: 0;
             transform: translateY(6px);
@@ -760,7 +702,6 @@
             background: #fff;
             border: 2px solid #b42318;
             border-radius: 8px;
-            box-shadow: 4px 4px 0 #b42318;
             color: #7a271a;
             font-size: 13px;
             line-height: 1.6;
@@ -769,7 +710,6 @@
         @media (max-width: 760px) {
             :root { --planet-shift: 0vw; }
             .brand { top: 18px; left: 18px; }
-            .brand h1 { font-size: 26px; }
             .brand p:nth-of-type(n + 2) { display: none; }
             #zone-dock { left: 18px; bottom: 74px; transform: scale(0.72); transform-origin: left bottom; }
             #legend, #info-panel { left: 18px; bottom: 18px; width: calc(100vw - 36px); }
@@ -794,8 +734,6 @@
     <div id="error"></div>
 
     <header class="brand">
-        <div class="brand-kicker">REFERENCE PLAYER ATLAS</div>
-        <h1>对照样本<br>空间叙事图谱</h1>
         <section id="legend" aria-label="食管癌发病率图例">
             <div class="legend-title">食管癌发病率</div>
             <div class="legend-row"><div class="legend-color" style="background:var(--low-map)"></div><span>低位区间 low</span></div>
@@ -1408,13 +1346,14 @@
         function renderZoneDock() {
             const dock = document.getElementById('zone-dock');
             dock.innerHTML = '';
-            Object.keys(config.zones).forEach((name, index) => {
+            Object.keys(config.zones).forEach((name) => {
                 const button = document.createElement('button');
                 button.type = 'button';
                 button.className = 'zone-button';
                 button.dataset.zone = name;
+                button.setAttribute('aria-label', name);
                 button.style.setProperty('--zone-icon', `url("${zoneIconPaths[name] || ''}")`);
-                button.innerHTML = `<i class="zone-icon" aria-hidden="true"></i><strong>${name}</strong><span>ZONE ${String(index + 1).padStart(2, '0')}</span>`;
+                button.innerHTML = `<i class="zone-icon" aria-hidden="true"></i><strong>${name}</strong>`;
                 button.addEventListener('click', () => focusOnRegion(name));
                 dock.appendChild(button);
             });

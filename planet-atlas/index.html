@@ -374,6 +374,11 @@
             text-decoration-thickness: 1px;
             text-underline-offset: 3px;
             cursor: pointer;
+            transition: color 0.18s ease;
+        }
+
+        .risk-tag.is-pinned {
+            color: #F8A364;
         }
 
         .food-orbit-layer {
@@ -477,6 +482,8 @@
         }
 
         .orbit-food img {
+            position: relative;
+            z-index: 1;
             width: 260px;
             height: 260px;
             object-fit: contain;
@@ -491,7 +498,27 @@
         .orbit-food.selected {
             background: transparent;
             box-shadow: none;
-            filter: drop-shadow(0 0 12px rgba(255,154,201,0.95));
+            filter: none;
+        }
+
+        .orbit-food::before {
+            content: "";
+            position: absolute;
+            left: calc(50% + 2px);
+            top: calc(50% - 2px);
+            width: 210px;
+            height: 210px;
+            border-radius: 50%;
+            background: #FAC4DE;
+            opacity: 0;
+            transform: translate(-50%, -50%) scale(0.82);
+            transition: opacity 0.24s ease, transform 0.32s ease;
+            pointer-events: none;
+        }
+
+        .orbit-food.selected::before {
+            opacity: 1;
+            transform: translate(-50%, -50%) scale(1);
         }
 
         .orbit-food.dimmed {
@@ -1014,6 +1041,7 @@
 
         const selectedChoiceIds = new Set(window.PLANET_SELECTED_CHOICE_IDS || []);
         const selectedFoodNames = new Set(window.PLANET_SELECTED_FOOD_NAMES || []);
+        let showPlayerSelections = false;
         let hostPlayerData = null;
         let hostReturnLocked = false;
         const tileSvgSize = { width: 1980, height: 1307 };
@@ -1104,6 +1132,7 @@
             scale: 2.35
         };
         let activeRegion = null;
+        let pinnedRiskTag = null;
         let hoveredObj = null;
         let tooltipLocked = false;
         let lastPointerEvent = null;
@@ -1292,8 +1321,10 @@
             document.getElementById('location-switch').addEventListener('click', (event) => {
                 const button = event.currentTarget;
                 const active = !button.classList.contains('active');
+                showPlayerSelections = active;
                 button.classList.toggle('active', active);
                 button.setAttribute('aria-pressed', String(active));
+                refreshSelectedOrbitFoods();
             });
             document.getElementById('close-tooltip').addEventListener('click', (event) => {
                 event.stopPropagation();
@@ -1302,14 +1333,47 @@
             document.getElementById('atlas-search').addEventListener('submit', handleSearch);
             [document.getElementById('tag-1'), document.getElementById('tag-2')].forEach(tag => {
                 tag.addEventListener('mouseenter', () => {
-                    highlightPoints(tag.dataset.dim, tag.dataset.val);
-                    highlightOrbitFoods(tag.innerText);
+                    applyRiskTagFilter(tag);
                 });
                 tag.addEventListener('mouseleave', () => {
-                    activeRegion ? highlightRegion(activeRegion) : resetPointsColor();
-                    resetOrbitFoodHighlight();
+                    if (pinnedRiskTag) {
+                        applyRiskTagFilter(pinnedRiskTag);
+                    } else {
+                        restoreRiskTagFilterBase();
+                    }
+                });
+                tag.addEventListener('click', (event) => {
+                    event.preventDefault();
+                    event.stopPropagation();
+
+                    if (pinnedRiskTag === tag) {
+                        clearPinnedRiskTag();
+                        return;
+                    }
+
+                    pinnedRiskTag?.classList.remove('is-pinned');
+                    pinnedRiskTag = tag;
+                    pinnedRiskTag.classList.add('is-pinned');
+                    applyRiskTagFilter(pinnedRiskTag);
                 });
             });
+        }
+
+        function applyRiskTagFilter(tag) {
+            if (!tag) return;
+            highlightPoints(tag.dataset.dim, tag.dataset.val);
+            highlightOrbitFoods(tag.innerText);
+        }
+
+        function restoreRiskTagFilterBase() {
+            activeRegion ? highlightRegion(activeRegion) : resetPointsColor();
+            resetOrbitFoodHighlight();
+        }
+
+        function clearPinnedRiskTag() {
+            pinnedRiskTag?.classList.remove('is-pinned');
+            pinnedRiskTag = null;
+            restoreRiskTagFilterBase();
         }
 
         function handleHostMessage(event) {
@@ -1326,7 +1390,7 @@
         function refreshSelectedOrbitFoods() {
             document.querySelectorAll('.orbit-food').forEach(node => {
                 const selected = selectedChoiceIds.has(node.dataset.id) || selectedFoodNames.has(node.dataset.name);
-                node.classList.toggle('selected', selected);
+                node.classList.toggle('selected', showPlayerSelections && selected);
             });
         }
 
@@ -1971,6 +2035,7 @@
         function focusOnRegion(regionName) {
             const center = groupCenters.get(regionName);
             if (!center) return;
+            clearPinnedRiskTag();
             activeRegion = regionName;
             driftEnabled = false;
             controls.enabled = false;
@@ -2153,7 +2218,10 @@
                     label.textContent = food.name;
                     node.appendChild(label);
                 }
-                if (selectedChoiceIds.has(food.id) || selectedFoodNames.has(food.name)) {
+                if (
+                    showPlayerSelections &&
+                    (selectedChoiceIds.has(food.id) || selectedFoodNames.has(food.name))
+                ) {
                     node.classList.add('selected');
                 }
                 container.appendChild(node);
@@ -2331,6 +2399,7 @@
         }
 
         function resetView() {
+            clearPinnedRiskTag();
             activeRegion = null;
             tooltipLocked = false;
             document.body.classList.remove('region-active');

@@ -189,6 +189,8 @@
         "orthogonalStepDelay": 520,
         "targetCenterX": 768,
         "targetCenterY": 469,
+        "foodOffsetX": 0,
+        "foodOffsetY": 200,
         "targetScale": 1.3
       },
       "objects": {

@@ -16,6 +16,21 @@ const act2Files = {
   choices: "data/choices-act2.json",
   layouts: "data/layouts-act2.json"
 };
+const ACT2_CATCH_BG_ASSET = "assets/images/act2/lunch/catch-bg.png";
+const ACT2_HELD_PLATE_ASSET = "assets/images/act2/lunch/held-plate.png";
+const ACT2_CATCH_AUNT_HAND_ASSET = "assets/images/act2/lunch/catch-aunt-hand.png";
+const ACT2_PLACE_OPTION_ASSETS = {
+  act2_place_canteen_table: "assets/images/act2/lunch/place-option-canteen-table.png",
+  act2_place_coworkers: "assets/images/act2/lunch/place-option-coworkers.png",
+  act2_place_park_bench: "assets/images/act2/lunch/place-option-park-bench.png",
+  act2_place_office_desk: "assets/images/act2/lunch/place-option-office-desk.png"
+};
+const ACT2_PLACE_BACKGROUND_ASSETS = {
+  act2_place_canteen_table: "assets/images/act2/lunch/scene-friend-bg.png",
+  act2_place_coworkers: "assets/images/act2/lunch/scene-work-bg.png",
+  act2_place_park_bench: "assets/images/act2/lunch/scene-park-bg.png",
+  act2_place_office_desk: "assets/images/act2/lunch/scene-solo-bg.png"
+};
 
 const resultFiles = {
   layouts: "data/layouts-result.json",
@@ -548,7 +563,6 @@ let RESULT_PLANET_VISUAL_CONFIG = {
   motionSpeed: 0.75,
   liveMotionScale: 1,
   svgMotionScale: 1,
-  selfSpinDegPerSecond: 4,
   foodOrbit: {
     enabled: true,
     x: 330,
@@ -886,7 +900,6 @@ function mergeResultPlanetVisualConfig(config = {}) {
     motionSpeed: Number(config.motionSpeed ?? RESULT_PLANET_VISUAL_CONFIG.motionSpeed),
     liveMotionScale: Number(config.liveMotionScale ?? RESULT_PLANET_VISUAL_CONFIG.liveMotionScale),
     svgMotionScale: Number(config.svgMotionScale ?? RESULT_PLANET_VISUAL_CONFIG.svgMotionScale),
-    selfSpinDegPerSecond: Number(config.selfSpinDegPerSecond ?? RESULT_PLANET_VISUAL_CONFIG.selfSpinDegPerSecond),
     foodOrbit: {
       ...RESULT_PLANET_VISUAL_CONFIG.foodOrbit,
       ...(config.foodOrbit || {})
@@ -1705,6 +1718,8 @@ function getAct1MicrowaveEntryConfig() {
     orthogonalStepDelay: config.orthogonalStepDelay ?? 520,
     targetCenterX: config.targetCenterX ?? 768,
     targetCenterY: config.targetCenterY ?? 469,
+    foodOffsetX: config.foodOffsetX ?? 0,
+    foodOffsetY: config.foodOffsetY ?? 0,
     targetScale: config.targetScale ?? 1.3
   };
 }
@@ -1726,8 +1741,8 @@ function playAct1BreakfastToHeatTransition(selectedElement) {
   const stage = act1Layouts?.stage || { width: DESIGN_WIDTH, height: DESIGN_HEIGHT };
   const targetWidth = selectedConfig.width * config.targetScale;
   const targetHeight = selectedConfig.height * config.targetScale;
-  const targetLeft = config.targetCenterX - targetWidth / 2;
-  const targetTop = config.targetCenterY - targetHeight / 2;
+  const targetLeft = config.targetCenterX + config.foodOffsetX - targetWidth / 2;
+  const targetTop = config.targetCenterY + config.foodOffsetY - targetHeight / 2;
 
   selectedElement.classList.add("is-travelling-to-microwave");
   selectedElement.style.zIndex = "30";
@@ -2354,6 +2369,7 @@ function renderAct2State(stateId) {
     objectLayer.appendChild(element);
   });
 
+  syncAct2PersistentPlateSlotLayout(state);
   syncAct2PlateSlots();
   syncAct2FinishButton();
   if (stateId === ACT2_LUNCH_PLACE_FOCUS_STATE && isAct2WorkBubblePlaceSelected()) {
@@ -2609,6 +2625,8 @@ function createAct2ObjectElement(objectId, objectConfig) {
     renderAct2IntroBubble(element, objectConfig);
   } else if (objectConfig.type === "act2PrepArea") {
     renderAct2PrepArea(element, objectConfig);
+  } else if (objectConfig.type === "act2Plate") {
+    renderAct2Plate(element, objectConfig);
   } else if (objectConfig.type === "act2PlateSlot") {
     renderAct2PlateSlot(element, objectConfig);
   } else if (objectConfig.type === "act2ComicGrid") {
@@ -2707,6 +2725,43 @@ function updateAct2ObjectLayout(element, objectConfig) {
   element.style.zIndex = objectConfig.zIndex ?? 1;
   element.style.transformOrigin = objectConfig.transformOrigin || "center center";
   element.style.transform = `scale(${objectConfig.scale ?? 1})`;
+}
+
+function syncAct2PersistentPlateSlotLayout(stateConfig = getAct2StateConfig(currentState)) {
+  if (currentState === ACT2_STATES.LUNCH_CATCH_GAME) {
+    return;
+  }
+
+  const objects = stateConfig?.objects || {};
+  const plateEntry = Object.entries(objects).find(([, objectConfig]) => objectConfig.type === "act2Plate");
+
+  if (!plateEntry) {
+    return;
+  }
+
+  const [, plateConfig] = plateEntry;
+  Object.entries(objects).forEach(([objectId, objectConfig]) => {
+    if (objectConfig.type !== "act2PlateSlot") {
+      return;
+    }
+
+    const slotElement = document.getElementById(objectId);
+    const slotIndex = Number(objectConfig.slotIndex);
+    const slotLayout = getAct2CatchPlateSlotLayout(slotIndex, plateConfig.width, plateConfig.height);
+
+    if (!slotElement || !Number.isFinite(slotIndex)) {
+      return;
+    }
+
+    updateAct2ObjectLayout(slotElement, {
+      ...objectConfig,
+      x: plateConfig.x + slotLayout.offsetX,
+      y: plateConfig.y + slotLayout.offsetY,
+      width: slotLayout.width,
+      height: slotLayout.height,
+      zIndex: slotLayout.zIndex || (plateConfig.zIndex || objectConfig.zIndex || 1) + 1
+    });
+  });
 }
 
 function getAct2LunchChoice(choiceId) {
@@ -2850,6 +2905,40 @@ function getAct2LunchChoiceAssetSrc(choice) {
   return choice?.asset?.src || choice?.assetSrc || `assets/images/act2/lunch/${choiceId}.png`;
 }
 
+function getAct2LunchFallingFoodAssetSrc(choice) {
+  const choiceId = choice?.id || choice?.foodId;
+
+  if (!choiceId) {
+    return "";
+  }
+
+  return choice?.fallingAsset?.src ||
+    choice?.fallingAssetSrc ||
+    `assets/images/act2/lunch/falling/${choiceId}.png`;
+}
+
+function getAct2LunchPlateFoodAssetSrc(choice) {
+  return choice?.plateAsset?.src ||
+    choice?.plateAssetSrc ||
+    getAct2LunchFallingFoodAssetSrc(choice);
+}
+
+function renderAct2Plate(element, objectConfig = {}) {
+  const image = document.createElement("img");
+
+  image.className = "act2-held-plate-asset";
+  image.src = objectConfig.image || objectConfig.asset?.src || ACT2_HELD_PLATE_ASSET;
+  image.alt = objectConfig.asset?.alt || objectConfig.content || "held plate";
+  image.draggable = false;
+  image.addEventListener("error", () => {
+    element.classList.remove("has-asset");
+    image.remove();
+    element.textContent = objectConfig.content || "";
+  }, { once: true });
+  element.classList.add("has-asset");
+  element.appendChild(image);
+}
+
 function renderAct2ConveyorWindow(element, objectConfig) {
   const lane = act2Layouts?.conveyors?.[objectConfig.laneId] || {};
   const label = document.createElement("div");
@@ -2943,6 +3032,9 @@ function renderAct2PlateSlot(element, objectConfig) {
 }
 
 function syncAct2PlateSlots() {
+  syncAct2PlateSlotsWithAssets();
+  return;
+
   objectLayer?.querySelectorAll(".act2-plate-slot").forEach((slotElement) => {
     const slotIndex = Number(slotElement.dataset.slotIndex);
     const selectedFood = act2LunchPlateItems.find((food) => food.slotIndex === slotIndex);
@@ -2971,6 +3063,77 @@ function syncAct2PlateSlots() {
   });
 }
 
+function syncAct2PlateSlotsWithAssets() {
+  objectLayer?.querySelectorAll(".act2-plate-slot").forEach((slotElement) => {
+    const slotIndex = Number(slotElement.dataset.slotIndex);
+    const selectedFood = act2LunchPlateItems.find((food) => food.slotIndex === slotIndex);
+
+    if (!selectedFood) {
+      slotElement.classList.remove("is-filled", "is-eaten", "has-asset");
+      delete slotElement.dataset.foodId;
+      slotElement.textContent = `格子 ${slotIndex + 1}`;
+      return;
+    }
+
+    slotElement.classList.add("is-filled");
+    slotElement.classList.toggle("is-eaten", act2EatingCompletedSlots.has(slotIndex));
+    renderAct2PlateSlotFood(slotElement, selectedFood, {
+      eaten: act2EatingCompletedSlots.has(slotIndex)
+    });
+  });
+}
+
+function renderAct2PlateSlotFood(slotElement, selectedFood, options = {}) {
+  const foodId = selectedFood.foodId || selectedFood.id || "";
+  const assetSrc = getAct2LunchPlateFoodAssetSrc(selectedFood);
+  const labelText = options.eaten ? "已吃完" : selectedFood.label || selectedFood.foodName;
+  const categoryText = selectedFood.category || "无";
+
+  if (
+    slotElement.dataset.foodId === foodId &&
+    slotElement.dataset.eaten === String(Boolean(options.eaten)) &&
+    slotElement.querySelector(".act2-plate-slot-food-asset, .act2-slot-food-name")
+  ) {
+    return;
+  }
+
+  slotElement.dataset.foodId = foodId;
+  slotElement.dataset.eaten = String(Boolean(options.eaten));
+  slotElement.innerHTML = "";
+  if (assetSrc) {
+    const image = document.createElement("img");
+
+    image.className = "act2-plate-slot-food-asset";
+    image.alt = selectedFood.label || selectedFood.foodName || "";
+    image.draggable = false;
+    image.addEventListener("load", () => {
+      slotElement.classList.add("has-asset");
+    }, { once: true });
+    image.addEventListener("error", () => {
+      slotElement.classList.remove("has-asset");
+      image.remove();
+      renderAct2PlateSlotText(slotElement, labelText, categoryText);
+    }, { once: true });
+    image.src = assetSrc;
+    slotElement.appendChild(image);
+    return;
+  }
+
+  renderAct2PlateSlotText(slotElement, labelText, categoryText);
+}
+
+function renderAct2PlateSlotText(slotElement, labelText, categoryText) {
+  const name = document.createElement("span");
+  const category = document.createElement("span");
+
+  name.className = "act2-slot-food-name";
+  name.textContent = labelText || "";
+  category.className = "act2-slot-food-category";
+  category.textContent = categoryText || "";
+  slotElement.appendChild(name);
+  slotElement.appendChild(category);
+}
+
 function renderAct2ComicPanelSelector(element, objectConfig) {
   (objectConfig.panels || []).forEach((panelConfig) => {
     const place = getAct2LunchPlaceChoice(panelConfig.placeId);
@@ -2992,6 +3155,11 @@ function renderAct2ComicPanelSelector(element, objectConfig) {
     shot.className = "act2-comic-panel-shot";
     shot.dataset.shot = panelConfig.shot || "";
     panel.appendChild(shot);
+    renderAct2OptionalAsset(panel, ACT2_PLACE_OPTION_ASSETS[place.id], {
+      className: "act2-place-option-asset",
+      alt: place.label || place.name || "",
+      hideFallbackSelector: ".act2-comic-panel-shot"
+    });
     panel.addEventListener("click", () => expandAct2ComicPanel(place.id));
     element.appendChild(panel);
   });
@@ -3006,9 +3174,28 @@ function renderAct2ComicFocus(element) {
   }
 
   element.dataset.placeId = place.id;
-  element.innerHTML = `
-    <div class="act2-comic-focus-frame" data-place-id="${place.id}"></div>
-  `;
+  const backgroundAsset = ACT2_PLACE_BACKGROUND_ASSETS[place.id];
+
+  if (backgroundAsset) {
+    const image = document.createElement("img");
+
+    image.className = "act2-place-focus-bg-asset";
+    image.src = backgroundAsset;
+    image.alt = place.label || place.name || "";
+    image.draggable = false;
+    image.addEventListener("error", () => {
+      element.classList.remove("has-asset");
+      image.remove();
+    }, { once: true });
+    element.classList.add("has-asset");
+    element.appendChild(image);
+  }
+
+  const frame = document.createElement("div");
+
+  frame.className = "act2-comic-focus-frame";
+  frame.dataset.placeId = place.id;
+  element.appendChild(frame);
 }
 
 function expandAct2ComicPanel(placeId) {
@@ -3395,22 +3582,96 @@ function getAct2CatchGameConfig() {
   return getAct2StateConfig(ACT2_STATES.LUNCH_CATCH_GAME).catchGame || {};
 }
 
+function renderAct2OptionalAsset(parent, src, options = {}) {
+  if (!parent || !src) {
+    return null;
+  }
+
+  const image = document.createElement("img");
+
+  image.className = options.className || "act2-optional-asset";
+  image.alt = options.alt || "";
+  image.draggable = false;
+  image.addEventListener("load", () => {
+    parent.classList.add(options.loadedClass || "has-asset");
+    if (options.hideFallbackSelector) {
+      parent.querySelectorAll(options.hideFallbackSelector).forEach((element) => {
+        element.hidden = true;
+      });
+    }
+  }, { once: true });
+  image.addEventListener("error", () => {
+    image.remove();
+  }, { once: true });
+  image.src = src;
+  parent.appendChild(image);
+  return image;
+}
+
+function renderAct2BubbleAsset(parent, fallbackText, assetSrc, options = {}) {
+  const fallback = document.createElement("span");
+
+  fallback.className = options.fallbackClassName || "act2-bubble-fallback";
+  fallback.textContent = fallbackText || "";
+  parent.appendChild(fallback);
+  renderAct2OptionalAsset(parent, assetSrc, {
+    className: options.assetClassName || "act2-bubble-asset",
+    alt: fallbackText || "",
+    hideFallbackSelector: `.${fallback.className}`
+  });
+}
+
+function getAct2WorkBubbleAssetSrc(bubbleConfig = {}, index = 0) {
+  return bubbleConfig.image ||
+    bubbleConfig.asset?.src ||
+    `assets/images/act2/lunch/work-bubble-r${act2WorkBubbleRound + 1}-${index + 1}.png`;
+}
+
+function getAct2FriendBubbleAssetSrc(kind, bubbleConfig = {}, index = 0) {
+  return bubbleConfig.image ||
+    bubbleConfig.asset?.src ||
+    `assets/images/act2/lunch/friend-${kind}-bubble-${index + 1}.png`;
+}
+
 function createAct2CatchGameStage() {
   const config = getAct2CatchGameConfig();
-  const dropArea = config.dropArea || {};
+  const backgroundConfig = config.background || {};
   const stage = document.createElement("div");
 
   stage.className = "act2-scene-object act2-catch-game";
+  renderAct2OptionalAsset(stage, config.background?.image || config.backgroundImage || ACT2_CATCH_BG_ASSET, {
+    className: "act2-catch-bg-asset",
+    alt: "lunch catch background"
+  });
   updateAct2ObjectLayout(stage, {
-    x: dropArea.x ?? 120,
-    y: dropArea.y ?? 40,
-    width: dropArea.width ?? 1680,
-    height: dropArea.height ?? 520,
+    x: backgroundConfig.x ?? 199,
+    y: backgroundConfig.y ?? 118,
+    width: backgroundConfig.width ?? 1523,
+    height: backgroundConfig.height ?? 549,
     opacity: 1,
     scale: 1,
-    zIndex: 2
+    zIndex: backgroundConfig.zIndex || 2
   });
   objectLayer.appendChild(stage);
+
+  const auntHand = document.createElement("img");
+  const auntHandConfig = config.auntHand || {};
+
+  auntHand.className = "act2-scene-object act2-catch-aunt-hand";
+  auntHand.src = auntHandConfig.image || ACT2_CATCH_AUNT_HAND_ASSET;
+  auntHand.alt = "aunt hand";
+  auntHand.draggable = false;
+  auntHand.addEventListener("error", () => auntHand.remove(), { once: true });
+  updateAct2ObjectLayout(auntHand, {
+    x: auntHandConfig.x ?? 326,
+    y: auntHandConfig.y ?? -2,
+    width: auntHandConfig.width ?? 493,
+    height: auntHandConfig.height ?? 361,
+    opacity: 1,
+    scale: 1,
+    zIndex: auntHandConfig.zIndex || 12
+  });
+  objectLayer.appendChild(auntHand);
 }
 
 function createAct2CatchPlate() {
@@ -3420,7 +3681,7 @@ function createAct2CatchPlate() {
 
   plate.id = "act2_catch_plate";
   plate.className = "act2-scene-object act2-plate act2-catch-plate";
-  plate.textContent = "餐盘";
+  renderAct2Plate(plate, { content: "plate" });
   objectLayer.appendChild(plate);
   act2CatchPlateX = plateConfig.x ?? 760;
   updateAct2CatchPlatePosition(act2CatchPlateX);
@@ -3460,29 +3721,57 @@ function updateAct2CatchPlatePosition(x) {
     });
   }
 
+  objectLayer?.querySelectorAll(".act2-catch-plate-slot").forEach((slot) => {
+    const slotIndex = Number(slot.dataset.slotIndex);
+    const slotLayout = getAct2CatchPlateSlotLayout(slotIndex, plateWidth, plateHeight);
+
+    updateAct2ObjectLayout(slot, {
+      x: clampedX + slotLayout.offsetX,
+      y: plateY + slotLayout.offsetY,
+      width: slotLayout.width,
+      height: slotLayout.height,
+      opacity: 1,
+      scale: 1,
+      zIndex: slotLayout.zIndex || (plateConfig.zIndex || 18) + 1
+    });
+  });
+  syncAct2PlateSlots();
+}
+
+function getAct2CatchPlateSlotLayout(slotIndex, plateWidth, plateHeight) {
+  const config = getAct2CatchGameConfig();
+  const customSlot = config.plateSlots?.[slotIndex];
+  const basePlate = config.plate || {};
+  const basePlateWidth = basePlate.width || plateWidth || 1;
+  const basePlateHeight = basePlate.height || plateHeight || 1;
+  const scaleX = basePlateWidth ? plateWidth / basePlateWidth : 1;
+  const scaleY = basePlateHeight ? plateHeight / basePlateHeight : 1;
+
+  if (customSlot) {
+    return {
+      offsetX: (customSlot.offsetX ?? customSlot.x ?? 0) * scaleX,
+      offsetY: (customSlot.offsetY ?? customSlot.y ?? 0) * scaleY,
+      width: (customSlot.width ?? 120) * scaleX,
+      height: (customSlot.height ?? 90) * scaleY,
+      zIndex: customSlot.zIndex
+    };
+  }
+
   const slotPaddingX = 34;
   const slotPaddingY = 30;
   const slotGapX = 18;
   const slotGapY = 16;
   const slotWidth = (plateWidth - slotPaddingX * 2 - slotGapX) / 2;
   const slotHeight = (plateHeight - slotPaddingY * 2 - slotGapY) / 2;
+  const col = slotIndex % 2;
+  const row = Math.floor(slotIndex / 2);
 
-  objectLayer?.querySelectorAll(".act2-catch-plate-slot").forEach((slot) => {
-    const slotIndex = Number(slot.dataset.slotIndex);
-    const col = slotIndex % 2;
-    const row = Math.floor(slotIndex / 2);
-
-    updateAct2ObjectLayout(slot, {
-      x: clampedX + slotPaddingX + col * (slotWidth + slotGapX),
-      y: plateY + slotPaddingY + row * (slotHeight + slotGapY),
-      width: slotWidth,
-      height: slotHeight,
-      opacity: 1,
-      scale: 1,
-      zIndex: (plateConfig.zIndex || 18) + 1
-    });
-  });
-  syncAct2PlateSlots();
+  return {
+    offsetX: slotPaddingX + col * (slotWidth + slotGapX),
+    offsetY: slotPaddingY + row * (slotHeight + slotGapY),
+    width: slotWidth,
+    height: slotHeight
+  };
 }
 
 function handleAct2PlateMouseMove(event) {
@@ -3580,9 +3869,33 @@ function spawnAct2FallingFood() {
   name.className = "act2-falling-food-name";
   name.textContent = nextFood.label || nextFood.foodName;
   falling.appendChild(name);
+  renderAct2FallingFoodAsset(falling, nextFood);
   objectLayer.appendChild(falling);
   act2CatchActiveDrops.push(drop);
   updateAct2FallingFoodElement(drop);
+}
+
+function renderAct2FallingFoodAsset(element, food) {
+  const assetSrc = getAct2LunchFallingFoodAssetSrc(food);
+
+  if (!assetSrc) {
+    return;
+  }
+
+  const image = document.createElement("img");
+
+  image.className = "act2-falling-food-asset";
+  image.alt = food.label || food.foodName || "";
+  image.draggable = false;
+  image.addEventListener("load", () => {
+    element.classList.add("has-asset");
+  }, { once: true });
+  image.addEventListener("error", () => {
+    element.classList.remove("has-asset");
+    image.remove();
+  }, { once: true });
+  image.src = assetSrc;
+  element.appendChild(image);
 }
 
 function updateAct2FallingFoodElement(drop) {
@@ -3709,7 +4022,7 @@ function cleanupAct2CatchGame(options = {}) {
   act2CaughtFoods = [];
   act2CatchPlateX = 0;
   if (!options.keepState) {
-    objectLayer?.querySelectorAll(".act2-catch-game, .act2-catch-plate, .act2-catch-plate-slot, .act2-falling-food").forEach((element) => element.remove());
+    objectLayer?.querySelectorAll(".act2-catch-game, .act2-catch-aunt-hand, .act2-catch-plate, .act2-catch-plate-slot, .act2-falling-food").forEach((element) => element.remove());
   }
 }
 
@@ -3765,7 +4078,9 @@ function spawnAct2WorkBubble(bubbleConfig, index) {
   bubble.dataset.round = String(act2WorkBubbleRound);
   bubble.dataset.index = String(index);
   bubble.dataset.overlapPlate = String(Boolean(bubbleConfig.overlapPlate));
-  bubble.textContent = bubbleConfig.text || "";
+  renderAct2BubbleAsset(bubble, bubbleConfig.text || "", getAct2WorkBubbleAssetSrc(bubbleConfig, index), {
+    assetClassName: "act2-work-bubble-asset"
+  });
   updateAct2ObjectLayout(bubble, {
     x: bubbleConfig.x,
     y: bubbleConfig.y,
@@ -3849,7 +4164,12 @@ function spawnAct2FriendToast(config) {
     const bubble = document.createElement("div");
 
     bubble.className = "act2-scene-object act2-friend-toast-bubble";
-    bubble.textContent = config.toastBubble.text || "干杯！";
+    renderAct2BubbleAsset(
+      bubble,
+      config.toastBubble.text || "干杯！",
+      config.toastBubble.image || config.toastBubble.asset?.src || "assets/images/act2/lunch/friend-toast-bubble.png",
+      { assetClassName: "act2-friend-bubble-asset" }
+    );
     updateAct2ObjectLayout(bubble, {
       ...config.toastBubble,
       opacity: 1,
@@ -3866,7 +4186,12 @@ function spawnAct2FriendTopBubbles(config) {
       const bubble = document.createElement("div");
 
       bubble.className = "act2-scene-object act2-friend-top-bubble";
-      bubble.textContent = bubbleConfig.text || "";
+      renderAct2BubbleAsset(
+        bubble,
+        bubbleConfig.text || "",
+        getAct2FriendBubbleAssetSrc("top", bubbleConfig, index),
+        { assetClassName: "act2-friend-bubble-asset" }
+      );
       updateAct2ObjectLayout(bubble, {
         ...bubbleConfig,
         opacity: 1,
@@ -3898,7 +4223,12 @@ function spawnAct2FriendBottomBubbles(config) {
 
       bubble.type = "button";
       bubble.className = "act2-scene-object act2-friend-bottom-bubble";
-      bubble.textContent = bubbleConfig.text || "";
+      renderAct2BubbleAsset(
+        bubble,
+        bubbleConfig.text || "",
+        getAct2FriendBubbleAssetSrc("bottom", bubbleConfig, index),
+        { assetClassName: "act2-friend-bubble-asset" }
+      );
       updateAct2ObjectLayout(bubble, {
         ...bubbleConfig,
         opacity: 1,
@@ -4095,6 +4425,7 @@ function startAct2SoloMealInteraction() {
   act2ChopsticksState = "open";
   renderAct2EatingProgress();
   renderAct2Chopsticks();
+  renderAct2SoloFloatingEffects();
   syncAct2PlateSlots();
 
   if (!filledSlots.length) {
@@ -4148,6 +4479,38 @@ function renderAct2Chopsticks() {
   });
   chopsticks.addEventListener("click", handleAct2ChopsticksClick);
   objectLayer.appendChild(chopsticks);
+}
+
+function renderAct2SoloFloatingEffects() {
+  const effects = getAct2StateConfig(ACT2_LUNCH_PLACE_FOCUS_STATE).soloMealInteraction?.floatingEffects || [];
+
+  effects.forEach((effectConfig, index) => {
+    const effect = document.createElement("div");
+
+    effect.className = "act2-scene-object act2-solo-floating-effect";
+    effect.dataset.effectId = effectConfig.id || String(index);
+    effect.dataset.animation = effectConfig.animation || (index % 2 === 0 ? "float" : "flash");
+    updateAct2ObjectLayout(effect, {
+      ...effectConfig,
+      opacity: effectConfig.opacity ?? 1,
+      scale: effectConfig.scale ?? 1,
+      zIndex: effectConfig.zIndex || 26
+    });
+
+    if (effectConfig.image) {
+      renderAct2OptionalAsset(effect, effectConfig.image, {
+        className: "act2-solo-floating-effect-asset",
+        alt: effectConfig.id || "solo floating effect",
+        hideFallbackSelector: ".act2-solo-floating-effect-fallback"
+      });
+    }
+
+    const fallback = document.createElement("span");
+
+    fallback.className = "act2-solo-floating-effect-fallback";
+    effect.appendChild(fallback);
+    objectLayer.appendChild(effect);
+  });
 }
 
 function handleAct2ChopsticksClick(event) {
@@ -4254,7 +4617,7 @@ function cleanupAct2SoloMealInteraction() {
   act2EatingClickCount = 0;
   act2EatingCompletedSlots = new Set();
   act2ChopsticksState = "open";
-  objectLayer?.querySelectorAll(".act2-eating-progress, .act2-chopsticks").forEach((element) => element.remove());
+  objectLayer?.querySelectorAll(".act2-eating-progress, .act2-chopsticks, .act2-solo-floating-effect").forEach((element) => element.remove());
 }
 
 function recordAct2LunchPlaceChoice(place, extraFields = {}) {
@@ -6991,6 +7354,9 @@ function createResultFoodOrbit() {
   orbit.style.setProperty("--result-food-orbit-radius-y", `${radiusY}px`);
   orbit.style.setProperty("--result-food-orbit-slot-size", `${slotSize}px`);
   orbit.style.setProperty("--result-food-orbit-item-size", `${itemSize}px`);
+  if (config.slotBackgroundImage) {
+    orbit.style.setProperty("--result-food-orbit-slot-bg-image", `url("${config.slotBackgroundImage}")`);
+  }
 
   for (let index = 0; index < renderedSlotCount; index += 1) {
     const food = foods.length ? foods[index % foods.length] : null;
@@ -7204,7 +7570,6 @@ function startResultPlanetAnimation(planetBody, metrics) {
     const motionSpeed = resultPlanetAnimationMetrics.motionSpeed || 1;
     const liveMotionScale = resultPlanetAnimationMetrics.liveMotionScale ?? 1;
     const svgMotionScale = resultPlanetAnimationMetrics.svgMotionScale ?? 1;
-    const selfSpinDegPerSecond = resultPlanetAnimationMetrics.selfSpinDegPerSecond ?? 4;
     const tick = elapsed * 0.045 * motionSpeed * (resultPlanetAnimationMetrics.rotationSpeed || 1);
     const planetElement = planetBody.parentElement;
     const svg = createResultPlanetSvg({
@@ -7214,10 +7579,9 @@ function startResultPlanetAnimation(planetBody, metrics) {
       rotationOffset: tick * 0.62
     });
     const breathScale = 1 + Math.sin(elapsed / 1450) * 0.006 * svgMotionScale;
-    const spinDeg = (elapsed / 1000) * selfSpinDegPerSecond;
 
     svg.style.transformOrigin = "center";
-    svg.style.transform = `scale(${breathScale.toFixed(4)}) rotate(${spinDeg.toFixed(3)}deg)`;
+    svg.style.transform = `scale(${breathScale.toFixed(4)})`;
     if (planetElement) {
       const liveX = Math.sin(elapsed / 2100) * 10 * liveMotionScale;
       const liveY = Math.cos(elapsed / 1800) * 16 * liveMotionScale;
@@ -7271,7 +7635,6 @@ function buildResultPlanetMetrics(riskResult = getPlayerRiskResult()) {
     motionSpeed: RESULT_PLANET_VISUAL_CONFIG.motionSpeed,
     liveMotionScale: RESULT_PLANET_VISUAL_CONFIG.liveMotionScale,
     svgMotionScale: RESULT_PLANET_VISUAL_CONFIG.svgMotionScale,
-    selfSpinDegPerSecond: RESULT_PLANET_VISUAL_CONFIG.selfSpinDegPerSecond,
     tick: 0,
     jitterFrame: 0,
     rotationOffset: 0
@@ -7420,24 +7783,28 @@ function setSvgAttrs(element, attrs = {}) {
 }
 
 function getResultPlanetColor(risk) {
-  if (risk <= 33) {
+  const thresholds = getRiskConfig().RISK_LEVEL_THRESHOLDS || {};
+  const lowMax = thresholds.lowMax ?? 33;
+  const highMin = thresholds.highMin ?? 42;
+
+  if (risk < lowMax) {
     return "#74D188";
   }
 
-  if (risk <= 66) {
-    return interpolateHexColor("#74D188", "#FFC1DF", (risk - 33) / 33);
+  if (risk < highMin) {
+    return "#FFC1DF";
   }
 
-  return interpolateHexColor("#FFC1DF", "#FF4800", (risk - 66) / 34);
+  return "#FF4800";
 }
 
 function getResultPlanetGradientColors(risk) {
-  const spread = 28 * Math.sin((risk / 100) * Math.PI);
+  const color = getResultPlanetColor(risk);
 
   return {
-    top: getResultPlanetColor(Math.min(100, risk + spread)),
-    mid: getResultPlanetColor(risk),
-    bottom: getResultPlanetColor(Math.max(0, risk - spread))
+    top: color,
+    mid: color,
+    bottom: color
   };
 }
 

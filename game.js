@@ -1716,7 +1716,6 @@ function getAct1MicrowaveEntryConfig() {
 
   return {
     duration: config.duration ?? 1500,
-    orthogonalStepDelay: config.orthogonalStepDelay ?? 520,
     targetCenterX: config.targetCenterX ?? 768,
     targetCenterY: config.targetCenterY ?? 469,
     foodOffsetX: config.foodOffsetX ?? 0,
@@ -1725,14 +1724,23 @@ function getAct1MicrowaveEntryConfig() {
   };
 }
 
+function setAct1CarriedFoodScale(element, scale) {
+  const normalizedScale = Number(scale) || 1;
+
+  element.style.setProperty("--act1-carried-food-scale", normalizedScale);
+  element.style.transform = `scale(${normalizedScale})`;
+}
+
 function playAct1BreakfastToHeatTransition(selectedElement) {
   const config = getAct1MicrowaveEntryConfig();
+  const heatState = getAct1StateConfig(ACT1_STATES.MICROWAVE_HEAT);
   const selectedConfig = getAct1StateConfig(ACT1_STATES.BREAKFAST_CHOICE)
     .objects?.[selectedElement.dataset.objectId];
 
   objectLayer.querySelectorAll(".act1-breakfast-frame").forEach((element) => {
     element.classList.add("is-leaving-up");
   });
+  appendAct1StateObjectsFromRight(heatState, config.duration);
 
   if (!selectedConfig) {
     window.setTimeout(enterAct1MicrowaveHeat, config.duration);
@@ -1747,22 +1755,40 @@ function playAct1BreakfastToHeatTransition(selectedElement) {
 
   selectedElement.classList.add("is-travelling-to-microwave");
   selectedElement.style.zIndex = "30";
-  selectedElement.style.transitionDuration = `${config.orthogonalStepDelay}ms`;
+  selectedElement.style.transitionDuration = `${config.duration}ms`;
   selectedElement.style.left = `${(targetLeft / stage.width) * 100}%`;
-  selectedElement.style.transform = `scale(${config.targetScale})`;
-
-  window.setTimeout(() => {
-    selectedElement.style.top = `${(targetTop / stage.height) * 100}%`;
-  }, config.orthogonalStepDelay);
+  selectedElement.style.top = `${(targetTop / stage.height) * 100}%`;
+  setAct1CarriedFoodScale(selectedElement, config.targetScale);
 
   window.setTimeout(() => {
     enterAct1MicrowaveHeat();
   }, config.duration);
 }
 
+function appendAct1StateObjectsFromRight(state, duration) {
+  Object.entries(state.objects || {}).forEach(([objectId, objectConfig]) => {
+    if (document.getElementById(objectId)) {
+      return;
+    }
+
+    const element = createAct1ObjectElement(objectId, objectConfig);
+
+    element.style.transitionDuration = `${duration}ms`;
+    element.classList.add("act1-scene-entering-right");
+    updateAct1ObjectLayout(element, objectConfig);
+    objectLayer.appendChild(element);
+    window.requestAnimationFrame(() => {
+      window.requestAnimationFrame(() => {
+        element.classList.remove("act1-scene-entering-right");
+      });
+    });
+  });
+}
+
 function enterAct1MicrowaveHeat() {
   const state = getAct1StateConfig(ACT1_STATES.MICROWAVE_HEAT);
   const carriedFood = objectLayer.querySelector(".act1-breakfast-option.is-travelling-to-microwave");
+  const heatObjectIds = new Set(Object.keys(state.objects || {}));
 
   currentPhase = PHASES.ACT1_HEATING;
   currentState = ACT1_STATES.MICROWAVE_HEAT;
@@ -1775,7 +1801,7 @@ function enterAct1MicrowaveHeat() {
   hideHoverInfoTooltip();
   updateStageHeader("\u7b2c\u4e00\u5e55\u4f4e\u4fdd\u771f\u539f\u578b", "\u65e9\u6668\u2014\u2014\u5fae\u6ce2\u52a0\u70ed");
   objectLayer.querySelectorAll(".act1-scene-object").forEach((element) => {
-    if (element === carriedFood) {
+    if (element === carriedFood || heatObjectIds.has(element.id)) {
       return;
     }
 
@@ -1789,6 +1815,10 @@ function enterAct1MicrowaveHeat() {
   }
 
   Object.entries(state.objects || {}).forEach(([objectId, objectConfig]) => {
+    if (document.getElementById(objectId)) {
+      return;
+    }
+
     const element = createAct1ObjectElement(objectId, objectConfig);
 
     updateAct1ObjectLayout(element, objectConfig);
@@ -2009,6 +2039,9 @@ function enterAct1EatingSpeed() {
   const state = getAct1StateConfig(ACT1_STATES.EATING_SPEED);
   const config = getAct1EatingConfig();
   const carriedFood = objectLayer.querySelector(".act1-carried-heat-food");
+  const sceneTransitionDuration = config.sceneTransitionDuration;
+  const heatExitDuration = config.heatExitDuration;
+  const eatingEnterDelay = config.eatingEnterDelay;
 
   currentPhase = PHASES.ACT1_EATING;
   currentState = ACT1_STATES.EATING_SPEED;
@@ -2024,21 +2057,35 @@ function enterAct1EatingSpeed() {
       return;
     }
 
-    element.remove();
+    element.style.transitionDuration = `${heatExitDuration}ms`;
+    element.style.zIndex = String(Math.max(1, Number(element.style.zIndex || 1) - 20));
+    element.classList.add("act1-scene-leaving-left");
+    window.setTimeout(() => {
+      element.remove();
+    }, heatExitDuration + 80);
   });
 
-  Object.entries(state.objects || {}).forEach(([objectId, objectConfig]) => {
-    const element = createAct1ObjectElement(objectId, objectConfig);
+  window.setTimeout(() => {
+    Object.entries(state.objects || {}).forEach(([objectId, objectConfig]) => {
+      const element = createAct1ObjectElement(objectId, objectConfig);
 
-    updateAct1ObjectLayout(element, objectConfig);
-    objectLayer.appendChild(element);
-  });
+      element.style.transitionDuration = `${sceneTransitionDuration}ms`;
+      element.classList.add("act1-scene-entering-right");
+      updateAct1ObjectLayout(element, objectConfig);
+      objectLayer.appendChild(element);
+      window.requestAnimationFrame(() => {
+        window.requestAnimationFrame(() => {
+          element.classList.remove("act1-scene-entering-right");
+        });
+      });
+    });
 
-  if (carriedFood) {
-    prepareAct1CarriedFoodForEating(carriedFood, config);
-  }
+    if (carriedFood) {
+      prepareAct1CarriedFoodForEating(carriedFood, config);
+    }
 
-  updateAct1EatingVisuals();
+    updateAct1EatingVisuals();
+  }, eatingEnterDelay);
   console.log("Entered act1_03_eating_speed", { selectedAct1BreakfastId });
 }
 
@@ -2053,7 +2100,12 @@ function getAct1EatingConfig() {
     targetCenterX: config.targetCenterX ?? 964,
     targetCenterY: config.targetCenterY ?? 654,
     targetScale: config.targetScale ?? 1.3,
-    assetPattern: config.assetPattern || "assets/images/act1/eating/{slug}-{state}.png"
+    sceneTransitionDuration: config.sceneTransitionDuration ?? 900,
+    heatExitDuration: config.heatExitDuration ?? 760,
+    eatingEnterDelay: config.eatingEnterDelay ?? config.heatExitDuration ?? 760,
+    assetIndexOffset: config.assetIndexOffset ?? 1,
+    assetPattern: config.assetPattern || "assets/images/act1/eating/{slug}-{state}.png",
+    assetStateLayouts: config.assetStateLayouts || {}
   };
 }
 
@@ -2073,9 +2125,10 @@ function prepareAct1CarriedFoodForEating(foodElement, config = getAct1EatingConf
 
   foodElement.classList.add("act1-carried-eating-food");
   foodElement.classList.remove("act1-carried-heat-food");
+  foodElement.style.transitionDuration = `${config.sceneTransitionDuration}ms`;
   foodElement.style.left = `${(targetLeft / stage.width) * 100}%`;
   foodElement.style.top = `${(targetTop / stage.height) * 100}%`;
-  foodElement.style.transform = `scale(${config.targetScale})`;
+  setAct1CarriedFoodScale(foodElement, config.targetScale);
   foodElement.style.zIndex = "30";
   foodElement.disabled = false;
   foodElement.addEventListener("click", handleAct1EatingFoodClick);
@@ -2123,16 +2176,23 @@ function updateAct1CarriedFoodEatingAsset(foodElement, stateIndex) {
   const config = getAct1EatingConfig();
   const slug = getAct1BreakfastAssetSlug();
   const existingImage = foodElement.querySelector(":scope > .act1-placeholder-image");
+  const assetLayout = getAct1EatingAssetStateLayout(slug, stateIndex, config);
 
   foodElement.dataset.eatingAssetState = String(stateIndex);
+  foodElement.style.setProperty("--act1-eating-container-anchor-x", `${assetLayout.containerAnchorX}%`);
+  foodElement.style.setProperty("--act1-eating-container-anchor-y", `${assetLayout.containerAnchorY}%`);
+  foodElement.style.setProperty("--act1-eating-image-anchor-x", `${assetLayout.imageAnchorX}%`);
+  foodElement.style.setProperty("--act1-eating-image-anchor-y", `${assetLayout.imageAnchorY}%`);
+  foodElement.style.setProperty("--act1-eating-image-offset-x", `${assetLayout.offsetX}px`);
+  foodElement.style.setProperty("--act1-eating-image-offset-y", `${assetLayout.offsetY}px`);
 
-  if (stateIndex <= 0) {
-    return;
-  }
-
+  const assetStateIndex = Math.max(
+    1,
+    Math.min(config.requiredClicks, stateIndex + config.assetIndexOffset)
+  );
   const imagePath = config.assetPattern
     .replace("{slug}", slug)
-    .replace("{state}", String(stateIndex));
+    .replace("{state}", String(assetStateIndex));
   const image = existingImage || document.createElement("img");
 
   image.className = "act1-placeholder-image";
@@ -2152,6 +2212,22 @@ function updateAct1CarriedFoodEatingAsset(foodElement, stateIndex) {
   if (!existingImage) {
     foodElement.prepend(image);
   }
+}
+
+function getAct1EatingAssetStateLayout(slug, stateIndex, config = getAct1EatingConfig()) {
+  const layouts = config.assetStateLayouts || {};
+  const specificLayout = layouts[slug]?.[stateIndex];
+  const defaultLayout = layouts.default?.[stateIndex];
+  const layout = specificLayout || defaultLayout || {};
+
+  return {
+    containerAnchorX: Number(layout.containerAnchorX ?? 50),
+    containerAnchorY: Number(layout.containerAnchorY ?? 50),
+    imageAnchorX: Number(layout.imageAnchorX ?? 50),
+    imageAnchorY: Number(layout.imageAnchorY ?? 50),
+    offsetX: Number(layout.offsetX ?? 0),
+    offsetY: Number(layout.offsetY ?? 0)
+  };
 }
 
 function updateAct1EatingVisuals() {
@@ -2262,7 +2338,8 @@ let act2FriendBubbleCompleted = 0;
 let act2FriendBubbleTimers = [];
 let act2DogState = 1;
 let act2DogTimer = null;
-let act2BirdCleared = false;
+let act2ClearedBirdIds = new Set();
+let act2ParkAutoEatingStarted = false;
 let act2ParkTimers = [];
 let act2EatingCurrentSlotIndex = 0;
 let act2EatingClickCount = 0;
@@ -3713,9 +3790,11 @@ function renderAct2BubbleAsset(parent, fallbackText, assetSrc, options = {}) {
 }
 
 function getAct2WorkBubbleAssetSrc(bubbleConfig = {}, index = 0) {
+  const kind = bubbleConfig.assetKind || (bubbleConfig.overlapPlate ? "bottom" : "top");
+
   return bubbleConfig.image ||
     bubbleConfig.asset?.src ||
-    `assets/images/act2/lunch/work-bubble-r${act2WorkBubbleRound + 1}-${index + 1}.png`;
+    `assets/images/act2/lunch/work-${kind}-bubble-${act2WorkBubbleRound + 1}-${index + 1}.png`;
 }
 
 function getAct2FriendBubbleAssetSrc(kind, bubbleConfig = {}, index = 0) {
@@ -4136,16 +4215,18 @@ function startAct2WorkBubbleInterruption() {
   act2WorkBubbleRound = 0;
   act2WorkBubbleActiveCount = 0;
   act2WorkBubbleClearedCount = 0;
+  const timing = getAct2WorkBubbleTiming();
   const timer = window.setTimeout(() => {
     advanceAct2WorkBubbleRound();
-  }, 80);
+  }, timing.initialDelay);
 
   act2WorkBubbleTimers.push(timer);
 }
 
 function advanceAct2WorkBubbleRound() {
-  const rounds = getAct2StateConfig(ACT2_LUNCH_PLACE_FOCUS_STATE).workBubbleRounds || [];
+  const rounds = getAct2WorkBubbleRounds();
   const bubbles = rounds[act2WorkBubbleRound] || [];
+  const timing = getAct2WorkBubbleTiming();
 
   if (!bubbles.length) {
     completeAct2WorkBubbleInterruption();
@@ -4157,10 +4238,42 @@ function advanceAct2WorkBubbleRound() {
   bubbles.forEach((bubbleConfig, index) => {
     const timer = window.setTimeout(() => {
       spawnAct2WorkBubble(bubbleConfig, index);
-    }, index * 70);
+    }, index * timing.stagger);
 
     act2WorkBubbleTimers.push(timer);
   });
+}
+
+function getAct2WorkBubbleTiming() {
+  const config = getAct2StateConfig(ACT2_LUNCH_PLACE_FOCUS_STATE).workBubbleTiming || {};
+
+  return {
+    initialDelay: config.initialDelay ?? 620,
+    roundDelay: config.roundDelay ?? 360,
+    stagger: config.stagger ?? 110,
+    enterDuration: config.enterDuration ?? 420
+  };
+}
+
+function getAct2WorkBubbleRounds() {
+  const configuredRounds = getAct2StateConfig(ACT2_LUNCH_PLACE_FOCUS_STATE).workBubbleRounds || [];
+  const topRound = (configuredRounds[0] || [])
+    .filter((bubble) => !bubble.overlapPlate && bubble.assetKind !== "bottom")
+    .slice(0, 3);
+  const bottomSourceRound = configuredRounds[configuredRounds.length - 1] || [];
+  const bottomRound = bottomSourceRound
+    .filter((bubble) => bubble.overlapPlate || bubble.assetKind === "bottom")
+    .slice(0, 2)
+    .map((bubble, index) => ({
+      ...bubble,
+      assetKind: "bottom",
+      overlapPlate: true,
+      image: bubble.image
+        ? bubble.image.replace(/work-bottom-bubble-\d+-\d+\.png$/, `work-bottom-bubble-2-${index + 1}.png`)
+        : `assets/images/act2/lunch/work-bottom-bubble-2-${index + 1}.png`
+    }));
+
+  return [topRound, bottomRound];
 }
 
 function spawnAct2WorkBubble(bubbleConfig, index) {
@@ -4169,12 +4282,14 @@ function spawnAct2WorkBubble(bubbleConfig, index) {
   }
 
   const bubble = document.createElement("button");
+  const timing = getAct2WorkBubbleTiming();
 
   bubble.type = "button";
-  bubble.className = "act2-scene-object act2-work-bubble";
+  bubble.className = "act2-scene-object act2-work-bubble is-entering";
   bubble.dataset.round = String(act2WorkBubbleRound);
   bubble.dataset.index = String(index);
   bubble.dataset.overlapPlate = String(Boolean(bubbleConfig.overlapPlate));
+  bubble.style.setProperty("--act2-work-bubble-enter-duration", `${bubbleConfig.enterDuration || timing.enterDuration}ms`);
   renderAct2BubbleAsset(bubble, bubbleConfig.text || "", getAct2WorkBubbleAssetSrc(bubbleConfig, index), {
     assetClassName: "act2-work-bubble-asset"
   });
@@ -4189,6 +4304,9 @@ function spawnAct2WorkBubble(bubbleConfig, index) {
   });
   bubble.addEventListener("click", () => handleAct2WorkBubbleClick(bubble));
   objectLayer.appendChild(bubble);
+  window.setTimeout(() => {
+    bubble.classList.remove("is-entering");
+  }, bubbleConfig.enterDuration || timing.enterDuration);
 }
 
 function handleAct2WorkBubbleClick(bubble) {
@@ -4202,7 +4320,12 @@ function handleAct2WorkBubbleClick(bubble) {
     bubble.remove();
     if (act2WorkBubbleClearedCount >= act2WorkBubbleActiveCount) {
       act2WorkBubbleRound += 1;
-      advanceAct2WorkBubbleRound();
+      const timing = getAct2WorkBubbleTiming();
+      const timer = window.setTimeout(() => {
+        advanceAct2WorkBubbleRound();
+      }, timing.roundDelay);
+
+      act2WorkBubbleTimers.push(timer);
     }
   }, 220);
 }
@@ -4394,7 +4517,8 @@ function createAct2ParkScene() {
   cleanupAct2ParkScene();
   const config = getAct2StateConfig(ACT2_LUNCH_PLACE_FOCUS_STATE).parkScene || {};
 
-  act2BirdCleared = false;
+  act2ClearedBirdIds = new Set();
+  act2ParkAutoEatingStarted = false;
   const scene = document.createElement("div");
   scene.className = "act2-scene-object act2-park-scene";
   renderAct2OptionalAsset(scene, getAct2ParkSceneAssetSrc("bg", config.scene || {}), {
@@ -4454,6 +4578,7 @@ function createAct2ParkScene() {
 
     bird.type = "button";
     bird.className = "act2-scene-object act2-bird";
+    bird.dataset.birdId = birdConfig.id || `park_bird_${index + 1}`;
     bird.textContent = birdConfig.text || "鸟";
     renderAct2OptionalAsset(bird, getAct2ParkSceneAssetSrc("bird", birdConfig, index + 1), {
       className: "act2-park-animal-asset",
@@ -4513,27 +4638,170 @@ function toggleAct2DogState(dog, dogConfig = {}) {
 }
 
 function handleAct2BirdClick(bird) {
-  if (!bird || act2BirdCleared || bird.classList.contains("is-cleared")) {
+  if (!bird || act2ParkAutoEatingStarted || bird.classList.contains("is-cleared")) {
     return;
   }
 
-  act2BirdCleared = true;
+  const birdId = bird.dataset.birdId || bird.id || `park_bird_${act2ClearedBirdIds.size + 1}`;
+
+  if (act2ClearedBirdIds.has(birdId)) {
+    return;
+  }
+
+  act2ClearedBirdIds.add(birdId);
   bird.classList.add("is-cleared");
   const timer = window.setTimeout(() => {
     bird.remove();
   }, 620);
-  const completeTimer = window.setTimeout(() => {
-    completeAct2ParkScene();
-  }, 5620);
 
-  act2ParkTimers.push(timer, completeTimer);
+  act2ParkTimers.push(timer);
+
+  const birdTotal = objectLayer?.querySelectorAll(".act2-bird").length || act2ClearedBirdIds.size;
+
+  if (act2ClearedBirdIds.size >= birdTotal) {
+    const autoEatingConfig = getAct2ParkAutoEatingConfig();
+    const autoEatTimer = window.setTimeout(() => {
+      startAct2ParkAutoEatingSequence();
+    }, autoEatingConfig.startDelay);
+
+    act2ParkTimers.push(autoEatTimer);
+  }
 }
 
-function completeAct2ParkScene() {
+function getAct2ParkAutoEatingConfig() {
+  const config = getAct2StateConfig(ACT2_LUNCH_PLACE_FOCUS_STATE).parkScene?.autoEating || {};
+
+  return {
+    startDelay: config.startDelay ?? 720,
+    slotDuration: config.slotDuration ?? 620,
+    finalDelay: config.finalDelay ?? 760,
+    crumbCount: config.crumbCount ?? 5,
+    crumbDuration: config.crumbDuration ?? 720
+  };
+}
+
+function startAct2ParkAutoEatingSequence() {
+  if (
+    act2ParkAutoEatingStarted ||
+    currentState !== ACT2_LUNCH_PLACE_FOCUS_STATE ||
+    !isAct2ParkScenePlaceSelected()
+  ) {
+    return;
+  }
+
   const place = getAct2LunchPlaceChoice(selectedAct2LunchPlaceId);
+  const filledSlots = getAct2EatingFilledSlotIndexes();
+
+  act2ParkAutoEatingStarted = true;
+  act2EatingCompletedSlots = new Set();
+  act2EatingClickCount = 0;
 
   if (place) {
-    recordAct2LunchPlaceChoice(place, { birdCleared: true });
+    recordAct2LunchPlaceChoice(place, {
+      birdCleared: true,
+      clearedBirdCount: act2ClearedBirdIds.size
+    });
+  }
+
+  if (!filledSlots.length) {
+    const completeTimer = window.setTimeout(() => {
+      completeAct2ParkScene({ recordPlace: false, recordEating: false });
+    }, 420);
+
+    act2ParkTimers.push(completeTimer);
+    return;
+  }
+
+  playAct2ParkAutoEatSlotSequence(filledSlots, 0);
+}
+
+function playAct2ParkAutoEatSlotSequence(slotIndexes, sequenceIndex) {
+  if (
+    currentState !== ACT2_LUNCH_PLACE_FOCUS_STATE ||
+    !isAct2ParkScenePlaceSelected()
+  ) {
+    return;
+  }
+
+  if (sequenceIndex >= slotIndexes.length) {
+    completeAct2ParkScene({ recordPlace: false, recordEating: true });
+    return;
+  }
+
+  const slotIndex = slotIndexes[sequenceIndex];
+  const slotElement = objectLayer?.querySelector(`.act2-plate-slot[data-slot-index="${slotIndex}"]`);
+  const autoEatingConfig = getAct2ParkAutoEatingConfig();
+
+  if (!slotElement) {
+    playAct2ParkAutoEatSlotSequence(slotIndexes, sequenceIndex + 1);
+    return;
+  }
+
+  slotElement.classList.add("is-auto-consuming");
+  slotElement.style.setProperty("--act2-park-auto-eat-duration", `${autoEatingConfig.slotDuration}ms`);
+  spawnAct2ParkFoodCrumbs(slotElement);
+
+  const consumeTimer = window.setTimeout(() => {
+    act2EatingCompletedSlots.add(slotIndex);
+    slotElement.classList.remove("is-auto-consuming");
+    syncAct2PlateSlots();
+
+    if (sequenceIndex >= slotIndexes.length - 1) {
+      const completeTimer = window.setTimeout(() => {
+        completeAct2ParkScene({ recordPlace: false, recordEating: true });
+      }, autoEatingConfig.finalDelay);
+
+      act2ParkTimers.push(completeTimer);
+      return;
+    }
+
+    playAct2ParkAutoEatSlotSequence(slotIndexes, sequenceIndex + 1);
+  }, autoEatingConfig.slotDuration);
+
+  act2ParkTimers.push(consumeTimer);
+}
+
+function spawnAct2ParkFoodCrumbs(slotElement) {
+  const autoEatingConfig = getAct2ParkAutoEatingConfig();
+  const crumbCount = autoEatingConfig.crumbCount;
+
+  for (let index = 0; index < crumbCount; index += 1) {
+    const crumb = document.createElement("span");
+    const angle = (index / crumbCount) * Math.PI * 2;
+    const distance = 18 + index * 5;
+
+    crumb.className = "act2-food-crumb";
+    crumb.style.setProperty("--crumb-x", `${Math.cos(angle) * distance}px`);
+    crumb.style.setProperty("--crumb-y", `${Math.sin(angle) * distance - 18}px`);
+    crumb.style.setProperty("--act2-crumb-duration", `${autoEatingConfig.crumbDuration}ms`);
+    slotElement.appendChild(crumb);
+
+    const timer = window.setTimeout(() => {
+      crumb.remove();
+    }, autoEatingConfig.crumbDuration);
+
+    act2ParkTimers.push(timer);
+  }
+}
+
+function completeAct2ParkScene(options = {}) {
+  const shouldRecordPlace = options.recordPlace ?? true;
+  const shouldRecordEating = options.recordEating ?? false;
+  const place = getAct2LunchPlaceChoice(selectedAct2LunchPlaceId);
+
+  if (place && shouldRecordPlace) {
+    recordAct2LunchPlaceChoice(place, {
+      birdCleared: true,
+      clearedBirdCount: act2ClearedBirdIds.size
+    });
+  }
+
+  if (place && shouldRecordEating) {
+    recordAct2LunchEatingResult(place, {
+      interactionType: "park_auto_eat_after_birds",
+      automatic: true,
+      clearedBirdCount: act2ClearedBirdIds.size
+    });
   }
 
   cleanupAct2ParkScene();
@@ -4549,7 +4817,8 @@ function cleanupAct2ParkScene() {
   act2ParkTimers.forEach((timer) => window.clearTimeout(timer));
   act2ParkTimers = [];
   act2DogState = 1;
-  act2BirdCleared = false;
+  act2ClearedBirdIds = new Set();
+  act2ParkAutoEatingStarted = false;
   objectLayer?.querySelectorAll(".act2-park-scene, .act2-dog, .act2-cat, .act2-bird").forEach((element) => element.remove());
 }
 
@@ -4717,7 +4986,7 @@ function completeAct2SoloMealInteraction() {
   enterAct2LunchDone();
 }
 
-function recordAct2LunchEatingResult(place) {
+function recordAct2LunchEatingResult(place, extraFields = {}) {
   const eatenSlots = getAct2EatingFilledSlotIndexes().map((slotIndex) => {
     const food = act2LunchPlateItems.find((item) => item.slotIndex === slotIndex);
 
@@ -4733,14 +5002,15 @@ function recordAct2LunchEatingResult(place) {
   const record = {
     sceneId: "act2",
     stepId: "act2_lunchEatingResult",
-    interactionType: "click_chopsticks_to_eat_plate",
+    interactionType: extraFields.interactionType || "click_chopsticks_to_eat_plate",
     placeId: place.id,
     placeName: place.name,
     label: place.label,
     clicksPerSlot: act2EatingClicksPerSlot,
     totalRequiredClicks: eatenSlots.length * act2EatingClicksPerSlot,
     completedSlotCount: act2EatingCompletedSlots.size,
-    eatenSlots
+    eatenSlots,
+    ...extraFields
   };
 
   playerChoices.push(record);

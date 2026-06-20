@@ -646,13 +646,44 @@ button:disabled {
 .act1-scene-object {
   position: absolute;
   transition:
-    left 900ms cubic-bezier(0.65, 0, 0.22, 1),
-    top 900ms cubic-bezier(0.65, 0, 0.22, 1),
-    width 900ms cubic-bezier(0.65, 0, 0.22, 1),
-    height 900ms cubic-bezier(0.65, 0, 0.22, 1),
+    left 900ms cubic-bezier(0.22, 0.86, 0.26, 1),
+    top 900ms cubic-bezier(0.22, 0.86, 0.26, 1),
+    width 900ms cubic-bezier(0.22, 0.86, 0.26, 1),
+    height 900ms cubic-bezier(0.22, 0.86, 0.26, 1),
+    transform 900ms cubic-bezier(0.22, 0.86, 0.26, 1),
+    opacity 520ms ease;
+  will-change: left, top, width, height, transform, opacity;
+}
+
+.act1-scene-object.act1-scene-leaving-left {
+  pointer-events: none;
+  opacity: 0;
+  transform: translate3d(-120vw, 0, 0) scale(0.98) !important;
+}
+
+.act1-scene-object.act1-scene-entering-right {
+  pointer-events: none;
+  opacity: 0;
+  transform: translate3d(120vw, 0, 0) scale(0.98) !important;
+}
+
+.act1-breakfast-option:not(.is-travelling-to-microwave):not(.act1-carried-heat-food):not(.act1-carried-eating-food) {
+  transition:
+    left 900ms cubic-bezier(0.22, 0.86, 0.26, 1),
+    top 900ms cubic-bezier(0.22, 0.86, 0.26, 1),
+    width 900ms cubic-bezier(0.22, 0.86, 0.26, 1),
+    height 900ms cubic-bezier(0.22, 0.86, 0.26, 1),
     transform 180ms ease,
     opacity 260ms ease;
-  will-change: transform, opacity;
+}
+
+.act1-breakfast-option.is-travelling-to-microwave,
+.act1-breakfast-option.act1-carried-eating-food {
+  transition:
+    left 900ms cubic-bezier(0.22, 0.86, 0.26, 1),
+    top 900ms cubic-bezier(0.22, 0.86, 0.26, 1),
+    transform 900ms cubic-bezier(0.22, 0.86, 0.26, 1),
+    opacity 520ms ease;
 }
 
 .act3-child-object {
@@ -962,14 +993,20 @@ button:disabled {
 }
 
 .act1-breakfast-option.has-act1-image {
+  padding: 0 !important;
   border-color: transparent;
   background: transparent;
   box-shadow: none;
+  overflow: visible;
 }
 
 .act1-breakfast-option.has-act1-image .act1-breakfast-sketch,
 .act1-breakfast-option.has-act1-image .act1-breakfast-label {
   opacity: 0;
+}
+
+.act1-breakfast-option.has-act1-image::after {
+  display: none !important;
 }
 
 .act1-breakfast-frame.is-leaving-up {
@@ -1004,7 +1041,7 @@ button:disabled {
 
 .act1-breakfast-option:hover:not(:disabled) {
   transform: scale(1.045);
-  background: #e2ded4;
+  background: transparent;
 }
 
 .act1-breakfast-option.has-image:hover:not(:disabled),
@@ -1017,12 +1054,12 @@ button:disabled {
 }
 
 .act1-breakfast-option.has-image:hover:not(:disabled) {
-  transform: none;
+  transform: scale(1.045);
 }
 
 .act1-breakfast-option.has-image:hover:not(:disabled) > .asset-image,
 .act1-breakfast-option.has-image.is-selected > .asset-image {
-  transform: scale(1.12);
+  transform: scale(1.04);
   transform-origin: center;
 }
 
@@ -1052,13 +1089,25 @@ button:disabled {
   opacity: 1;
   cursor: default;
   pointer-events: none;
-  border-color: #8b1c12;
-  border-radius: 999px;
-  background:
-    linear-gradient(135deg, rgba(255, 247, 199, 0.88), rgba(255, 163, 93, 0.72)),
-    #f2e4bd;
-  box-shadow: 5px 5px 0 rgba(139, 28, 18, 0.18);
+  border-color: transparent;
+  background: transparent;
+  box-shadow: none;
   animation: act1HeatFoodIdle 760ms ease-in-out infinite alternate;
+}
+
+.act1-breakfast-option.act1-carried-heat-food.has-act1-image,
+.act1-breakfast-option.act1-carried-heat-food.has-image,
+.act1-breakfast-option.act1-carried-heat-food.has-loaded-asset-image {
+  padding: 0 !important;
+  border-color: transparent !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.act1-breakfast-option.act1-carried-heat-food.has-act1-image > .act1-placeholder-image,
+.act1-breakfast-option.act1-carried-heat-food.has-image > .asset-image,
+.act1-breakfast-option.act1-carried-heat-food.has-loaded-asset-image > .asset-image {
+  transform: none;
 }
 
 .act1-breakfast-option.has-image:hover:not(:disabled),
@@ -1072,7 +1121,7 @@ button:disabled {
 
 .act1-breakfast-option.has-image:hover:not(:disabled),
 .act1-breakfast-option.has-image.is-selected {
-  transform: none;
+  transform: scale(1.045);
 }
 
 .act1-breakfast-option.has-image > .asset-image {
@@ -1082,20 +1131,26 @@ button:disabled {
 
 .act1-breakfast-option.has-image:hover:not(:disabled) > .asset-image,
 .act1-breakfast-option.has-image.is-selected > .asset-image {
-  transform: scale(1.12);
+  transform: scale(1.04);
 }
 
 .act1-breakfast-option.has-image,
+.act1-breakfast-option.has-act1-image,
 .act1-breakfast-option.has-loaded-asset-image,
 .act1-breakfast-option.has-image:hover,
+.act1-breakfast-option.has-act1-image:hover,
 .act1-breakfast-option.has-loaded-asset-image:hover,
 .act1-breakfast-option.has-image:active,
+.act1-breakfast-option.has-act1-image:active,
 .act1-breakfast-option.has-loaded-asset-image:active,
 .act1-breakfast-option.has-image.is-selected,
+.act1-breakfast-option.has-act1-image.is-selected,
 .act1-breakfast-option.has-loaded-asset-image.is-selected,
 .act1-breakfast-option.has-image.is-travelling-to-microwave,
+.act1-breakfast-option.has-act1-image.is-travelling-to-microwave,
 .act1-breakfast-option.has-loaded-asset-image.is-travelling-to-microwave,
 .act1-breakfast-option.has-image.act1-carried-heat-food,
+.act1-breakfast-option.has-act1-image.act1-carried-heat-food,
 .act1-breakfast-option.has-loaded-asset-image.act1-carried-heat-food {
   padding: 0 !important;
   border-color: transparent !important;
@@ -1104,13 +1159,29 @@ button:disabled {
 }
 
 .act1-breakfast-option.has-image::after,
+.act1-breakfast-option.has-act1-image::after,
 .act1-breakfast-option.has-loaded-asset-image::after {
   display: none !important;
 }
 
+.act1-breakfast-option.has-act1-image:hover:not(:disabled),
+.act1-breakfast-option.has-act1-image.is-selected {
+  transform: scale(1.045) rotate(-1deg);
+}
+
+.act1-breakfast-option.has-act1-image > .act1-placeholder-image {
+  transition: transform 180ms ease;
+  transform-origin: center;
+}
+
+.act1-breakfast-option.has-act1-image:hover:not(:disabled) > .act1-placeholder-image,
+.act1-breakfast-option.has-act1-image.is-selected > .act1-placeholder-image {
+  transform: scale(1.04) rotate(1deg);
+}
+
 .act1-breakfast-option.has-loaded-asset-image:hover:not(:disabled),
 .act1-breakfast-option.has-loaded-asset-image.is-selected {
-  transform: none;
+  transform: scale(1.045);
 }
 
 .act1-breakfast-option.has-loaded-asset-image > .asset-image {
@@ -1120,7 +1191,7 @@ button:disabled {
 
 .act1-breakfast-option.has-loaded-asset-image:hover:not(:disabled) > .asset-image,
 .act1-breakfast-option.has-loaded-asset-image.is-selected > .asset-image {
-  transform: scale(1.12);
+  transform: scale(1.04);
 }
 
 .act1-breakfast-option.is-leaving {
@@ -1701,6 +1772,7 @@ button:disabled {
 .act1-eating-plate {
   border: 2px solid rgba(23, 23, 23, 0.28);
   background: rgba(215, 215, 215, 0.36);
+  color: transparent;
   pointer-events: none;
 }
 
@@ -1711,6 +1783,22 @@ button:disabled {
   border-color: transparent;
   background: transparent;
   box-shadow: none;
+  color: transparent;
+}
+
+#act1_s03_bird_left,
+#act1_s03_bird_right {
+  overflow: visible;
+  transform-origin: center bottom;
+  will-change: transform;
+}
+
+#act1_s03_bird_left {
+  animation: act1WindowBirdHopLeft 1180ms steps(2, end) infinite;
+}
+
+#act1_s03_bird_right {
+  animation: act1WindowBirdHopRight 1360ms steps(2, end) 180ms infinite;
 }
 
 .act1-table-line {
@@ -1799,16 +1887,45 @@ button:disabled {
 .act1-breakfast-option.act1-carried-eating-food {
   cursor: pointer;
   pointer-events: auto;
-  border-color: #8b1c12;
-  border-radius: 999px;
-  background:
-    linear-gradient(135deg, rgba(255, 247, 199, 0.88), rgba(255, 163, 93, 0.72)),
-    #f2e4bd;
+  border-color: transparent;
+  background: transparent;
+  box-shadow: none;
   animation: none;
 }
 
 .act1-breakfast-option.act1-carried-eating-food:active {
-  transform: scale(1.24);
+  transform: scale(var(--act1-carried-food-scale, 1));
+}
+
+.act1-breakfast-option.act1-carried-eating-food > .act1-placeholder-image {
+  left: calc(var(--act1-eating-container-anchor-x, 50%) + var(--act1-eating-image-offset-x, 0px));
+  top: calc(var(--act1-eating-container-anchor-y, 50%) + var(--act1-eating-image-offset-y, 0px));
+  right: auto;
+  bottom: auto;
+  width: auto;
+  height: auto;
+  max-width: none;
+  max-height: none;
+  object-fit: contain;
+  transform:
+    translate(
+      calc(-1 * var(--act1-eating-image-anchor-x, 50%)),
+      calc(-1 * var(--act1-eating-image-anchor-y, 50%))
+    );
+  transform-origin: center center;
+  transition:
+    left 140ms ease,
+    top 140ms ease,
+    transform 140ms ease;
+}
+
+.act1-breakfast-option.act1-carried-eating-food.has-act1-image:hover:not(:disabled) > .act1-placeholder-image,
+.act1-breakfast-option.act1-carried-eating-food.has-act1-image.is-selected > .act1-placeholder-image {
+  transform:
+    translate(
+      calc(-1 * var(--act1-eating-image-anchor-x, 50%)),
+      calc(-1 * var(--act1-eating-image-anchor-y, 50%))
+    );
 }
 
 .act1-breakfast-option.act1-carried-eating-food.is-eating-asset-missing::after {
@@ -1832,6 +1949,50 @@ button:disabled {
 .act1-breakfast-option.act1-carried-eating-food.is-complete {
   opacity: 0;
   pointer-events: none;
+}
+
+@keyframes act1WindowBirdHopLeft {
+  0% {
+    transform: translate(0, 0) rotate(-4deg);
+  }
+
+  25% {
+    transform: translate(18px, -12px) rotate(5deg);
+  }
+
+  50% {
+    transform: translate(42px, 2px) rotate(-2deg);
+  }
+
+  75% {
+    transform: translate(24px, -10px) rotate(4deg);
+  }
+
+  100% {
+    transform: translate(0, 0) rotate(-4deg);
+  }
+}
+
+@keyframes act1WindowBirdHopRight {
+  0% {
+    transform: translate(0, 0) rotate(4deg);
+  }
+
+  25% {
+    transform: translate(-20px, -10px) rotate(-5deg);
+  }
+
+  50% {
+    transform: translate(-48px, 3px) rotate(2deg);
+  }
+
+  75% {
+    transform: translate(-22px, -14px) rotate(-4deg);
+  }
+
+  100% {
+    transform: translate(0, 0) rotate(4deg);
+  }
 }
 
 /* ---------------------------------------------------------------------------
@@ -2565,12 +2726,14 @@ button:disabled {
   object-fit: contain;
   pointer-events: none;
   user-select: none;
+  --act2-food-rotation: 0deg;
   transform-origin: center;
 }
 
 .act2-plate-slot[data-slot-index="0"] .act2-plate-slot-food-asset,
 .act2-plate-slot[data-slot-index="1"] .act2-plate-slot-food-asset,
 .act2-plate-slot[data-slot-index="2"] .act2-plate-slot-food-asset {
+  --act2-food-rotation: 90deg;
   transform: rotate(90deg);
 }
 
@@ -2581,6 +2744,45 @@ button:disabled {
 
 .act2-plate-slot.has-asset.is-eaten {
   background: transparent;
+}
+
+.act2-plate-slot.has-asset.is-eaten::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 58%;
+  width: 38%;
+  height: 22%;
+  border-radius: 999px;
+  background:
+    radial-gradient(circle at 22% 44%, #9c6230 0 3px, transparent 4px),
+    radial-gradient(circle at 48% 60%, #c8873f 0 4px, transparent 5px),
+    radial-gradient(circle at 76% 38%, #7d4c26 0 3px, transparent 4px),
+    rgba(181, 120, 58, 0.18);
+  transform: translate(-50%, -50%) rotate(-6deg);
+  pointer-events: none;
+}
+
+.act2-plate-slot.is-auto-consuming .act2-plate-slot-food-asset {
+  animation: act2ParkAutoEatFood var(--act2-park-auto-eat-duration, 620ms) ease-in forwards;
+}
+
+.act2-plate-slot.has-asset.is-eaten .act2-plate-slot-food-asset {
+  opacity: 0;
+}
+
+.act2-food-crumb {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  z-index: 5;
+  width: 10px;
+  height: 8px;
+  border-radius: 50%;
+  background: #b9783a;
+  border: 1px solid rgba(23, 23, 23, 0.52);
+  pointer-events: none;
+  animation: act2FoodCrumbPop var(--act2-crumb-duration, 720ms) ease-out forwards;
 }
 
 .act2-plate-slot.is-eaten .act2-slot-food-name {
@@ -2883,6 +3085,11 @@ button:disabled {
 
 .act2-work-bubble:hover {
   transform: scale(1.04);
+}
+
+.act2-work-bubble.is-entering {
+  pointer-events: none;
+  animation: act2WorkBubblePopIn var(--act2-work-bubble-enter-duration, 420ms) cubic-bezier(0.2, 1.28, 0.34, 1) both;
 }
 
 .act2-work-bubble.is-clearing {
@@ -3333,6 +3540,23 @@ button:disabled {
   }
 }
 
+@keyframes act2WorkBubblePopIn {
+  0% {
+    opacity: 0;
+    transform: translateY(-24px) scale(0.58);
+  }
+
+  62% {
+    opacity: 1;
+    transform: translateY(4px) scale(1.08);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
 @keyframes act2CatStartle {
   0% {
     transform: translate(0, 0) rotate(-1deg);
@@ -3415,6 +3639,49 @@ button:disabled {
 
   100% {
     transform: scale(1);
+  }
+}
+
+@keyframes act2ParkAutoEatFood {
+  0% {
+    opacity: 1;
+    transform: scale(1) rotate(var(--act2-food-rotation, 0deg));
+    filter: none;
+  }
+
+  38% {
+    opacity: 1;
+    transform: scale(1.1) rotate(var(--act2-food-rotation, 0deg)) translateY(-8px);
+    filter: saturate(1.18);
+  }
+
+  100% {
+    opacity: 0;
+    transform: scale(0.18) rotate(var(--act2-food-rotation, 0deg)) translateY(10px);
+    filter: saturate(0.86);
+  }
+}
+
+@keyframes act2FoodCrumbPop {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.4);
+  }
+
+  28% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+
+  100% {
+    opacity: 0;
+    transform:
+      translate(
+        calc(-50% + var(--crumb-x, 0px)),
+        calc(-50% + var(--crumb-y, -22px))
+      )
+      scale(0.72)
+      rotate(80deg);
   }
 }
 
@@ -5466,11 +5733,11 @@ button:disabled {
 
 @keyframes act1HeatFoodIdle {
   from {
-    transform: translateY(0);
+    transform: translateY(0) scale(var(--act1-carried-food-scale, 1));
   }
 
   to {
-    transform: translateY(-8px);
+    transform: translateY(-8px) scale(var(--act1-carried-food-scale, 1));
   }
 }
 

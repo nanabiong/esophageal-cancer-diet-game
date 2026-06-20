@@ -186,7 +186,6 @@
       },
       "entryTransition": {
         "duration": 1500,
-        "orthogonalStepDelay": 520,
         "targetCenterX": 768,
         "targetCenterY": 469,
         "foodOffsetX": 0,
@@ -238,24 +237,35 @@
         "fastMaxMs": 3500,
         "mediumMaxMs": 7000,
         "nextStateDelay": 1200,
-        "targetCenterX": 964,
-        "targetCenterY": 654,
-        "targetScale": 1.3,
-        "assetPattern": "assets/images/act1/eating/{slug}-{state}.png"
+        "sceneTransitionDuration": 900,
+        "heatExitDuration": 760,
+        "eatingEnterDelay": 760,
+        "targetCenterX": 990,
+        "targetCenterY": 580,
+        "targetScale": 1,
+        "assetIndexOffset": 1,
+        "assetPattern": "assets/images/act1/eating/{slug}-{state}.png",
+        "assetStateLayouts": {
+          "_note": "State image layout while eating. Images keep their own asset size; containerAnchor and imageAnchor align a point in the original box to a point in the state image.",
+          "default": [
+            { "containerAnchorX": 100, "containerAnchorY": 100, "imageAnchorX": 100, "imageAnchorY": 100 },
+            { "containerAnchorX": 100, "containerAnchorY": 100, "imageAnchorX": 100, "imageAnchorY": 100 },
+            { "containerAnchorX": 100, "containerAnchorY": 100, "imageAnchorX": 100, "imageAnchorY": 100 },
+            { "containerAnchorX": 100, "containerAnchorY": 100, "imageAnchorX": 100, "imageAnchorY": 100 },
+            { "containerAnchorX": 100, "containerAnchorY": 100, "imageAnchorX": 100, "imageAnchorY": 100 },
+            { "containerAnchorX": 100, "containerAnchorY": 100, "imageAnchorX": 100, "imageAnchorY": 100 }
+          ],
+          "egg-ham-sandwich": [
+            { "containerAnchorX": 100, "containerAnchorY": 100, "imageAnchorX": 100, "imageAnchorY": 100 },
+            { "containerAnchorX": 100, "containerAnchorY": 100, "imageAnchorX": 100, "imageAnchorY": 100 },
+            { "containerAnchorX": 100, "containerAnchorY": 100, "imageAnchorX": 100, "imageAnchorY": 100 },
+            { "containerAnchorX": 100, "containerAnchorY": 100, "imageAnchorX": 100, "imageAnchorY": 100 },
+            { "containerAnchorX": 100, "containerAnchorY": 100, "imageAnchorX": 100, "imageAnchorY": 100 },
+            { "containerAnchorX": 100, "containerAnchorY": 100, "imageAnchorX": 100, "imageAnchorY": 100 }
+          ]
+        }
       },
       "objects": {
-        "act1_s03_scene_background": {
-          "type": "eatingSceneBg",
-          "x": 0,
-          "y": 0,
-          "width": 1920,
-          "height": 931,
-          "opacity": 1,
-          "scale": 1,
-          "zIndex": 1,
-          "content": "\u80cc\u666f",
-          "image": "assets/images/act1/eating/scene-bg.png"
-        },
         "act1_s03_table": {
           "type": "eatingTable",
           "x": 381,

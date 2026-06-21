@@ -4412,7 +4412,7 @@ button:disabled {
 
 .result-galaxy-center-planet {
   position: absolute;
-  pointer-events: none;
+  pointer-events: auto;
   opacity: 0;
   transform:
     translate(
@@ -5618,6 +5618,29 @@ button:disabled {
   grid-template-columns: var(--result-trait-icon-size, 92px) minmax(0, 1fr);
   align-items: center;
   column-gap: var(--result-trait-icon-gap, 28px);
+  transition:
+    transform 220ms ease,
+    filter 220ms ease;
+  transform-origin: center left;
+  will-change: transform;
+}
+
+.result-trait-bar.is-planet-hover-matched {
+  z-index: 2;
+  transform: translateY(-9px) scale(1.045);
+  filter: drop-shadow(0 12px 14px rgba(105, 54, 24, 0.18));
+}
+
+.result-trait-bar.is-planet-hover-matched .result-trait-icon-slot {
+  transform: scale(1.1);
+}
+
+.result-trait-bar.is-planet-hover-matched .result-trait-track {
+  background: color-mix(in srgb, var(--trait-risk-color, #8f7b63) 18%, #d9cdb8);
+}
+
+.result-trait-bar.is-planet-hover-matched .result-trait-track::before {
+  background: var(--trait-risk-color, #8f7b63);
 }
 
 .result-trait-icon-slot {
@@ -5627,6 +5650,7 @@ button:disabled {
   display: flex;
   align-items: center;
   justify-content: center;
+  transition: transform 220ms ease;
 }
 
 .result-trait-icon-slot.is-missing::before {
@@ -5798,6 +5822,7 @@ button:disabled {
 
 .result-risk-summary-level {
   margin: 0;
+  color: var(--result-risk-level-color, #693618);
   font-family: "Alimama FangYuanTi VF", "Alimama FangYuanTi", YouYuan, "幼圆", "Microsoft YaHei", sans-serif;
   font-size: 45px;
   font-weight: 500;
@@ -5806,15 +5831,15 @@ button:disabled {
 }
 
 .result-risk-summary-level-low {
-  color: #4f8b61;
+  color: var(--result-risk-level-color, #74D188);
 }
 
 .result-risk-summary-level-medium {
-  color: #a87728;
+  color: var(--result-risk-level-color, #FFC1DF);
 }
 
 .result-risk-summary-level-high {
-  color: #693618;
+  color: var(--result-risk-level-color, #FF4800);
 }
 
 .result-risk-percentile {
@@ -5839,7 +5864,7 @@ button:disabled {
   flex: 0 0 auto;
   border-radius: 999px;
   background: var(--dot-color, #8fd39b);
-  opacity: 0.72;
+  opacity: var(--dot-opacity, 0.42);
   transform: scale(var(--dot-scale, 1));
 }
 

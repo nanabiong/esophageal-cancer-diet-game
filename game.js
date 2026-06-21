@@ -7490,13 +7490,13 @@ function renderResultDietGalaxyLayout(layer) {
     </div>
     <div class="result-risk-summary">
       <p class="result-risk-summary-title">你的食管癌饮食风险评估为</p>
-      <p class="result-risk-summary-level result-risk-summary-level-${personaResult.riskLevel}">${escapeHtml(personaResult.riskLabel)}</p>
+      <p class="result-risk-summary-level result-risk-summary-level-${personaResult.riskLevel}" style="--result-risk-level-color:${personaResult.riskColor};">${escapeHtml(personaResult.riskLabel)}</p>
       <div class="result-risk-percentile">
         <div class="result-risk-percentile-track">
           ${personaResult.percentileDots.map((dot) => `
             <span
               class="result-risk-percentile-dot ${dot.isPlayer ? "is-player" : ""}"
-              style="--dot-color:${dot.color}; --dot-scale:${dot.scale};"
+              style="--dot-color:${dot.color}; --dot-scale:${dot.scale}; --dot-opacity:${dot.opacity};"
             ></span>
           `).join("")}
         </div>
@@ -7530,8 +7530,9 @@ function buildResultPersonaSummary(riskResult) {
     dimensionMap,
     riskLevel: riskResult.riskLevel || "medium",
     riskLabel: getResultRiskLevelLabel(riskResult.riskLevel),
+    riskColor: getResultPlanetColor(riskResult.totalRiskIndex),
     percentile,
-    percentileDots: buildResultPercentileDots(percentile),
+    percentileDots: buildResultPercentileDots(percentile, riskResult.totalRiskIndex),
     percentileText: `你的饮食风险高于${percentile}%的用户`
   };
 }
@@ -7583,6 +7584,17 @@ function getResultDimensionEndpointName(dimension, value) {
   return value >= item.threshold ? item.highLabel : item.lowLabel;
 }
 
+function getResultPersonaDimensionName(dimension, labels = {}) {
+  const names = {
+    sensory: "\u611f\u5b98\u523a\u6fc0",
+    rhythm: "\u8282\u5f8b\u503e\u5411",
+    specificity: "\u7279\u5f02",
+    danger: "\u5371\u9669"
+  };
+
+  return names[dimension] || labels.name || dimension;
+}
+
 function getResultSampleSerial() {
   return "0127";
 }
@@ -7601,23 +7613,65 @@ function getResultRiskLevelLabel(level) {
 
 function getResultRiskPercentile(totalRiskIndex) {
   const score = Math.max(0, Math.min(100, Number(totalRiskIndex) || 0));
-  const simulatedScores = Array.from({ length: 100 }, (_, index) => {
+  const simulatedScores = getResultSimulatedRiskScores();
+
+  return simulatedScores.filter((sampleScore) => score >= sampleScore).length;
+}
+
+function getResultSimulatedRiskScores() {
+  return Array.from({ length: 100 }, (_, index) => {
     const noise = Math.sin((index + 1) * 12.9898) * 43758.5453;
     const normalizedNoise = noise - Math.floor(noise);
     const spread = (index / 99) * 0.5 + normalizedNoise * 0.5;
 
     return Math.max(0, Math.min(100, spread * 100));
   });
-
-  return simulatedScores.filter((sampleScore) => score >= sampleScore).length;
 }
 
-function buildResultPercentileDots(percentile) {
+function getResultRiskLevelColor(level) {
+  if (level === "low") {
+    return "#74D188";
+  }
+
+  if (level === "high") {
+    return "#FF4800";
+  }
+
+  return "#FFC1DF";
+}
+
+function buildResultPercentileDots(percentile, totalRiskIndex) {
   const playerIndex = Math.max(0, Math.min(19, Math.round((percentile / 100) * 19)));
+  const simulatedScores = getResultSimulatedRiskScores();
+  const levels = ["low", "medium", "high"];
+  const rawCounts = levels.map((level) => (
+    simulatedScores.filter((score) => getRiskLevel(score) === level).length
+  ));
+  const exactCounts = rawCounts.map((count) => (count / simulatedScores.length) * 20);
+  const segmentCounts = exactCounts.map(Math.floor);
+  let remainingDots = 20 - segmentCounts.reduce((sum, count) => sum + count, 0);
+
+  exactCounts
+    .map((exact, index) => ({ index, remainder: exact - segmentCounts[index] }))
+    .sort((a, b) => b.remainder - a.remainder)
+    .forEach(({ index }) => {
+      if (remainingDots <= 0) {
+        return;
+      }
+
+      segmentCounts[index] += 1;
+      remainingDots -= 1;
+    });
+
+  const levelByDot = levels.flatMap((level, index) => (
+    Array.from({ length: segmentCounts[index] }, () => level)
+  ));
+  const playerLevel = getRiskLevel(totalRiskIndex);
 
   return Array.from({ length: 20 }, (_, index) => ({
     isPlayer: index === playerIndex,
-    color: index <= playerIndex ? "#f65a1e" : "#8fd39b",
+    color: getResultRiskLevelColor(index === playerIndex ? playerLevel : (levelByDot[index] || "medium")),
+    opacity: index === playerIndex ? 1 : 0.42,
     scale: index === playerIndex ? 1.45 : 0.78 + ((index % 4) * 0.1)
   }));
 }
@@ -7667,12 +7721,11 @@ function renderResultOutcomeTraitBars(config, riskResult, personaResult) {
 function createResultTraitBarMarkup({ dimension, value, item, labels }) {
   const endpoint = value >= (labels.threshold ?? 50) ? "high" : "low";
   const iconAsset = getResultTraitIconAssetPath(dimension, endpoint);
-  const activeLabel = endpoint === "high"
-    ? (labels.highLabel || item.rightLabel || "")
-    : (labels.lowLabel || item.leftLabel || "");
+  const dimensionName = getResultPersonaDimensionName(dimension, labels);
+  const traitRiskColor = getResultPlanetColor(value);
 
   return `
-    <div class="result-trait-bar" style="--trait-position: ${value}%">
+    <div class="result-trait-bar" data-dimension="${escapeHtml(dimension)}" style="--trait-position: ${value}%; --trait-risk-color: ${traitRiskColor};">
       <div class="result-trait-icon-slot" data-dimension="${escapeHtml(dimension)}" data-endpoint="${endpoint}">
         <img
           class="result-trait-icon-image"
@@ -7683,7 +7736,7 @@ function createResultTraitBarMarkup({ dimension, value, item, labels }) {
       </div>
       <div class="result-trait-content">
         <div class="result-trait-name-row">
-          <span>${escapeHtml(activeLabel)}</span>
+          <span>${escapeHtml(dimensionName)}</span>
         </div>
         <div class="result-trait-track-wrap">
           <div class="result-trait-track"></div>
@@ -7738,13 +7791,13 @@ function createResultOutcomePanelMarkup(personaResult, traitBars) {
     </div>
     <div class="result-risk-summary">
       <p class="result-risk-summary-title">你的食管癌饮食风险评估为</p>
-      <p class="result-risk-summary-level result-risk-summary-level-${personaResult.riskLevel}">${escapeHtml(personaResult.riskLabel)}</p>
+      <p class="result-risk-summary-level result-risk-summary-level-${personaResult.riskLevel}" style="--result-risk-level-color:${personaResult.riskColor};">${escapeHtml(personaResult.riskLabel)}</p>
       <div class="result-risk-percentile">
         <div class="result-risk-percentile-track">
           ${personaResult.percentileDots.map((dot) => `
             <span
               class="result-risk-percentile-dot ${dot.isPlayer ? "is-player" : ""}"
-              style="--dot-color:${dot.color}; --dot-scale:${dot.scale};"
+              style="--dot-color:${dot.color}; --dot-scale:${dot.scale}; --dot-opacity:${dot.opacity};"
             ></span>
           `).join("")}
         </div>
@@ -8745,11 +8798,62 @@ function createGalaxyCenterPlanet() {
   }
 
   planet.appendChild(planetBody);
+  setupResultPlanetTraitHover(planet);
   galaxyLocatingField.appendChild(planet);
 
   if (dynamicPlanetSvg) {
     startResultPlanetAnimation(planetBody, dynamicPlanetMetrics);
   }
+}
+
+function setupResultPlanetTraitHover(planet) {
+  if (!planet) {
+    return;
+  }
+
+  planet.addEventListener("mousemove", (event) => {
+    setResultTraitHoverDimension(getResultPlanetHoverDimension(planet, event));
+  });
+  planet.addEventListener("mouseleave", () => {
+    setResultTraitHoverDimension(null);
+  });
+}
+
+function getResultPlanetHoverDimension(planet, event) {
+  const rect = planet.getBoundingClientRect();
+  const centerX = rect.left + rect.width / 2;
+  const centerY = rect.top + rect.height / 2;
+  const dx = event.clientX - centerX;
+  const dy = event.clientY - centerY;
+  const radius = Math.max(1, Math.min(rect.width, rect.height) / 2);
+  const distanceRatio = Math.sqrt(dx * dx + dy * dy) / radius;
+
+  if (distanceRatio > 0.9) {
+    return null;
+  }
+
+  if (distanceRatio <= 0.18) {
+    return "danger";
+  }
+
+  if (distanceRatio <= 0.42) {
+    return "specificity";
+  }
+
+  if (distanceRatio <= 0.62) {
+    return "sensory";
+  }
+
+  return "rhythm";
+}
+
+function setResultTraitHoverDimension(dimension) {
+  document.querySelectorAll(".result-trait-bar").forEach((bar) => {
+    bar.classList.toggle(
+      "is-planet-hover-matched",
+      Boolean(dimension) && bar.dataset.dimension === dimension
+    );
+  });
 }
 
 function createResultFoodOrbit() {

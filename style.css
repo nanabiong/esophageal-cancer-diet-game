@@ -3319,6 +3319,59 @@ button:disabled {
   display: none !important;
 }
 
+.act2-place-guide-bubble {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 26px;
+  color: var(--act2-place-guide-text-color, #8a625d);
+  font-family: YouYuan, "幼圆", "Microsoft YaHei", sans-serif;
+  font-size: var(--act2-place-guide-font-size, 20px);
+  font-weight: 500;
+  line-height: var(--act2-place-guide-line-height, 1.35);
+  text-align: center;
+  pointer-events: none;
+  animation: act2PlaceGuideBubbleIn var(--act2-place-guide-enter-duration, 420ms) cubic-bezier(0.2, 1.18, 0.34, 1) both;
+}
+
+.act2-place-guide-bubble.has-asset {
+  background: transparent;
+}
+
+.act2-place-guide-asset {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: fill;
+  pointer-events: none;
+  user-select: none;
+}
+
+.act2-place-guide-text {
+  position: relative;
+  z-index: 1;
+  display: block;
+  width: 100%;
+  transform: translateY(var(--act2-place-guide-text-offset-y, -8px));
+  white-space: normal;
+}
+
+.act2-guide-path {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.act2-guide-path-line {
+  animation: act2GuidePathFlow var(--act2-guide-path-duration, 1200ms) linear infinite;
+}
+
 .act2-work-bubble {
   display: flex;
   align-items: center;
@@ -3437,8 +3490,7 @@ button:disabled {
   box-shadow: 5px 5px 0 rgba(0, 0, 0, 0.16);
 }
 
-.act2-friend-toast-bubble,
-.act2-friend-top-bubble {
+.act2-friend-toast-bubble {
   pointer-events: none;
   animation: act2FriendTopBubbleIn 260ms ease-out forwards;
 }
@@ -3482,7 +3534,6 @@ button:disabled {
   cursor: pointer;
   background: #eef7ff;
   transform-origin: center bottom;
-  animation: act2FriendBottomBubbleIn 640ms cubic-bezier(0.18, 0.98, 0.28, 1) forwards;
   will-change: transform, opacity;
 }
 
@@ -3838,6 +3889,28 @@ button:disabled {
   100% {
     opacity: 1;
     transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes act2PlaceGuideBubbleIn {
+  0% {
+    opacity: 0;
+    transform: translateY(12px) scale(0.94);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes act2GuidePathFlow {
+  from {
+    stroke-dashoffset: 0;
+  }
+
+  to {
+    stroke-dashoffset: -52;
   }
 }
 

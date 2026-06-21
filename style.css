@@ -21,8 +21,8 @@
   pointer-events: none;
   transform: translate3d(0, 100%, 0);
   transition:
-    transform 850ms cubic-bezier(0.22, 0.9, 0.28, 1),
-    opacity 320ms ease;
+    transform 900ms cubic-bezier(0.22, 0.9, 0.28, 1),
+    opacity 360ms ease;
 }
 
 .planet-atlas-host.is-visible {
@@ -48,6 +48,13 @@ body.planet-atlas-active .result-outcome-panel-host {
   opacity: 0;
   visibility: hidden;
   pointer-events: none;
+}
+
+body.result-atlas-slide-transitioning .result-galaxy-locating-layer,
+body.result-atlas-slide-transitioning .result-food-orbit,
+body.result-atlas-slide-transitioning .result-outcome-panel-host {
+  pointer-events: none;
+  animation: resultAtlasSettlementSlideUp 900ms cubic-bezier(0.22, 0.9, 0.28, 1) forwards;
 }
 
 body.planet-atlas-active .result-galaxy-locating-layer {
@@ -332,6 +339,63 @@ button:disabled {
   50% {
     transform: translate3d(0, -12px, 0) rotate(0.35deg);
   }
+}
+
+.result-locating-interstitial {
+  position: fixed;
+  inset: 0;
+  z-index: 290;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 28px;
+  overflow: hidden;
+  background:
+    linear-gradient(rgba(0, 0, 0, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 0, 0, 0.02) 1px, transparent 1px),
+    #f3f3f0;
+  background-size: 32px 32px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 420ms ease;
+}
+
+.result-locating-interstitial.is-visible {
+  opacity: 1;
+}
+
+.result-locating-interstitial.is-leaving {
+  opacity: 0;
+}
+
+.result-locating-interstitial-planet {
+  width: min(46vw, 560px);
+  aspect-ratio: 1;
+  animation: homePlanetFloat 5200ms ease-in-out infinite;
+}
+
+.result-locating-interstitial-planet-body,
+.result-locating-interstitial-planet-body .result-galaxy-dynamic-planet-svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.result-locating-interstitial-planet-body .result-galaxy-dynamic-planet-svg {
+  filter: none;
+  transform-origin: center;
+}
+
+.result-locating-interstitial-caption {
+  margin: 0;
+  color: #693618;
+  font-family: YouYuan, "幼圆", "Microsoft YaHei", sans-serif;
+  font-size: 30px;
+  font-weight: 400;
+  line-height: 1.4;
+  letter-spacing: 0;
 }
 
 @media (max-width: 1500px) {
@@ -4437,6 +4501,7 @@ button:disabled {
   position: absolute;
   pointer-events: auto;
   opacity: 0;
+  cursor: pointer;
   transform:
     translate(
       calc(-50% + var(--result-center-planet-parallax-x, 0px) + var(--result-center-planet-live-x, 0px)),
@@ -4446,6 +4511,19 @@ button:disabled {
     scale(var(--result-center-planet-live-scale, 1));
   transform-origin: center;
   will-change: transform, opacity;
+}
+
+.result-galaxy-center-planet.is-atlas-click-transitioning {
+  --result-atlas-planet-exit-x: 1250px;
+  --result-atlas-planet-exit-y: 650px;
+  --result-atlas-planet-exit-scale: 2.9;
+  --result-atlas-planet-exit-rotate: 12deg;
+  pointer-events: none;
+  animation: resultPlanetAtlasMoveDownRight 1900ms cubic-bezier(0.22, 0.82, 0.2, 1) forwards;
+}
+
+.result-galaxy-center-planet.is-atlas-click-transitioning .result-galaxy-dynamic-planet-svg {
+  filter: none;
 }
 
 .result-galaxy-center-planet-body {
@@ -6109,6 +6187,46 @@ button:disabled {
     transform:
       translateY(calc(var(--result-center-planet-float-amplitude, 16px) * 0.5))
       scale(1);
+  }
+}
+
+@keyframes resultAtlasSettlementSlideUp {
+  0% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+    visibility: visible;
+  }
+
+  100% {
+    opacity: 0;
+    transform: translate3d(0, -100%, 0);
+    visibility: hidden;
+  }
+}
+
+@keyframes resultPlanetAtlasMoveDownRight {
+  0% {
+    opacity: 1;
+    transform:
+      translate3d(
+        calc(-50% + var(--result-center-planet-parallax-x, 0px) + var(--result-center-planet-live-x, 0px)),
+        calc(-50% + var(--result-center-planet-parallax-y, 0px) + var(--result-center-planet-live-y, 0px)),
+        0
+      )
+      rotate(var(--result-center-planet-live-rotate, 0deg))
+      scale(var(--result-center-planet-live-scale, 1));
+  }
+
+  100% {
+    opacity: 1;
+    transform:
+      translate3d(
+        calc(-50% + var(--result-atlas-planet-exit-x, 1250px)),
+        calc(-50% + var(--result-atlas-planet-exit-y, 650px)),
+        0
+      )
+      rotate(var(--result-atlas-planet-exit-rotate, 12deg))
+      scale(var(--result-atlas-planet-exit-scale, 2.9));
   }
 }
 

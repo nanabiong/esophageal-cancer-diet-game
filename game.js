@@ -77,6 +77,7 @@ const PHASES = {
   FOOD: "act3_food",
   DRINK: "act3_drink",
   EXIT_SCROLL: "act3_exit_scroll",
+  RESULT_LOCATING_INTERSTITIAL: "result_locating_interstitial",
   RESULT_GALAXY_LOCATING: "result_galaxy_locating",
   RESULT_GALAXY: "result_galaxy",
   RESULT_ORBIT: "result_orbit",
@@ -172,6 +173,11 @@ const ACT3_EXIT_SCROLL_CONFIG = {
   resultDelay: 420,
   completeDelay: 1650
 };
+const RESULT_LOCATING_INTERSTITIAL_CONFIG = {
+  duration: 2200,
+  fadeOutDuration: 520
+};
+const RESULT_ATLAS_SLIDE_TRANSITION_DURATION = 900;
 const ACT0_ALARM_DEFAULT_CONFIG = {
   maxHits: 3,
   backgroundLevels: [
@@ -691,6 +697,7 @@ let resultOrbitLayer = null;
 let planetAtlasLayer = null;
 let planetAtlasFrame = null;
 let planetAtlasWheelLocked = false;
+let resultAtlasClickTransitioning = false;
 let resultRiskLayer = null;
 let resultStatsOverlayLayer = null;
 let isResultOrbitPlanetSelected = false;
@@ -5789,13 +5796,13 @@ function startHomeScreenExit() {
   }, 880);
 }
 
-function startHomePlanetAnimation(planetBody) {
+function startHomePlanetAnimation(planetBody, options = {}) {
   stopHomePlanetAnimation();
   homePlanetAnimationStartTime = performance.now();
   homePlanetLastRenderTime = 0;
 
   const renderFrame = (time) => {
-    if (!planetBody?.isConnected || isHomeScreenLeaving) {
+    if (!planetBody?.isConnected || (isHomeScreenLeaving && !options.ignoreHomeLeaving)) {
       stopHomePlanetAnimation();
       return;
     }
@@ -7856,8 +7863,45 @@ function startAct3ExitSequence() {
   objectLayer.classList.add("act3-exit-sequence");
 
   window.setTimeout(() => {
-    enterGalaxyLocatingState();
+    enterResultLocatingInterstitial();
   }, ACT3_EXIT_SCROLL_CONFIG.completeDelay);
+}
+
+function enterResultLocatingInterstitial() {
+  const app = document.getElementById("app");
+
+  updatePlayerRiskResult();
+  document.querySelector(".result-locating-interstitial")?.remove();
+
+  const layer = document.createElement("section");
+  const planet = document.createElement("div");
+  const planetBody = document.createElement("div");
+  const caption = document.createElement("p");
+
+  layer.className = "result-locating-interstitial";
+  layer.setAttribute("aria-label", "饮食星球定位过渡页");
+  planet.className = "result-locating-interstitial-planet";
+  planetBody.className = "result-locating-interstitial-planet-body";
+  caption.className = "result-locating-interstitial-caption";
+  caption.textContent = "你的饮食星球正在定位中……";
+
+  planet.appendChild(planetBody);
+  layer.append(planet, caption);
+  app?.appendChild(layer);
+  currentPhase = PHASES.RESULT_LOCATING_INTERSTITIAL;
+  currentState = "result_state_00_locating_interstitial";
+  isAct3ExitAnimating = false;
+  startHomePlanetAnimation(planetBody, { ignoreHomeLeaving: true });
+
+  window.requestAnimationFrame(() => layer.classList.add("is-visible"));
+  window.setTimeout(() => {
+    layer.classList.add("is-leaving");
+    window.setTimeout(() => {
+      stopHomePlanetAnimation();
+      layer.remove();
+      enterGalaxyLocatingState();
+    }, RESULT_LOCATING_INTERSTITIAL_CONFIG.fadeOutDuration);
+  }, RESULT_LOCATING_INTERSTITIAL_CONFIG.duration);
 }
 
 function enterGalaxyLocatingState() {
@@ -8429,11 +8473,6 @@ function handleResultGalaxyWheel(event) {
   }
 
   event.preventDefault();
-  planetAtlasWheelLocked = true;
-  enterPlanetAtlasState();
-  window.setTimeout(() => {
-    planetAtlasWheelLocked = false;
-  }, 900);
 }
 
 function ensurePlanetAtlasLayer() {
@@ -8476,7 +8515,11 @@ function returnFromPlanetAtlas() {
   currentPhase = PHASES.RESULT_GALAXY;
   currentState = RESULT_STATES.DIET_GALAXY;
   document.body.classList.remove("planet-atlas-active");
+  document.body.classList.remove("result-atlas-click-transitioning");
+  document.body.classList.remove("result-atlas-slide-transitioning");
   planetAtlasLayer?.classList.remove("is-visible");
+  planetAtlasLayer?.classList.remove("is-direct-enter");
+  document.getElementById("result-galaxy-center-planet")?.classList.remove("is-atlas-click-transitioning");
   resultGalaxyLayer?.classList.remove("is-atlas-behind");
 }
 
@@ -8598,6 +8641,8 @@ function completeResultGalaxyEnterTransition() {
   if (resultGalaxyLayer) {
     renderResultDietGalaxyLayout(resultGalaxyLayer);
   }
+  ensurePlanetAtlasLayer();
+  postPlanetAtlasPayload();
   updateResultGalaxyProgress(1);
   console.log("Entered result_state_01_diet_galaxy", {
     playerChoices,
@@ -8838,12 +8883,52 @@ function setupResultPlanetTraitHover(planet) {
     return;
   }
 
+  planet.setAttribute("role", "button");
+  planet.tabIndex = 0;
+  planet.addEventListener("click", handleResultPlanetAtlasTransitionClick);
+  planet.addEventListener("keydown", (event) => {
+    if (event.key !== "Enter" && event.key !== " ") {
+      return;
+    }
+
+    event.preventDefault();
+    handleResultPlanetAtlasTransitionClick();
+  });
   planet.addEventListener("mousemove", (event) => {
     setResultTraitHoverDimension(getResultPlanetHoverDimension(planet, event));
   });
   planet.addEventListener("mouseleave", () => {
     setResultTraitHoverDimension(null);
   });
+}
+
+function handleResultPlanetAtlasTransitionClick() {
+  if (currentPhase !== PHASES.RESULT_GALAXY || resultAtlasClickTransitioning) {
+    return;
+  }
+
+  startResultAtlasClickTransition();
+}
+
+function startResultAtlasClickTransition() {
+  const atlasLayer = ensurePlanetAtlasLayer();
+
+  resultAtlasClickTransitioning = true;
+  planetAtlasWheelLocked = true;
+  updatePlayerRiskResult();
+  postPlanetAtlasPayload();
+  document.body.classList.add("result-atlas-slide-transitioning");
+  resultGalaxyLayer?.classList.add("is-atlas-behind");
+  window.requestAnimationFrame(() => atlasLayer.classList.add("is-visible"));
+
+  window.setTimeout(() => {
+    currentPhase = PHASES.RESULT_PLANET_ATLAS;
+    currentState = RESULT_STATES.PLANET_ATLAS;
+    document.body.classList.add("planet-atlas-active");
+    document.body.classList.remove("result-atlas-slide-transitioning");
+    resultAtlasClickTransitioning = false;
+    planetAtlasWheelLocked = false;
+  }, RESULT_ATLAS_SLIDE_TRANSITION_DURATION);
 }
 
 function getResultPlanetHoverDimension(planet, event) {

@@ -73,13 +73,14 @@
       "objects": {
         "act2_s01_intro_bubble": {
           "type": "act2IntroBubble",
-          "x": 177,
-          "y": 126,
-          "width": 320,
-          "height": 120,
-          "opacity": 1,
+          "visible": false,
+          "x": 0,
+          "y": 0,
+          "width": 1,
+          "height": 1,
+          "opacity": 0,
           "scale": 1,
-          "zIndex": 9,
+          "zIndex": 0,
           "content": "又到了午餐时间"
         }
       }
@@ -181,7 +182,7 @@
       },
       "guidePath": {
         "enabled": true,
-        "d": "M 735 258 C 610 202, 435 208, 336 176 C 260 152, 218 116, 186 58",
+        "d": "M 610 250 C 520 190, 380 158, 254 176",
         "color": "#b77b74",
         "strokeWidth": 2.5,
         "dashArray": "12 12",
@@ -1039,10 +1040,11 @@
     },
     "act2_03_lunch_done": {
       "_note": "Act2 lunch recorded placeholder.",
-      "nextStateDelay": 1200,
+      "nextStateDelay": 0,
       "objects": {
         "act2_s03_done_panel": {
           "type": "act2DonePanel",
+          "visible": false,
           "x": 540,
           "y": 300,
           "width": 840,

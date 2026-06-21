@@ -3205,14 +3205,14 @@ button:disabled {
   bottom: calc(100% + 14px);
   z-index: 12;
   width: min(360px, 94vw);
-  padding: 14px 16px;
-  border: 3px solid #171717;
-  border-radius: 22px;
-  background: #fff8df;
-  box-shadow: 5px 5px 0 rgba(0, 0, 0, 0.18);
-  color: #171717;
+  padding: 16px 18px;
+  border: 2px solid var(--hover-info-border, #222);
+  border-radius: 18px;
+  background: var(--hover-info-bg, rgba(255, 255, 255, 0.94));
+  box-shadow: 4px 4px 0 var(--hover-info-shadow, rgba(0, 0, 0, 0.18));
+  color: #222;
   font-family: YouYuan, "骞煎渾", "Microsoft YaHei", sans-serif;
-  line-height: 1.35;
+  line-height: 1.55;
   opacity: 0;
   pointer-events: none;
   transform: translate(-50%, 8px) scale(0.96);
@@ -3221,20 +3221,31 @@ button:disabled {
     transform 160ms ease;
 }
 
+.act2-place-tooltip.is-detached {
+  bottom: auto;
+  z-index: 90;
+  transform: translate(-50%, calc(-100% + 8px)) scale(0.96);
+}
+
 .act2-comic-panel:hover .act2-place-tooltip {
   opacity: 1;
   transform: translate(-50%, 0) scale(1);
 }
 
+.act2-place-tooltip.is-detached.is-visible {
+  opacity: 1;
+  transform: translate(-50%, -100%) scale(1);
+}
+
 .act2-place-tooltip-title {
-  margin-bottom: 6px;
-  font-size: 22px;
-  font-weight: 900;
+  margin-bottom: 8px;
+  font-size: var(--hover-info-title-size, 22px);
+  font-weight: 600;
 }
 
 .act2-place-tooltip-body {
-  font-size: 17px;
-  font-weight: 700;
+  font-size: var(--hover-info-body-size, 17px);
+  font-weight: 400;
 }
 
 .act2-comic-panel-shot {
@@ -3739,7 +3750,19 @@ button:disabled {
   justify-content: center;
   border: 0;
   background: transparent;
+  box-shadow: none;
+  padding: 0;
   cursor: pointer;
+  appearance: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.act2-chopsticks:hover,
+.act2-chopsticks:focus,
+.act2-chopsticks:active {
+  background: transparent;
+  box-shadow: none;
+  outline: none;
 }
 
 .act2-chopstick-line {
@@ -4471,6 +4494,10 @@ button:disabled {
   border: 0;
   background: transparent;
   box-shadow: none;
+}
+
+.result-galaxy-center-planet.has-dynamic-planet.is-visible .result-galaxy-center-planet-body {
+  animation: resultCenterPlanetReveal var(--result-galaxy-reveal-duration, 720ms) cubic-bezier(0.2, 1.35, 0.34, 1) forwards;
 }
 
 .result-galaxy-dynamic-planet-svg {

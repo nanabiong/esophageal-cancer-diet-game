@@ -2582,6 +2582,10 @@ function renderAct2State(stateId) {
   objectLayer.querySelectorAll(".act2-scene-object").forEach((element) => element.remove());
 
   Object.entries(state.objects || {}).forEach(([objectId, objectConfig]) => {
+    if (objectConfig?.visible === false || objectConfig?.hidden === true) {
+      return;
+    }
+
     const element = createAct2ObjectElement(objectId, objectConfig);
 
     updateAct2ObjectLayout(element, objectConfig);
@@ -3330,7 +3334,7 @@ function renderAct2PrepAreaList(list) {
       list.appendChild(item);
       continue;
     }
-    item.textContent = food ? food.label || food.foodName : `空位 ${index + 1}`;
+    item.textContent = "";
     item.classList.toggle("is-empty", !food);
     list.appendChild(item);
   }
@@ -3604,7 +3608,7 @@ function renderAct2ComicPanelSelector(element, objectConfig) {
     shot.className = "act2-comic-panel-shot";
     shot.dataset.shot = panelConfig.shot || "";
     panel.appendChild(shot);
-    renderAct2PlacePanelTooltip(panel, panelConfig, place);
+    renderAct2PlacePanelTooltip(panel, panelConfig, place, objectConfig);
     renderAct2OptionalAsset(panel, panelConfig.image || panelConfig.asset?.src || ACT2_PLACE_OPTION_ASSETS[place.id], {
       className: "act2-place-option-asset",
       alt: place.label || place.name || "",
@@ -3615,17 +3619,40 @@ function renderAct2ComicPanelSelector(element, objectConfig) {
   });
 }
 
-function renderAct2PlacePanelTooltip(panel, panelConfig, place) {
+function renderAct2PlacePanelTooltip(panel, panelConfig, place, objectConfig) {
   const tooltip = document.createElement("div");
   const title = document.createElement("div");
   const body = document.createElement("div");
 
-  tooltip.className = "act2-place-tooltip";
+  tooltip.className = "act2-scene-object act2-place-tooltip is-detached";
   title.className = "act2-place-tooltip-title";
   body.className = "act2-place-tooltip-body";
   title.textContent = panelConfig.tooltipTitle || place.label || place.name || "";
   body.textContent = panelConfig.tooltipText || place.description || "";
   tooltip.append(title, body);
+
+  if (
+    objectLayer &&
+    Number.isFinite(panelConfig.x) &&
+    Number.isFinite(panelConfig.y) &&
+    Number.isFinite(panelConfig.width) &&
+    Number.isFinite(objectConfig?.x) &&
+    Number.isFinite(objectConfig?.y)
+  ) {
+    const tooltipX = objectConfig.x + panelConfig.x + panelConfig.width / 2;
+    const tooltipY = objectConfig.y + panelConfig.y - 14;
+
+    tooltip.style.left = `${tooltipX}px`;
+    tooltip.style.top = `${Math.max(12, tooltipY)}px`;
+    objectLayer.appendChild(tooltip);
+    panel.addEventListener("mouseenter", () => tooltip.classList.add("is-visible"));
+    panel.addEventListener("mouseleave", () => tooltip.classList.remove("is-visible"));
+    panel.addEventListener("focus", () => tooltip.classList.add("is-visible"));
+    panel.addEventListener("blur", () => tooltip.classList.remove("is-visible"));
+    return;
+  }
+
+  tooltip.classList.remove("act2-scene-object", "is-detached");
   panel.appendChild(tooltip);
 }
 
@@ -7439,7 +7466,7 @@ function renderResultDietGalaxyLayout(layer) {
       const value = dynamicValue ?? item.value;
       const labels = personaResult.dimensionMap[dimension] || {};
 
-      return createResultTraitBarMarkup({ dimension, value, item, labels });
+      return createResultTraitBarMarkup({ dimension, value, item, labels, riskColor: personaResult.riskColor });
     })
     .join("");
 
@@ -7713,16 +7740,16 @@ function renderResultOutcomeTraitBars(config, riskResult, personaResult) {
       const value = dynamicValue ?? item.value;
       const labels = personaResult.dimensionMap[dimension] || {};
 
-      return createResultTraitBarMarkup({ dimension, value, item, labels });
+      return createResultTraitBarMarkup({ dimension, value, item, labels, riskColor: personaResult.riskColor });
     })
     .join("");
 }
 
-function createResultTraitBarMarkup({ dimension, value, item, labels }) {
+function createResultTraitBarMarkup({ dimension, value, item, labels, riskColor }) {
   const endpoint = value >= (labels.threshold ?? 50) ? "high" : "low";
   const iconAsset = getResultTraitIconAssetPath(dimension, endpoint);
   const dimensionName = getResultPersonaDimensionName(dimension, labels);
-  const traitRiskColor = getResultPlanetColor(value);
+  const traitRiskColor = riskColor || getResultPlanetColor(value);
 
   return `
     <div class="result-trait-bar" data-dimension="${escapeHtml(dimension)}" style="--trait-position: ${value}%; --trait-risk-color: ${traitRiskColor};">

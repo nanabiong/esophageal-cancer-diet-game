@@ -440,9 +440,13 @@
             line-height: 1.2;
             opacity: 0;
             transform: scale(0.7);
-            pointer-events: auto;
+            pointer-events: none;
             cursor: help;
             transition: filter 0.18s ease, opacity 0.18s ease, transform 0.18s ease, background 0.18s ease;
+        }
+
+        #food-orbit.visible .orbit-food {
+            pointer-events: auto;
         }
 
         .orbit-food img {
@@ -2185,6 +2189,11 @@
         }
 
         function showDishTooltip(event) {
+            if (!activeRegion || !document.getElementById('food-orbit')?.classList.contains('visible')) {
+                hideDishTooltip();
+                return;
+            }
+
             const node = event.currentTarget;
             const title = node.dataset.hoverTitle;
             const body = node.dataset.hoverBody;

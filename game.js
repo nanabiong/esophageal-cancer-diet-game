@@ -67,6 +67,7 @@ const ACT3_STATES = {
 };
 
 const PHASES = {
+  HOME: "home_screen",
   ACT0: "act0_alarm_intro",
   ACT1_BREAKFAST: "act1_breakfast",
   ACT1_HEATING: "act1_heating",
@@ -729,6 +730,10 @@ let resultPlanetAnimationFrame = 0;
 let resultPlanetAnimationStartTime = 0;
 let resultPlanetAnimationMetrics = null;
 let resultPlanetLastRenderTime = 0;
+let homePlanetAnimationFrame = 0;
+let homePlanetAnimationStartTime = 0;
+let homePlanetLastRenderTime = 0;
+let isHomeScreenLeaving = false;
 let resultFoodOrbitAnimationFrame = 0;
 let resultFoodOrbitAnimationStartTime = 0;
 let resultFoodOrbitLastRenderTime = 0;
@@ -5073,12 +5078,141 @@ function startConfiguredEntry() {
   }
   // DEBUG ACT2 END
 
+  enterHomeScreen();
+}
+
+function continueConfiguredEntryAfterHome() {
   if (!PREVIEW_ENTRY_CONFIG.enabled) {
     enterAct0();
     return;
   }
 
   startPreviewEntry();
+}
+
+function enterHomeScreen() {
+  const layer = document.getElementById("homeScreen");
+  const button = document.getElementById("homeStartButton");
+  const planetBody = document.getElementById("homePlanetBody");
+
+  if (!layer || !button || !planetBody) {
+    continueConfiguredEntryAfterHome();
+    return;
+  }
+
+  currentPhase = PHASES.HOME;
+  currentState = "home_screen";
+  isHomeScreenLeaving = false;
+  layer.classList.remove("is-leaving", "is-revealing");
+  layer.classList.add("is-ready");
+  layer.removeAttribute("aria-hidden");
+  button.disabled = false;
+  button.addEventListener("click", startHomeScreenExit, { once: true });
+  startHomePlanetAnimation(planetBody);
+}
+
+function startHomeScreenExit() {
+  if (isHomeScreenLeaving) {
+    return;
+  }
+
+  const layer = document.getElementById("homeScreen");
+
+  isHomeScreenLeaving = true;
+  layer?.classList.add("is-leaving");
+  layer?.classList.remove("is-ready");
+  layer?.setAttribute("aria-hidden", "true");
+
+  window.setTimeout(() => {
+    stopHomePlanetAnimation();
+    continueConfiguredEntryAfterHome();
+
+    // Keep a fully black frame over the newly created Act 0 scene, then reveal it.
+    window.requestAnimationFrame(() => {
+      window.requestAnimationFrame(() => {
+        layer?.classList.remove("is-leaving");
+        layer?.classList.add("is-revealing");
+      });
+    });
+
+    window.setTimeout(() => layer?.remove(), 700);
+  }, 880);
+}
+
+function startHomePlanetAnimation(planetBody) {
+  stopHomePlanetAnimation();
+  homePlanetAnimationStartTime = performance.now();
+  homePlanetLastRenderTime = 0;
+
+  const renderFrame = (time) => {
+    if (!planetBody?.isConnected || isHomeScreenLeaving) {
+      stopHomePlanetAnimation();
+      return;
+    }
+
+    // Rebuild the procedural SVG at roughly 30fps. This keeps the morph fluid
+    // without making the overall low-to-high cycle any slower.
+    if (time - homePlanetLastRenderTime < 32) {
+      homePlanetAnimationFrame = window.requestAnimationFrame(renderFrame);
+      return;
+    }
+
+    homePlanetLastRenderTime = time;
+    const elapsed = time - homePlanetAnimationStartTime;
+    const cycleProgress = (elapsed % 12000) / 12000;
+    // Linear triangle wave: travel through both directions at a constant rate.
+    // The previous cosine easing slowed at each extreme and sped up midway.
+    const blend = cycleProgress < 0.5
+      ? cycleProgress * 2
+      : (1 - cycleProgress) * 2;
+    const metric = blend * 100;
+    const svg = createResultPlanetSvg({
+      risk: metric,
+      sensory: metric,
+      rhythm: 100 - metric,
+      specificity: metric,
+      danger: metric,
+      colorOverride: getHomePlanetDemoColor(blend),
+      crackSize: RESULT_PLANET_VISUAL_CONFIG.crackSize,
+      patternDensity: RESULT_PLANET_VISUAL_CONFIG.patternDensity,
+      strokeWidth: RESULT_PLANET_VISUAL_CONFIG.strokeWidth,
+      cWaveSpan: RESULT_PLANET_VISUAL_CONFIG.cWaveSpan,
+      cDotSpan: RESULT_PLANET_VISUAL_CONFIG.cDotSpan,
+      kChiliSpan: RESULT_PLANET_VISUAL_CONFIG.kChiliSpan,
+      kDotsSpan: RESULT_PLANET_VISUAL_CONFIG.kDotsSpan,
+      tick: elapsed * 0.045,
+      jitterFrame: 0,
+      rotationOffset: (elapsed * 0.018) % 360,
+      ringRotationOffset: (elapsed * 0.008) % 360,
+      surfaceRotationOffset: (-elapsed * 0.016) % 360,
+      gapRotationOffset: (elapsed * 0.01) % 360
+    });
+    const breathScale = 1 + Math.sin(elapsed / 1200) * 0.008;
+
+    svg.style.transform = `scale(${breathScale.toFixed(4)})`;
+    planetBody.replaceChildren(svg);
+    homePlanetAnimationFrame = window.requestAnimationFrame(renderFrame);
+  };
+
+  homePlanetAnimationFrame = window.requestAnimationFrame(renderFrame);
+}
+
+function stopHomePlanetAnimation() {
+  if (homePlanetAnimationFrame) {
+    window.cancelAnimationFrame(homePlanetAnimationFrame);
+  }
+
+  homePlanetAnimationFrame = 0;
+  homePlanetAnimationStartTime = 0;
+  homePlanetLastRenderTime = 0;
+}
+
+function getHomePlanetDemoColor(blend) {
+  if (blend <= 0.5) {
+    return interpolateHexColor("#74D188", "#FFC1DF", blend * 2);
+  }
+
+  return interpolateHexColor("#FFC1DF", "#FF4800", (blend - 0.5) * 2);
 }
 
 // DEBUG ACT2 START
@@ -8358,7 +8492,9 @@ function createResultPlanetSvg(metrics) {
   const cx = 250;
   const cy = 250;
   const planetRadius = 100;
-  const colors = getResultPlanetGradientColors(metrics.risk);
+  const colors = metrics.colorOverride
+    ? { top: metrics.colorOverride, mid: metrics.colorOverride, bottom: metrics.colorOverride }
+    : getResultPlanetGradientColors(metrics.risk);
   const backRing = document.createElementNS(svgNs, "g");
   const frontRing = document.createElementNS(svgNs, "g");
   const bodyClipGroup = document.createElementNS(svgNs, "g");
@@ -8592,9 +8728,11 @@ function splitResultPlanetRingDots(metrics) {
   const cosRotation = Math.cos(rotation);
   const sinRotation = Math.sin(rotation);
 
+  const rotationOffset = metrics.ringRotationOffset ?? metrics.rotationOffset ?? 0;
+
   for (let index = 0; index < count; index += 1) {
     const angleJitter = (deterministicNoise(index, 19) - 0.5) * rhythmFactor * 9;
-    const currentAngle = ((index * 360) / count + angleJitter + (metrics.rotationOffset || 0)) % 360;
+    const currentAngle = ((index * 360) / count + angleJitter + rotationOffset) % 360;
     const angleDeg = currentAngle < 0 ? currentAngle + 360 : currentAngle;
     const angle = (angleDeg * Math.PI) / 180;
     const sizeMultiplier = 0.6 + deterministicNoise(index, 7) * 0.8;
@@ -8685,6 +8823,8 @@ function createResultPlanetDecorations(metrics) {
   const latitudes = [25, -25];
   const isKEnd = metrics.specificity >= 50;
 
+  const rotationOffset = metrics.surfaceRotationOffset ?? metrics.rotationOffset ?? 0;
+
   latitudes.forEach((latitude, ringIndex) => {
     for (let index = 0; index < density; index += 1) {
       const id = ringIndex * density + index;
@@ -8694,7 +8834,7 @@ function createResultPlanetDecorations(metrics) {
         ? (isEven ? metrics.kChiliSpan : metrics.kDotsSpan)
         : (isEven ? metrics.cWaveSpan : metrics.cDotSpan);
       const latitudeOffset = (deterministicNoise(id, 23) * 2 - 1) * (activeSpan / 100) * 32;
-      const longitudeRad = ((longitude - (metrics.rotationOffset || 0)) * Math.PI) / 180;
+      const longitudeRad = ((longitude - rotationOffset) * Math.PI) / 180;
       const latitudeRad = ((latitude + latitudeOffset) * Math.PI) / 180;
       const radius = 92;
       const x3d = radius * Math.cos(latitudeRad) * Math.sin(longitudeRad);
@@ -8806,7 +8946,10 @@ function createResultPlanetRotatingGapPaths(metrics) {
 }
 
 function createResultPlanetGapPath(baseLongitude, startLatitude, endLatitude, outerWidth, innerWidth, metrics) {
-  const path = getResultPlanetProjectedPath(baseLongitude, startLatitude, endLatitude, 95, metrics);
+  const path = getResultPlanetProjectedPath(baseLongitude, startLatitude, endLatitude, 95, {
+    ...metrics,
+    rotationOffset: metrics.gapRotationOffset ?? metrics.rotationOffset ?? 0
+  });
 
   if (!path) {
     return [];

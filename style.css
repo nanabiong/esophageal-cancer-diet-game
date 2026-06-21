@@ -3443,6 +3443,32 @@ button:disabled {
   animation: act2FriendTopBubbleIn 260ms ease-out forwards;
 }
 
+.act2-friend-top-bubble,
+.act2-friend-bottom-bubble {
+  cursor: pointer;
+}
+
+.act2-friend-top-bubble {
+  pointer-events: auto;
+}
+
+.act2-friend-top-bubble:hover,
+.act2-friend-bottom-bubble:hover {
+  transform: scale(1.04);
+}
+
+.act2-friend-top-bubble.is-entering,
+.act2-friend-bottom-bubble.is-entering {
+  pointer-events: none;
+  animation: act2WorkBubblePopIn var(--act2-friend-bubble-enter-duration, 420ms) cubic-bezier(0.2, 1.28, 0.34, 1) both;
+}
+
+.act2-friend-top-bubble.is-clearing,
+.act2-friend-bottom-bubble.is-clearing {
+  pointer-events: none;
+  animation: act2WorkBubbleFadeOut 220ms ease-out forwards;
+}
+
 .act2-friend-top-bubble.is-leaving {
   animation: act2FriendTopBubbleOut 320ms ease-out forwards;
 }

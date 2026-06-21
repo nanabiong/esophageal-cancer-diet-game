@@ -2353,6 +2353,7 @@ let act2WorkBubbleClearedCount = 0;
 let act2WorkBubbleTimers = [];
 let act2FriendBubbleTotal = 0;
 let act2FriendBubbleCompleted = 0;
+let act2FriendBubbleRound = 0;
 let act2FriendBubbleTimers = [];
 let act2DogState = 1;
 let act2DogTimer = null;
@@ -4461,19 +4462,96 @@ function cleanupAct2WorkBubbles() {
 
 function startAct2FriendMealInteraction() {
   cleanupAct2FriendMealInteraction();
+  act2FriendBubbleRound = 0;
+  act2FriendBubbleTotal = 0;
+  act2FriendBubbleCompleted = 0;
+  const timing = getAct2FriendBubbleTiming();
+  const timer = window.setTimeout(() => {
+    advanceAct2FriendBubbleRound();
+  }, timing.initialDelay);
+
+  act2FriendBubbleTimers.push(timer);
+}
+
+function getAct2FriendBubbleTiming() {
   const config = getAct2StateConfig(ACT2_LUNCH_PLACE_FOCUS_STATE).friendMealInteraction || {};
+  const timing = config.bubbleTiming || config.timing || {};
 
-  spawnAct2FriendToast(config);
-  const topTimer = window.setTimeout(() => {
-    spawnAct2FriendTopBubbles(config);
-  }, 160);
-  const clearTimer = window.setTimeout(() => {
-    clearAct2FriendToast();
-    clearAct2FriendTopBubbles();
-    spawnAct2FriendBottomBubbles(config);
-  }, 3000);
+  return {
+    initialDelay: timing.initialDelay ?? 620,
+    roundDelay: timing.roundDelay ?? 360,
+    stagger: timing.stagger ?? 110,
+    enterDuration: timing.enterDuration ?? 420,
+    clearDuration: timing.clearDuration ?? 220
+  };
+}
 
-  act2FriendBubbleTimers.push(topTimer, clearTimer);
+function getAct2FriendBubbleRounds() {
+  const config = getAct2StateConfig(ACT2_LUNCH_PLACE_FOCUS_STATE).friendMealInteraction || {};
+  const topBubbles = (config.topBubbles || []).slice(0, 3).map((bubble) => ({
+    ...bubble,
+    assetKind: "top"
+  }));
+  const bottomBubbles = (config.bottomBubbles || []).slice(0, 2).map((bubble) => ({
+    ...bubble,
+    assetKind: "bottom"
+  }));
+
+  return [topBubbles, bottomBubbles];
+}
+
+function advanceAct2FriendBubbleRound() {
+  const rounds = getAct2FriendBubbleRounds();
+  const bubbles = rounds[act2FriendBubbleRound] || [];
+  const timing = getAct2FriendBubbleTiming();
+
+  if (!bubbles.length) {
+    completeAct2FriendMealInteraction();
+    return;
+  }
+
+  act2FriendBubbleTotal = bubbles.length;
+  act2FriendBubbleCompleted = 0;
+  bubbles.forEach((bubbleConfig, index) => {
+    const timer = window.setTimeout(() => {
+      spawnAct2FriendBubble(bubbleConfig, index);
+    }, index * timing.stagger);
+
+    act2FriendBubbleTimers.push(timer);
+  });
+}
+
+function spawnAct2FriendBubble(bubbleConfig, index) {
+  if (currentState !== ACT2_LUNCH_PLACE_FOCUS_STATE || !isAct2FriendMealPlaceSelected()) {
+    return;
+  }
+
+  const kind = bubbleConfig.assetKind || (act2FriendBubbleRound === 0 ? "top" : "bottom");
+  const timing = getAct2FriendBubbleTiming();
+  const bubble = document.createElement("button");
+
+  bubble.type = "button";
+  bubble.className = `act2-scene-object act2-friend-${kind}-bubble is-entering`;
+  bubble.dataset.round = String(act2FriendBubbleRound);
+  bubble.dataset.index = String(index);
+  bubble.style.setProperty("--act2-friend-bubble-enter-duration", `${bubbleConfig.enterDuration || timing.enterDuration}ms`);
+  renderAct2BubbleAsset(
+    bubble,
+    bubbleConfig.text || "",
+    getAct2FriendBubbleAssetSrc(kind, bubbleConfig, index),
+    { assetClassName: "act2-friend-bubble-asset" }
+  );
+  updateAct2ObjectLayout(bubble, {
+    ...bubbleConfig,
+    opacity: 1,
+    scale: 1,
+    zIndex: bubbleConfig.zIndex || (kind === "top" ? 32 : 34)
+  });
+  bubble.addEventListener("click", () => handleAct2FriendBubbleClick(bubble));
+  objectLayer.appendChild(bubble);
+  window.setTimeout(() => {
+    bubble.classList.remove("is-entering");
+  }, bubbleConfig.enterDuration || timing.enterDuration);
 }
 
 function spawnAct2FriendToast(config) {
@@ -4574,23 +4652,29 @@ function spawnAct2FriendBottomBubbles(config) {
 }
 
 function handleAct2FriendBubbleClick(bubble) {
-  if (!bubble || bubble.classList.contains("is-heart")) {
+  if (!bubble || bubble.classList.contains("is-clearing")) {
     return;
   }
 
-  bubble.classList.add("is-heart");
-  bubble.textContent = "❤️";
+  const timing = getAct2FriendBubbleTiming();
+  bubble.classList.add("is-clearing");
   const removeTimer = window.setTimeout(() => {
     bubble.remove();
     act2FriendBubbleCompleted += 1;
     if (act2FriendBubbleCompleted >= act2FriendBubbleTotal) {
+      act2FriendBubbleRound += 1;
+      const rounds = getAct2FriendBubbleRounds();
       const completeTimer = window.setTimeout(() => {
-        completeAct2FriendMealInteraction();
-      }, 180);
+        if (act2FriendBubbleRound >= rounds.length) {
+          completeAct2FriendMealInteraction();
+        } else {
+          advanceAct2FriendBubbleRound();
+        }
+      }, timing.roundDelay);
 
       act2FriendBubbleTimers.push(completeTimer);
     }
-  }, 560);
+  }, timing.clearDuration);
 
   act2FriendBubbleTimers.push(removeTimer);
 }
@@ -4618,6 +4702,7 @@ function cleanupAct2FriendMealInteraction() {
   act2FriendBubbleTimers = [];
   act2FriendBubbleTotal = 0;
   act2FriendBubbleCompleted = 0;
+  act2FriendBubbleRound = 0;
   objectLayer?.querySelectorAll(
     ".act2-friend-toast-hand, .act2-friend-toast-bubble, .act2-friend-top-bubble, .act2-friend-bottom-bubble"
   ).forEach((element) => element.remove());

@@ -512,6 +512,13 @@
         ]
       ],
       "friendMealInteraction": {
+        "bubbleTiming": {
+          "initialDelay": 620,
+          "roundDelay": 360,
+          "stagger": 110,
+          "enterDuration": 420,
+          "clearDuration": 220
+        },
         "toastHand": {
           "x": 214,
           "y": 96,
@@ -531,6 +538,7 @@
             "y": 68,
             "width": 180,
             "height": 68,
+            "image": "assets/images/act2/lunch/friend-top-bubble-1.png",
             "text": "干杯！"
           },
           {
@@ -538,6 +546,7 @@
             "y": 86,
             "width": 320,
             "height": 72,
+            "image": "assets/images/act2/lunch/friend-top-bubble-2.png",
             "text": "今天终于能好好吃一顿了"
           },
           {
@@ -545,6 +554,7 @@
             "y": 130,
             "width": 210,
             "height": 68,
+            "image": "assets/images/act2/lunch/friend-top-bubble-3.png",
             "text": "这个好吃！"
           },
           {
@@ -561,6 +571,7 @@
             "y": 508,
             "width": 140,
             "height": 74,
+            "image": "assets/images/act2/lunch/friend-bottom-bubble-1.png",
             "text": "辣椒"
           },
           {
@@ -568,6 +579,7 @@
             "y": 542,
             "width": 140,
             "height": 74,
+            "image": "assets/images/act2/lunch/friend-bottom-bubble-2.png",
             "text": "火焰"
           },
           {

@@ -17,6 +17,38 @@
     "act1_01_breakfast_choice": {
       "_note": "Act1 1-1 breakfast choice low-fidelity state.",
       "nextStateDelay": 1300,
+      "guideBubbles": {
+        "enabled": true,
+        "timing": {
+          "rightDelay": 520,
+          "enterDuration": 420,
+          "typeInterval": 28
+        },
+        "bubbles": [
+          {
+            "side": "right",
+            "x": 318,
+            "y": 34,
+            "width": 520,
+            "height": 112,
+            "zIndex": 42,
+            "fontSize": 28,
+            "textOffsetY": -12,
+            "text": "\u518d\u4e0d\u8d70\u8981\u8fdf\u5230\u5566!\u5feb\u5feb\u5403\u70b9\u65e9\u9910!"
+          },
+          {
+            "side": "right",
+            "x": 1030,
+            "y": 710,
+            "width": 430,
+            "height": 105,
+            "zIndex": 42,
+            "fontSize": 28,
+            "textOffsetY": -12,
+            "text": "\u70b9\u51fb\u9009\u62e9\u60f3\u5403\u7684\u65e9\u9910!"
+          }
+        ]
+      },
       "objects": {
         "act1_s01_bubble_hurry": {
           "type": "bubble",
@@ -24,9 +56,10 @@
           "y": 352,
           "width": 430,
           "height": 138,
-          "opacity": 1,
+          "opacity": 0,
           "scale": 1,
           "zIndex": 20,
+          "visible": false,
           "content": "\u518d\u4e0d\u8d70\u8981\u8fdf\u5230\u4e86\uff0c\u65e9\u996d\u5c31\u9009\u5b83\u5427\uff01"
         },
         "act1_s01_bg_cornEggMilk": {
@@ -192,6 +225,26 @@
         "foodOffsetY": 200,
         "targetScale": 1.3
       },
+      "guideBubbles": {
+        "enabled": true,
+        "timing": {
+          "enterDuration": 420,
+          "typeInterval": 28
+        },
+        "bubbles": [
+          {
+            "side": "left",
+            "x": 36,
+            "y": 36,
+            "width": 440,
+            "height": 105,
+            "zIndex": 42,
+            "fontSize": 28,
+            "textOffsetY": -12,
+            "text": "\u8fdb\u53bb\u52a0\u70ed\u4e0b\u5427!\u5403\u53e3\u70ed\u7684..."
+          }
+        ]
+      },
       "objects": {
         "act1_s02_main_microwave": {
           "type": "microwavePanel",
@@ -264,6 +317,26 @@
             { "containerAnchorX": 100, "containerAnchorY": 100, "imageAnchorX": 100, "imageAnchorY": 100 }
           ]
         }
+      },
+      "guideBubbles": {
+        "enabled": true,
+        "timing": {
+          "enterDuration": 420,
+          "typeInterval": 28
+        },
+        "bubbles": [
+          {
+            "side": "right",
+            "x": 1425,
+            "y": 640,
+            "width": 440,
+            "height": 105,
+            "zIndex": 42,
+            "fontSize": 28,
+            "textOffsetY": -12,
+            "text": "\u5f00\u52a8\u5566!\u8fde\u7eed\u70b9\u51fb\u5403\u6389\u98df\u7269!"
+          }
+        ]
       },
       "objects": {
         "act1_s03_table": {
@@ -368,9 +441,10 @@
           "y": 478,
           "width": 330,
           "height": 118,
-          "opacity": 1,
+          "opacity": 0,
           "scale": 1,
           "zIndex": 20,
+          "visible": false,
           "content": "\u5f00\u52a8\u5566!"
         }
       }

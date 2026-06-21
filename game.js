@@ -668,6 +668,7 @@ let act1EatingClickCount = 0;
 let act1EatingStartedAt = 0;
 let act1EatingRequiredClicks = 1;
 let isAct1EatingComplete = false;
+let act1GuideTimers = [];
 let selectedAct2LunchId = null;
 let isAct2LunchLocked = false;
 let playerChoices = [];
@@ -1456,6 +1457,7 @@ window.getPlayerRiskResult = getPlayerRiskResult;
 
 function enterAct1BreakfastChoice() {
   const state = getAct1StateConfig(ACT1_STATES.BREAKFAST_CHOICE);
+  const visibleObjects = getAct1VisibleObjects(state);
 
   currentPhase = PHASES.ACT1_BREAKFAST;
   currentState = ACT1_STATES.BREAKFAST_CHOICE;
@@ -1464,12 +1466,13 @@ function enterAct1BreakfastChoice() {
   selectedAct1BreakfastId = null;
   hideHoverInfoTooltip();
   hideGuidanceBubbles();
+  cleanupAct1GuideBubbles();
   stopHotpotFloatingBubbles();
   updateStageHeader("\u7b2c\u4e00\u5e55\u4f4e\u4fdd\u771f\u539f\u578b", "\u65e9\u6668\u2014\u2014\u65e9\u996d\u9009\u62e9");
   objectLayer?.classList.remove("act3-exit-sequence");
   objectLayer.querySelectorAll(".act1-scene-object").forEach((element) => element.remove());
 
-  Object.entries(state.objects || {}).forEach(([objectId, objectConfig]) => {
+  Object.entries(visibleObjects).forEach(([objectId, objectConfig]) => {
     const element = createAct1ObjectElement(objectId, objectConfig);
 
     updateAct1ObjectLayout(element, objectConfig);
@@ -1478,6 +1481,7 @@ function enterAct1BreakfastChoice() {
     }
     objectLayer.appendChild(element);
   });
+  startAct1GuideBubbles(state.guideBubbles);
 
   console.log("Entered act1_01_breakfast_choice", { playerChoices });
 }
@@ -1490,6 +1494,15 @@ function getAct1StateConfig(stateId) {
   }
 
   return state;
+}
+
+function getAct1VisibleObjects(state) {
+  return Object.fromEntries(
+    Object.entries(state?.objects || {}).filter(([, objectConfig]) => (
+      objectConfig.hide !== true &&
+      objectConfig.visible !== false
+    ))
+  );
 }
 
 function createAct1ObjectElement(objectId, objectConfig) {
@@ -1663,6 +1676,98 @@ function updateAct1ObjectLayout(element, objectConfig) {
   element.style.transform = `scale(${objectConfig.scale ?? 1})`;
 }
 
+function startAct1GuideBubbles(guideConfig) {
+  if (!guideConfig?.enabled) {
+    return;
+  }
+
+  const timing = {
+    rightDelay: guideConfig.timing?.rightDelay ?? 760,
+    enterDuration: guideConfig.timing?.enterDuration ?? 420,
+    typeInterval: guideConfig.timing?.typeInterval ?? 36
+  };
+  const bubbles = Array.isArray(guideConfig.bubbles)
+    ? guideConfig.bubbles
+    : [
+        guideConfig.left ? { side: "left", ...guideConfig.left } : null,
+        guideConfig.right ? { side: "right", ...guideConfig.right } : null
+      ].filter(Boolean);
+
+  bubbles.forEach((bubbleConfig, index) => {
+    const delay = bubbleConfig.delay ?? (index === 0 ? 0 : timing.rightDelay);
+    const timer = window.setTimeout(() => {
+      renderAct1GuideBubble(bubbleConfig.side || (index === 0 ? "left" : "right"), bubbleConfig, timing);
+    }, delay);
+
+    act1GuideTimers.push(timer);
+  });
+}
+
+function renderAct1GuideBubble(side, bubbleConfig, timing) {
+  const bubble = document.createElement("div");
+  const textElement = document.createElement("span");
+
+  bubble.className = `act1-scene-object act1-guide-bubble act1-guide-bubble-${side}`;
+  bubble.style.setProperty("--act1-guide-enter-duration", `${bubbleConfig.enterDuration || timing.enterDuration}ms`);
+  bubble.style.setProperty("--act1-guide-text-color", bubbleConfig.textColor || "#8a625d");
+  bubble.style.setProperty("--act1-guide-font-size", `${bubbleConfig.fontSize || 28}px`);
+  bubble.style.setProperty("--act1-guide-line-height", bubbleConfig.lineHeight || 1.35);
+  bubble.style.setProperty("--act1-guide-text-offset-y", `${bubbleConfig.textOffsetY ?? -12}px`);
+  textElement.className = "act1-guide-text";
+  bubble.appendChild(textElement);
+  renderAct2OptionalAsset(bubble, getAct1GuideAssetSrc(side, bubbleConfig), {
+    className: "act1-guide-asset",
+    alt: "",
+    loadedClass: "has-asset"
+  });
+  updateAct1ObjectLayout(bubble, {
+    x: bubbleConfig.x,
+    y: bubbleConfig.y,
+    width: bubbleConfig.width,
+    height: bubbleConfig.height,
+    opacity: 1,
+    scale: 1,
+    zIndex: bubbleConfig.zIndex || 42
+  });
+  objectLayer.appendChild(bubble);
+  typeAct1GuideText(textElement, bubbleConfig.text || "", bubbleConfig.typeInterval ?? timing.typeInterval);
+}
+
+function getAct1GuideAssetSrc(side, bubbleConfig = {}) {
+  return bubbleConfig.image ||
+    bubbleConfig.asset?.src ||
+    `assets/images/act2/lunch/guide-bubble-${side}.png`;
+}
+
+function typeAct1GuideText(textElement, text, interval) {
+  let index = 0;
+
+  textElement.textContent = "";
+  const revealNext = () => {
+    if (!textElement.isConnected) {
+      return;
+    }
+
+    index += 1;
+    textElement.textContent = text.slice(0, index);
+
+    if (index >= text.length) {
+      return;
+    }
+
+    const timer = window.setTimeout(revealNext, interval);
+    act1GuideTimers.push(timer);
+  };
+
+  revealNext();
+}
+
+function cleanupAct1GuideBubbles() {
+  act1GuideTimers.forEach((timer) => window.clearTimeout(timer));
+  act1GuideTimers = [];
+  objectLayer?.querySelectorAll(".act1-guide-bubble").forEach((bubble) => bubble.remove());
+}
+
 function getAct1BreakfastChoice(choiceId) {
   return act1Choices?.choices?.find((choice) => choice.id === choiceId) || null;
 }
@@ -1682,6 +1787,7 @@ function handleAct1BreakfastChoice(optionElement) {
   selectedAct1BreakfastId = choice.id;
   isStateLocked = true;
   hideHoverInfoTooltip();
+  cleanupAct1GuideBubbles();
   recordAct1BreakfastChoice(choice);
   optionElement.classList.add("is-selected");
   optionElement.disabled = true;
@@ -1776,7 +1882,7 @@ function playAct1BreakfastToHeatTransition(selectedElement) {
 }
 
 function appendAct1StateObjectsFromRight(state, duration) {
-  Object.entries(state.objects || {}).forEach(([objectId, objectConfig]) => {
+  Object.entries(getAct1VisibleObjects(state)).forEach(([objectId, objectConfig]) => {
     if (document.getElementById(objectId)) {
       return;
     }
@@ -1798,7 +1904,8 @@ function appendAct1StateObjectsFromRight(state, duration) {
 function enterAct1MicrowaveHeat() {
   const state = getAct1StateConfig(ACT1_STATES.MICROWAVE_HEAT);
   const carriedFood = objectLayer.querySelector(".act1-breakfast-option.is-travelling-to-microwave");
-  const heatObjectIds = new Set(Object.keys(state.objects || {}));
+  const visibleObjects = getAct1VisibleObjects(state);
+  const heatObjectIds = new Set(Object.keys(visibleObjects));
 
   currentPhase = PHASES.ACT1_HEATING;
   currentState = ACT1_STATES.MICROWAVE_HEAT;
@@ -1809,6 +1916,7 @@ function enterAct1MicrowaveHeat() {
   act1ClearedHeatZoneIds = new Set();
   stopAct1HeatLoop();
   hideHoverInfoTooltip();
+  cleanupAct1GuideBubbles();
   updateStageHeader("\u7b2c\u4e00\u5e55\u4f4e\u4fdd\u771f\u539f\u578b", "\u65e9\u6668\u2014\u2014\u5fae\u6ce2\u52a0\u70ed");
   objectLayer.querySelectorAll(".act1-scene-object").forEach((element) => {
     if (element === carriedFood || heatObjectIds.has(element.id)) {
@@ -1824,7 +1932,7 @@ function enterAct1MicrowaveHeat() {
     carriedFood.disabled = true;
   }
 
-  Object.entries(state.objects || {}).forEach(([objectId, objectConfig]) => {
+  Object.entries(visibleObjects).forEach(([objectId, objectConfig]) => {
     if (document.getElementById(objectId)) {
       return;
     }
@@ -1836,6 +1944,7 @@ function enterAct1MicrowaveHeat() {
   });
 
   updateAct1HeatVisuals();
+  startAct1GuideBubbles(state.guideBubbles);
   startAct1HeatLoop();
   console.log("Entered act1_02_microwave_heat", { selectedAct1BreakfastId });
 }
@@ -2047,6 +2156,7 @@ function recordAct1HeatingResult() {
 
 function enterAct1EatingSpeed() {
   const state = getAct1StateConfig(ACT1_STATES.EATING_SPEED);
+  const visibleObjects = getAct1VisibleObjects(state);
   const config = getAct1EatingConfig();
   const carriedFood = objectLayer.querySelector(".act1-carried-heat-food");
   const sceneTransitionDuration = config.sceneTransitionDuration;
@@ -2061,6 +2171,7 @@ function enterAct1EatingSpeed() {
   act1EatingRequiredClicks = config.requiredClicks;
   isAct1EatingComplete = false;
   hideHoverInfoTooltip();
+  cleanupAct1GuideBubbles();
   updateStageHeader("\u7b2c\u4e00\u5e55\u4f4e\u4fdd\u771f\u539f\u578b", "\u65e9\u6668\u2014\u2014\u5403\u65e9\u996d");
   objectLayer.querySelectorAll(".act1-scene-object").forEach((element) => {
     if (element === carriedFood) {
@@ -2076,7 +2187,7 @@ function enterAct1EatingSpeed() {
   });
 
   window.setTimeout(() => {
-    Object.entries(state.objects || {}).forEach(([objectId, objectConfig]) => {
+    Object.entries(visibleObjects).forEach(([objectId, objectConfig]) => {
       const element = createAct1ObjectElement(objectId, objectConfig);
 
       element.style.transitionDuration = `${sceneTransitionDuration}ms`;
@@ -2095,6 +2206,7 @@ function enterAct1EatingSpeed() {
     }
 
     updateAct1EatingVisuals();
+    startAct1GuideBubbles(state.guideBubbles);
   }, eatingEnterDelay);
   console.log("Entered act1_03_eating_speed", { selectedAct1BreakfastId });
 }

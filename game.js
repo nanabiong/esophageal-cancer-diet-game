@@ -2379,6 +2379,8 @@ let act2CaughtFoods = [];
 let act2CatchSpawnTimer = null;
 let act2CatchAnimationFrame = null;
 let act2CatchPlateX = 0;
+let act2CatchSpawnPending = false;
+let act2CatchAuntTimers = [];
 const ACT2_LUNCH_PLACE_SELECT_STATE = "act2_04_lunch_place_select";
 const ACT2_LUNCH_PLACE_FOCUS_STATE = "act2_05_lunch_place_focus";
 const ACT2_WORK_BUBBLE_PLACE_ID = "act2_place_coworkers";
@@ -3865,7 +3867,70 @@ function createAct2CatchGameStage() {
     scale: 1,
     zIndex: auntHandConfig.zIndex || 12
   });
+  auntHand.style.setProperty("--act2-aunt-move-duration", `${config.auntHandMotion?.moveDuration ?? 360}ms`);
+  auntHand.style.setProperty("--act2-aunt-pour-duration", `${config.auntHandMotion?.pourDuration ?? 440}ms`);
+  auntHand.style.setProperty("--act2-aunt-pour-rotate", `${config.auntHandMotion?.pourRotate ?? 18}deg`);
+  auntHand.style.setProperty("--act2-aunt-pour-x", `${config.auntHandMotion?.pourTranslateX ?? 18}px`);
+  auntHand.style.setProperty("--act2-aunt-pour-y", `${config.auntHandMotion?.pourTranslateY ?? 34}px`);
   objectLayer.appendChild(auntHand);
+}
+
+function setAct2CatchAuntTimer(callback, delay) {
+  const timer = window.setTimeout(() => {
+    act2CatchAuntTimers = act2CatchAuntTimers.filter((item) => item !== timer);
+    callback();
+  }, delay);
+
+  act2CatchAuntTimers.push(timer);
+  return timer;
+}
+
+function animateAct2CatchAuntHandForDrop(dropCenterX) {
+  const config = getAct2CatchGameConfig();
+  const auntHand = objectLayer?.querySelector(".act2-catch-aunt-hand");
+  const auntHandConfig = config.auntHand || {};
+  const motionConfig = config.auntHandMotion || {};
+
+  if (!auntHand) {
+    return 0;
+  }
+
+  const handWidth = auntHandConfig.width ?? 493;
+  const handHeight = auntHandConfig.height ?? 361;
+  const handX = dropCenterX - handWidth + (motionConfig.rightEdgeOffset ?? 0);
+  const handY = motionConfig.trackY ?? auntHandConfig.y ?? -2;
+  const moveDuration = motionConfig.moveDuration ?? 360;
+  const pourStartDelay = motionConfig.pourStartDelay ?? 70;
+  const pourDuration = motionConfig.pourDuration ?? 440;
+  const dropDelay = motionConfig.dropDelay ?? (moveDuration + pourStartDelay + Math.round(pourDuration * 0.58));
+
+  auntHand.classList.remove("is-pouring");
+  auntHand.style.setProperty("--act2-aunt-move-duration", `${moveDuration}ms`);
+  auntHand.style.setProperty("--act2-aunt-pour-duration", `${pourDuration}ms`);
+  auntHand.style.setProperty("--act2-aunt-pour-rotate", `${motionConfig.pourRotate ?? 18}deg`);
+  auntHand.style.setProperty("--act2-aunt-pour-x", `${motionConfig.pourTranslateX ?? 18}px`);
+  auntHand.style.setProperty("--act2-aunt-pour-y", `${motionConfig.pourTranslateY ?? 34}px`);
+  updateAct2ObjectLayout(auntHand, {
+    x: handX,
+    y: handY,
+    width: handWidth,
+    height: handHeight,
+    opacity: 1,
+    scale: auntHandConfig.scale ?? 1,
+    transformOrigin: motionConfig.transformOrigin || auntHandConfig.transformOrigin || "88% 36%",
+    zIndex: auntHandConfig.zIndex || 12
+  });
+
+  setAct2CatchAuntTimer(() => {
+    if (currentState === ACT2_STATES.LUNCH_CATCH_GAME) {
+      auntHand.classList.add("is-pouring");
+    }
+  }, moveDuration + pourStartDelay);
+  setAct2CatchAuntTimer(() => {
+    auntHand.classList.remove("is-pouring");
+  }, moveDuration + pourStartDelay + pourDuration);
+
+  return dropDelay;
 }
 
 function createAct2CatchPlate() {
@@ -4015,6 +4080,10 @@ function spawnAct2FallingFood() {
     return;
   }
 
+  if (act2CatchSpawnPending) {
+    return;
+  }
+
   const config = getAct2CatchGameConfig();
   const maxActiveDrops = config.maxActiveDrops ?? 3;
 
@@ -4045,28 +4114,48 @@ function spawnAct2FallingFood() {
   const height = foodSize.height ?? 150;
   const minX = dropArea.x ?? 120;
   const maxX = minX + (dropArea.width ?? 1680) - width;
-  const falling = document.createElement("div");
-  const name = document.createElement("span");
+  const dropX = minX + Math.random() * Math.max(1, maxX - minX);
   const drop = {
     id: `act2_drop_${Date.now()}_${Math.random().toString(16).slice(2)}`,
     food: nextFood,
-    element: falling,
-    x: minX + Math.random() * Math.max(1, maxX - minX),
-    y: (dropArea.y ?? 40) - height,
+    element: null,
+    x: dropX,
+    y: config.spawnY ?? ((dropArea.y ?? 40) - height),
     width,
     height,
     speed: randomBetween(config.fallSpeedMin ?? 3, config.fallSpeedMax ?? 6)
   };
+  const auntDelay = animateAct2CatchAuntHandForDrop(drop.x + drop.width / 2);
 
-  falling.className = "act2-scene-object act2-falling-food";
-  falling.dataset.dropId = drop.id;
-  name.className = "act2-falling-food-name";
-  name.textContent = nextFood.label || nextFood.foodName;
-  falling.appendChild(name);
-  renderAct2FallingFoodAsset(falling, nextFood);
-  objectLayer.appendChild(falling);
-  act2CatchActiveDrops.push(drop);
-  updateAct2FallingFoodElement(drop);
+  act2CatchSpawnPending = true;
+  setAct2CatchAuntTimer(() => {
+    const activeFoodIds = new Set(act2CatchActiveDrops.map((activeDrop) => activeDrop.food.foodId));
+    const isFoodStillAvailable = act2CatchRemainingFoods.some((food) => food.foodId === nextFood.foodId);
+
+    act2CatchSpawnPending = false;
+    if (
+      currentState !== ACT2_STATES.LUNCH_CATCH_GAME ||
+      act2CatchActiveDrops.length >= maxActiveDrops ||
+      activeFoodIds.has(nextFood.foodId) ||
+      !isFoodStillAvailable
+    ) {
+      return;
+    }
+
+    const falling = document.createElement("div");
+    const name = document.createElement("span");
+
+    falling.className = "act2-scene-object act2-falling-food";
+    falling.dataset.dropId = drop.id;
+    name.className = "act2-falling-food-name";
+    name.textContent = nextFood.label || nextFood.foodName;
+    falling.appendChild(name);
+    renderAct2FallingFoodAsset(falling, nextFood);
+    objectLayer.appendChild(falling);
+    drop.element = falling;
+    act2CatchActiveDrops.push(drop);
+    updateAct2FallingFoodElement(drop);
+  }, auntDelay);
 }
 
 function renderAct2FallingFoodAsset(element, food) {
@@ -4209,6 +4298,9 @@ function cleanupAct2CatchGame(options = {}) {
     window.clearTimeout(act2CatchSpawnTimer);
     act2CatchSpawnTimer = null;
   }
+  act2CatchAuntTimers.forEach((timer) => window.clearTimeout(timer));
+  act2CatchAuntTimers = [];
+  act2CatchSpawnPending = false;
 
   act2CatchActiveDrops.forEach((drop) => drop.element?.remove());
   act2CatchActiveDrops = [];

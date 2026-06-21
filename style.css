@@ -290,8 +290,8 @@ button:disabled {
 
 .home-planet-stage {
   /* 首页星球整体位置：X 负值向左、正值向右；Y 负值向上、正值向下。 */
-  --home-planet-offset-x: -50px;
-  --home-planet-offset-y: -30px;
+  --home-planet-offset-x: -170px;
+  --home-planet-offset-y: -115px;
   position: relative;
   width: 100%;
   height: min(78vh, 760px);
@@ -307,7 +307,7 @@ button:disabled {
 
 .home-planet {
   position: relative;
-  width: min(69vw, 1080px);
+  width: min(62vw, 950px);
   aspect-ratio: 1;
   animation: homePlanetFloat 5200ms ease-in-out infinite;
 }
@@ -349,7 +349,7 @@ button:disabled {
   }
 
   .home-planet {
-    width: min(75vw, 915px);
+    width: min(68vw, 800px);
   }
 }
 
@@ -2812,6 +2812,28 @@ button:disabled {
   object-fit: contain;
   pointer-events: none;
   user-select: none;
+  transition:
+    left var(--act2-aunt-move-duration, 360ms) cubic-bezier(0.34, 0.9, 0.28, 1),
+    top var(--act2-aunt-move-duration, 360ms) cubic-bezier(0.34, 0.9, 0.28, 1);
+  will-change: left, top, transform;
+}
+
+.act2-catch-aunt-hand.is-pouring {
+  animation: act2AuntPour var(--act2-aunt-pour-duration, 440ms) ease-in-out;
+}
+
+@keyframes act2AuntPour {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) rotate(0deg);
+  }
+
+  48%,
+  70% {
+    transform:
+      translate3d(var(--act2-aunt-pour-x, 18px), var(--act2-aunt-pour-y, 34px), 0)
+      rotate(var(--act2-aunt-pour-rotate, 18deg));
+  }
 }
 
 .act2-catch-plate {
@@ -5638,7 +5660,7 @@ button:disabled {
 .result-risk-summary-level {
   margin: 0;
   font-family: "Alimama FangYuanTi VF", "Alimama FangYuanTi", YouYuan, "幼圆", "Microsoft YaHei", sans-serif;
-  font-size: 80px;
+  font-size: 45px;
   font-weight: 500;
   line-height: 1.05;
   letter-spacing: 0;

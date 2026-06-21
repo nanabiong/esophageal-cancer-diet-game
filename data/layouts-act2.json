@@ -244,6 +244,26 @@
           "width": 160,
           "height": 150
         },
+        "spawnY": -20,
+        "auntHand": {
+          "x": 326,
+          "y": -110,
+          "width": 493,
+          "height": 361,
+          "zIndex": 12
+        },
+        "auntHandMotion": {
+          "trackY": -110,
+          "rightEdgeOffset": 0,
+          "moveDuration": 360,
+          "pourStartDelay": 70,
+          "pourDuration": 440,
+          "dropDelay": 685,
+          "pourRotate": 18,
+          "pourTranslateX": 18,
+          "pourTranslateY": 34,
+          "transformOrigin": "88% 36%"
+        },
         "fallSpeedMin": 3,
         "fallSpeedMax": 6,
         "spawnIntervalMin": 350,

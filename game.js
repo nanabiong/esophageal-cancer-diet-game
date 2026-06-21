@@ -2108,7 +2108,7 @@ function getAct1EatingConfig() {
     sceneTransitionDuration: config.sceneTransitionDuration ?? 900,
     heatExitDuration: config.heatExitDuration ?? 760,
     eatingEnterDelay: config.eatingEnterDelay ?? config.heatExitDuration ?? 760,
-    assetIndexOffset: config.assetIndexOffset ?? 1,
+    assetIndexOffset: config.assetIndexOffset ?? 0,
     assetPattern: config.assetPattern || "assets/images/act1/eating/{slug}-{state}.png",
     assetStateLayouts: config.assetStateLayouts || {}
   };
@@ -2137,7 +2137,9 @@ function prepareAct1CarriedFoodForEating(foodElement, config = getAct1EatingConf
   foodElement.style.zIndex = "30";
   foodElement.disabled = false;
   foodElement.addEventListener("click", handleAct1EatingFoodClick);
-  updateAct1CarriedFoodEatingAsset(foodElement, 0);
+  foodElement.dataset.eatingAssetState = "0";
+  applyAct1EatingAssetLayout(foodElement, 0, config);
+  foodElement.classList.remove("is-eating-asset-missing");
 }
 
 function handleAct1EatingFoodClick() {
@@ -2181,15 +2183,9 @@ function updateAct1CarriedFoodEatingAsset(foodElement, stateIndex) {
   const config = getAct1EatingConfig();
   const slug = getAct1BreakfastAssetSlug();
   const existingImage = foodElement.querySelector(":scope > .act1-placeholder-image");
-  const assetLayout = getAct1EatingAssetStateLayout(slug, stateIndex, config);
 
   foodElement.dataset.eatingAssetState = String(stateIndex);
-  foodElement.style.setProperty("--act1-eating-container-anchor-x", `${assetLayout.containerAnchorX}%`);
-  foodElement.style.setProperty("--act1-eating-container-anchor-y", `${assetLayout.containerAnchorY}%`);
-  foodElement.style.setProperty("--act1-eating-image-anchor-x", `${assetLayout.imageAnchorX}%`);
-  foodElement.style.setProperty("--act1-eating-image-anchor-y", `${assetLayout.imageAnchorY}%`);
-  foodElement.style.setProperty("--act1-eating-image-offset-x", `${assetLayout.offsetX}px`);
-  foodElement.style.setProperty("--act1-eating-image-offset-y", `${assetLayout.offsetY}px`);
+  applyAct1EatingAssetLayout(foodElement, stateIndex, config);
 
   const assetStateIndex = Math.max(
     1,
@@ -2217,6 +2213,18 @@ function updateAct1CarriedFoodEatingAsset(foodElement, stateIndex) {
   if (!existingImage) {
     foodElement.prepend(image);
   }
+}
+
+function applyAct1EatingAssetLayout(foodElement, stateIndex, config = getAct1EatingConfig()) {
+  const slug = getAct1BreakfastAssetSlug();
+  const assetLayout = getAct1EatingAssetStateLayout(slug, stateIndex, config);
+
+  foodElement.style.setProperty("--act1-eating-container-anchor-x", `${assetLayout.containerAnchorX}%`);
+  foodElement.style.setProperty("--act1-eating-container-anchor-y", `${assetLayout.containerAnchorY}%`);
+  foodElement.style.setProperty("--act1-eating-image-anchor-x", `${assetLayout.imageAnchorX}%`);
+  foodElement.style.setProperty("--act1-eating-image-anchor-y", `${assetLayout.imageAnchorY}%`);
+  foodElement.style.setProperty("--act1-eating-image-offset-x", `${assetLayout.offsetX}px`);
+  foodElement.style.setProperty("--act1-eating-image-offset-y", `${assetLayout.offsetY}px`);
 }
 
 function getAct1EatingAssetStateLayout(slug, stateIndex, config = getAct1EatingConfig()) {
@@ -6767,7 +6775,7 @@ function buildResultPersonaSummary(riskResult) {
     riskLabel: getResultRiskLevelLabel(riskResult.riskLevel),
     percentile,
     percentileDots: buildResultPercentileDots(percentile),
-    percentileText: `在模拟的100组用户数据中，你的饮食风险高于 ${percentile} 位用户`
+    percentileText: `你的饮食风险高于${percentile}%的用户`
   };
 }
 

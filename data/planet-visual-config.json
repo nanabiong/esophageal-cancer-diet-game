@@ -18,7 +18,7 @@
   "foodOrbit": {
     "_note": "Selected food overview ring. x/y are offsets from the stage center.",
     "enabled": true,
-    "x": -760,
+    "x": -820,
     "y": 0,
     "radiusX": 900,
     "radiusY": 800,

@@ -35,7 +35,8 @@ body.planet-atlas-active .test-controls,
 body.planet-atlas-active .debug-entry-controls,
 body.planet-atlas-active .result-stats-debug-button,
 body.planet-atlas-active .result-stats-overlay-layer,
-body.planet-atlas-active .result-food-orbit {
+body.planet-atlas-active .result-food-orbit,
+body.planet-atlas-active .result-outcome-panel-host {
   opacity: 0;
   visibility: hidden;
   pointer-events: none;
@@ -3858,6 +3859,15 @@ button:disabled {
   background: transparent;
 }
 
+.result-outcome-panel-host {
+  position: absolute;
+  inset: 0;
+  z-index: 132;
+  pointer-events: none;
+  opacity: 0;
+  animation: resultLocatingLayerEnter 600ms ease-out forwards;
+}
+
 .result-locating-field {
   position: absolute;
   left: 50%;
@@ -5167,18 +5177,18 @@ button:disabled {
 
 .result-persona-heading h2 {
   margin: 0;
-  color: #693618;
-  font-family: Comfortaa, sans-serif;
-  font-size: 46px;
-  font-weight: 500;
+  color: #4f3524;
+  font-family: "Alimama FangYuanTi VF", "Alimama FangYuanTi", YouYuan, "幼圆", "Microsoft YaHei", sans-serif;
+  font-size: 40px;
+  font-weight: 600;
   line-height: 1.1;
 }
 
 .result-persona-heading p {
   margin: 8px 0 0;
-  color: #693618;
-  font-family: Comfortaa, sans-serif;
-  font-size: 16px;
+  color: #8a735d;
+  font-family: YouYuan, "幼圆", "Microsoft YaHei", sans-serif;
+  font-size: 20px;
   line-height: 1.4;
 }
 
@@ -5208,6 +5218,63 @@ button:disabled {
 .result-trait-bar {
   position: relative;
   width: 100%;
+  display: grid;
+  grid-template-columns: var(--result-trait-icon-size, 92px) minmax(0, 1fr);
+  align-items: center;
+  column-gap: var(--result-trait-icon-gap, 28px);
+}
+
+.result-trait-icon-slot {
+  position: relative;
+  width: var(--result-trait-icon-size, 92px);
+  height: var(--result-trait-icon-size, 92px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.result-trait-icon-slot.is-missing::before {
+  content: "";
+  width: 72%;
+  height: 72%;
+  border: 2px solid rgba(105, 54, 24, 0.42);
+  border-radius: 999px;
+}
+
+.result-trait-icon-image {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  display: block;
+}
+
+.result-trait-content {
+  min-width: 0;
+}
+
+.result-trait-name-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+  margin-bottom: 2px;
+  color: #8a735d;
+  font-family: YouYuan, "幼圆", "Microsoft YaHei", sans-serif;
+  font-size: 14px;
+  line-height: 1.2;
+}
+
+.result-trait-name-row strong {
+  color: #4f3524;
+  font-family: Comfortaa, sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.result-trait-name-row,
+.result-trait-name-row strong {
+  font-family: YouYuan, "幼圆", "Microsoft YaHei", sans-serif;
+  font-size: 20px;
 }
 
 .result-trait-track-wrap {
@@ -5223,8 +5290,19 @@ button:disabled {
   top: 50%;
   height: var(--result-bar-height, 10px);
   border-radius: 999px;
-  background: #d9d4ca;
+  background: #d9cdb8;
   transform: translateY(-50%);
+}
+
+.result-trait-track::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: var(--trait-position, 50%);
+  height: 100%;
+  border-radius: inherit;
+  background: #a7947d;
 }
 
 .result-trait-endpoint {
@@ -5251,8 +5329,10 @@ button:disabled {
   top: 50%;
   width: var(--result-pointer-width, 42px);
   height: var(--result-pointer-height, 42px);
-  background: #8d8880;
+  background: #f6eedc;
+  border: 1.5px solid #b19a82;
   transform: translate(-50%, -50%);
+  display: none;
 }
 
 .result-trait-pointer-square {
@@ -5264,8 +5344,9 @@ button:disabled {
   height: 0;
   border-left: calc(var(--result-pointer-width, 42px) / 2) solid transparent;
   border-right: calc(var(--result-pointer-width, 42px) / 2) solid transparent;
-  border-bottom: var(--result-pointer-height, 42px) solid #8d8880;
+  border-bottom: var(--result-pointer-height, 42px) solid #f6eedc;
   background: transparent;
+  border-top: 0;
 }
 
 .result-trait-pointer-circle {
@@ -5275,7 +5356,7 @@ button:disabled {
 .result-trait-pointer-radial {
   border-radius: 999px;
   background:
-    repeating-conic-gradient(from 0deg, #8d8880 0deg 4deg, transparent 4deg 18deg);
+    repeating-conic-gradient(from 0deg, #b19a82 0deg 4deg, transparent 4deg 18deg);
   -webkit-mask:
     radial-gradient(circle, transparent 0 42%, #000 42% 100%);
   mask:
@@ -5287,7 +5368,7 @@ button:disabled {
   justify-content: space-between;
   gap: 16px;
   margin-top: var(--result-trait-label-gap, 16px);
-  color: #693618;
+  color: #8a735d;
   font-family: YouYuan, "幼圆", "Microsoft YaHei", sans-serif;
   font-size: var(--result-trait-label-font-size, 16px);
   line-height: 1.3;
@@ -5301,9 +5382,94 @@ button:disabled {
   text-align: right;
 }
 
+.result-risk-summary {
+  position: absolute;
+  z-index: 15;
+  left: var(--result-risk-summary-x, 1040px);
+  top: var(--result-risk-summary-y, 520px);
+  width: var(--result-risk-summary-width, 620px);
+  color: #4f3524;
+  font-family: YouYuan, "幼圆", "Microsoft YaHei", sans-serif;
+}
+
+.result-risk-summary-title {
+  margin: 0 0 6px;
+  color: #8a735d;
+  font-family: YouYuan, "幼圆", "Microsoft YaHei", sans-serif;
+  font-size: 20px;
+  line-height: 1.4;
+}
+
+.result-risk-summary-level {
+  margin: 0;
+  font-family: "Alimama FangYuanTi VF", "Alimama FangYuanTi", YouYuan, "幼圆", "Microsoft YaHei", sans-serif;
+  font-size: 80px;
+  font-weight: 500;
+  line-height: 1.05;
+  letter-spacing: 0;
+}
+
+.result-risk-summary-level-low {
+  color: #4f8b61;
+}
+
+.result-risk-summary-level-medium {
+  color: #a87728;
+}
+
+.result-risk-summary-level-high {
+  color: #693618;
+}
+
+.result-risk-percentile {
+  margin-top: 22px;
+  color: #8a735d;
+  font-size: 16px;
+  line-height: 1.45;
+}
+
+.result-risk-percentile-track {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 28px;
+  margin-bottom: 10px;
+}
+
+.result-risk-percentile-dot {
+  position: relative;
+  width: 18px;
+  height: 18px;
+  flex: 0 0 auto;
+  border-radius: 999px;
+  background: var(--dot-color, #8fd39b);
+  opacity: 0.72;
+  transform: scale(var(--dot-scale, 1));
+}
+
+.result-risk-percentile-dot.is-player {
+  opacity: 1;
+  border: 2px solid #693618;
+  box-shadow: 0 0 0 2px rgba(246, 90, 30, 0.18);
+}
+
+.result-risk-percentile-dot.is-player::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: calc(100% + 5px);
+  width: 0;
+  height: 0;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-bottom: 9px solid #f65a1e;
+  transform: translateX(-50%) rotate(180deg);
+}
+
 .result-galaxy-layer.is-orbit-scene .result-galaxy-label,
 .result-galaxy-layer.is-orbit-scene .result-diet-galaxy-panel,
-.result-galaxy-layer.is-orbit-scene .result-trait-bars {
+.result-galaxy-layer.is-orbit-scene .result-trait-bars,
+.result-galaxy-layer.is-orbit-scene .result-risk-summary {
   opacity: 0;
   visibility: hidden;
   pointer-events: none;

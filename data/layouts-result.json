@@ -177,9 +177,12 @@
         ]
       },
       "panel": {
-        "x": 1057,
-        "y": 118,
-        "width": 660,
+        "x": 1220,
+        "y": 122,
+        "width": 500,
+        "riskX": 1220,
+        "riskY": 650,
+        "riskWidth": 520,
         "title": "VKA-D",
         "subtitle": "Voltage / Kernel / Adventure - Dash",
         "paragraphs": [
@@ -189,40 +192,42 @@
         ]
       },
       "traitBars": {
-        "x": 1057,
-        "y": 620,
-        "width": 620,
-        "height": 6,
-        "gap": 14,
-        "pointerWidth": 24,
-        "pointerHeight": 24,
+        "x": 1220,
+        "y": 220,
+        "width": 500,
+        "height": 8,
+        "gap": 18,
+        "pointerWidth": 22,
+        "pointerHeight": 22,
         "endpointSize": 14,
         "labelGap": 4,
-        "labelFontSize": 16,
+        "labelFontSize": 14,
+        "iconSize": 92,
+        "iconGap": 28,
         "items": [
           {
             "value": 78,
-            "leftLabel": "\u6e29\u548c\u578b",
-            "rightLabel": "\u523a\u6fc0\u578b",
+            "leftLabel": "\u6e29\u548c",
+            "rightLabel": "\u523a\u6fc0",
             "pointerShape": "square"
           },
           {
-            "value": 55,
-            "leftLabel": "\u65b0\u9c9c\u6d3e",
-            "rightLabel": "\u8fb9\u7f18\u6d3e",
-            "pointerShape": "triangle"
+            "value": 32,
+            "leftLabel": "\u4eea\u5f0f",
+            "rightLabel": "\u51b2\u523a",
+            "pointerShape": "radial"
           },
           {
             "value": 82,
-            "leftLabel": "\u67d4\u8f6f\u578b",
-            "rightLabel": "\u786c\u6838\u578b",
+            "leftLabel": "\u67d4\u8f6f",
+            "rightLabel": "\u786c\u6838",
             "pointerShape": "circle"
           },
           {
-            "value": 32,
-            "leftLabel": "\u4eea\u5f0f\u578b",
-            "rightLabel": "\u51b2\u523a\u578b",
-            "pointerShape": "radial"
+            "value": 55,
+            "leftLabel": "\u65b0\u9c9c",
+            "rightLabel": "\u8fb9\u7f18",
+            "pointerShape": "triangle"
           }
         ]
       },

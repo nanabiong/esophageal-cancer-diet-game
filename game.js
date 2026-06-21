@@ -373,9 +373,12 @@ const RESULT_GALAXY_LOCATING_DEFAULT_CONFIG = {
       ]
     },
     panel: {
-      x: 1040,
-      y: 130,
-      width: 660,
+      x: 1220,
+      y: 122,
+      width: 500,
+      riskX: 1220,
+      riskY: 585,
+      riskWidth: 520,
       title: "VKA-D",
       subtitle: "Voltage / Kernel / Adventure - Dash",
       paragraphs: [
@@ -385,40 +388,42 @@ const RESULT_GALAXY_LOCATING_DEFAULT_CONFIG = {
       ]
     },
     traitBars: {
-      x: 1040,
-      y: 650,
-      width: 620,
-      height: 10,
-      gap: 28,
-      pointerWidth: 42,
-      pointerHeight: 42,
+      x: 1220,
+      y: 220,
+      width: 500,
+      height: 8,
+      gap: 18,
+      pointerWidth: 22,
+      pointerHeight: 22,
       endpointSize: 14,
-      labelGap: 16,
-      labelFontSize: 16,
+      labelGap: 4,
+      labelFontSize: 14,
+      iconSize: 92,
+      iconGap: 28,
       items: [
         {
           value: 78,
-          leftLabel: "\u6e29\u548c\u578b",
-          rightLabel: "\u523a\u6fc0\u578b",
+          leftLabel: "\u6e29\u548c",
+          rightLabel: "\u523a\u6fc0",
           pointerShape: "square"
         },
         {
-          value: 55,
-          leftLabel: "\u65b0\u9c9c\u6d3e",
-          rightLabel: "\u8fb9\u7f18\u6d3e",
-          pointerShape: "triangle"
+          value: 32,
+          leftLabel: "\u4eea\u5f0f",
+          rightLabel: "\u51b2\u523a",
+          pointerShape: "radial"
         },
         {
           value: 82,
-          leftLabel: "\u67d4\u8f6f\u578b",
-          rightLabel: "\u786c\u6838\u578b",
+          leftLabel: "\u67d4\u8f6f",
+          rightLabel: "\u786c\u6838",
           pointerShape: "circle"
         },
         {
-          value: 32,
-          leftLabel: "\u4eea\u5f0f\u578b",
-          rightLabel: "\u51b2\u523a\u578b",
-          pointerShape: "radial"
+          value: 55,
+          leftLabel: "\u65b0\u9c9c",
+          rightLabel: "\u8fb9\u7f18",
+          pointerShape: "triangle"
         }
       ]
     },
@@ -6643,6 +6648,7 @@ function getRiskTransitionEdgePoint() {
 function renderResultDietGalaxyLayout(layer) {
   const config = RESULT_GALAXY_LOCATING_CONFIG.resultDietGalaxy;
   const riskResult = getPlayerRiskResult();
+  const personaResult = buildResultPersonaSummary(riskResult);
 
   if (RESULT_PLANET_ONLY_MODE) {
     layer.innerHTML = "";
@@ -6652,10 +6658,7 @@ function renderResultDietGalaxyLayout(layer) {
 
   layer.classList.remove("result-planet-only-layer");
 
-  const traitDimensionOrder = ["sensory", "danger", "specificity", "rhythm"];
-  const paragraphs = config.panel.paragraphs
-    .map((paragraph) => `<p>${paragraph.replace(/\n/g, "<br>")}</p>`)
-    .join("");
+  const traitDimensionOrder = ["sensory", "rhythm", "specificity", "danger"];
   const traitBarItems =
     config.traitBars.items ||
     (config.traitBars.values || []).map((value) => ({
@@ -6669,21 +6672,9 @@ function renderResultDietGalaxyLayout(layer) {
       const dimension = traitDimensionOrder[index];
       const dynamicValue = riskResult.dimensions?.[dimension]?.riskIndex;
       const value = dynamicValue ?? item.value;
+      const labels = personaResult.dimensionMap[dimension] || {};
 
-      return `
-      <div class="result-trait-bar" style="--trait-position: ${value}%">
-        <div class="result-trait-track-wrap">
-          <div class="result-trait-track"></div>
-          <div class="result-trait-endpoint result-trait-endpoint-left"></div>
-          <div class="result-trait-endpoint result-trait-endpoint-right"></div>
-          <div class="result-trait-pointer result-trait-pointer-${item.pointerShape || "square"}"></div>
-        </div>
-        <div class="result-trait-label-row">
-          <span class="result-trait-label result-trait-label-left">${item.leftLabel || ""}</span>
-          <span class="result-trait-label result-trait-label-right">${item.rightLabel || ""}</span>
-        </div>
-      </div>
-    `;
+      return createResultTraitBarMarkup({ dimension, value, item, labels });
     })
     .join("");
 
@@ -6702,6 +6693,9 @@ function renderResultDietGalaxyLayout(layer) {
   layer.style.setProperty("--result-panel-x", `${config.panel.x}px`);
   layer.style.setProperty("--result-panel-y", `${config.panel.y}px`);
   layer.style.setProperty("--result-panel-width", `${config.panel.width}px`);
+  layer.style.setProperty("--result-risk-summary-x", `${config.panel.riskX ?? config.panel.x}px`);
+  layer.style.setProperty("--result-risk-summary-y", `${config.panel.riskY ?? 520}px`);
+  layer.style.setProperty("--result-risk-summary-width", `${config.panel.riskWidth ?? config.panel.width}px`);
   layer.style.setProperty("--result-bars-x", `${config.traitBars.x}px`);
   layer.style.setProperty("--result-bars-y", `${config.traitBars.y}px`);
   layer.style.setProperty("--result-bars-width", `${config.traitBars.width}px`);
@@ -6712,6 +6706,8 @@ function renderResultDietGalaxyLayout(layer) {
   layer.style.setProperty("--result-trait-endpoint-size", `${config.traitBars.endpointSize || 14}px`);
   layer.style.setProperty("--result-trait-label-gap", `${config.traitBars.labelGap || 16}px`);
   layer.style.setProperty("--result-trait-label-font-size", `${config.traitBars.labelFontSize || 16}px`);
+  layer.style.setProperty("--result-trait-icon-size", `${config.traitBars.iconSize || 92}px`);
+  layer.style.setProperty("--result-trait-icon-gap", `${config.traitBars.iconGap || 28}px`);
   layer.innerHTML = `
     <div class="result-galaxy-visual-placeholder result-main-planet" aria-hidden="true"></div>
     <div class="result-galaxy-label">
@@ -6720,15 +6716,275 @@ function renderResultDietGalaxyLayout(layer) {
     </div>
     <div class="result-diet-galaxy-panel">
       <div class="result-persona-heading">
-        <h2>${config.panel.title}</h2>
-        <p>${config.panel.subtitle}</p>
-      </div>
-      <div class="result-persona-copy">
-        ${paragraphs}
+        <h2>${escapeHtml(personaResult.playerCode)}</h2>
+        <p>${escapeHtml(personaResult.subtitle)}</p>
       </div>
     </div>
     <div class="result-trait-bars">
       ${traitBars}
+    </div>
+    <div class="result-risk-summary">
+      <p class="result-risk-summary-title">你的食管癌饮食风险评估为</p>
+      <p class="result-risk-summary-level result-risk-summary-level-${personaResult.riskLevel}">${escapeHtml(personaResult.riskLabel)}</p>
+      <div class="result-risk-percentile">
+        <div class="result-risk-percentile-track">
+          ${personaResult.percentileDots.map((dot) => `
+            <span
+              class="result-risk-percentile-dot ${dot.isPlayer ? "is-player" : ""}"
+              style="--dot-color:${dot.color}; --dot-scale:${dot.scale};"
+            ></span>
+          `).join("")}
+        </div>
+        <p>${escapeHtml(personaResult.percentileText)}</p>
+      </div>
+    </div>
+  `;
+}
+
+function buildResultPersonaSummary(riskResult) {
+  const dimensionMap = getResultPersonaDimensionMap();
+  const typeCode = RISK_DIMENSION_KEYS
+    .map((dimension) => {
+      const item = dimensionMap[dimension];
+      const value = riskResult.dimensions?.[dimension]?.riskIndex ?? 0;
+
+      return value >= item.threshold ? item.highLetter : item.lowLetter;
+    })
+    .join("");
+  const sampleSerial = getResultSampleSerial();
+  const endpoints = RISK_DIMENSION_KEYS
+    .map((dimension) => getResultDimensionEndpointName(dimension, riskResult.dimensions?.[dimension]?.riskIndex ?? 0))
+    .join(" × ");
+  const percentile = getResultRiskPercentile(riskResult.totalRiskIndex);
+
+  return {
+    typeCode,
+    sampleSerial,
+    playerCode: `${typeCode}-${sampleSerial}`,
+    subtitle: endpoints,
+    dimensionMap,
+    riskLevel: riskResult.riskLevel || "medium",
+    riskLabel: getResultRiskLevelLabel(riskResult.riskLevel),
+    percentile,
+    percentileDots: buildResultPercentileDots(percentile),
+    percentileText: `在模拟的100组用户数据中，你的饮食风险高于 ${percentile} 位用户`
+  };
+}
+
+function getResultPersonaDimensionMap() {
+  return {
+    sensory: {
+      name: "感官刺激",
+      lowLabel: "温和",
+      highLabel: "刺激",
+      lowLetter: "L",
+      highLetter: "V",
+      threshold: 50
+    },
+    rhythm: {
+      name: "节律倾向",
+      lowLabel: "仪式",
+      highLabel: "冲刺",
+      lowLetter: "O",
+      highLetter: "D",
+      threshold: 50
+    },
+    specificity: {
+      name: "特异",
+      lowLabel: "柔软",
+      highLabel: "硬核",
+      lowLetter: "C",
+      highLetter: "K",
+      threshold: 50
+    },
+    danger: {
+      name: "危险",
+      lowLabel: "新鲜",
+      highLabel: "边缘",
+      lowLetter: "A",
+      highLetter: "G",
+      threshold: 50
+    }
+  };
+}
+
+function getResultDimensionEndpointName(dimension, value) {
+  const item = getResultPersonaDimensionMap()[dimension];
+
+  if (!item) {
+    return "";
+  }
+
+  return value >= item.threshold ? item.highLabel : item.lowLabel;
+}
+
+function getResultSampleSerial() {
+  return "0127";
+}
+
+function getResultRiskLevelLabel(level) {
+  if (level === "low") {
+    return "低风险";
+  }
+
+  if (level === "high") {
+    return "高风险";
+  }
+
+  return "中风险";
+}
+
+function getResultRiskPercentile(totalRiskIndex) {
+  const score = Math.max(0, Math.min(100, Number(totalRiskIndex) || 0));
+  const simulatedScores = Array.from({ length: 100 }, (_, index) => {
+    const noise = Math.sin((index + 1) * 12.9898) * 43758.5453;
+    const normalizedNoise = noise - Math.floor(noise);
+    const spread = (index / 99) * 0.5 + normalizedNoise * 0.5;
+
+    return Math.max(0, Math.min(100, spread * 100));
+  });
+
+  return simulatedScores.filter((sampleScore) => score >= sampleScore).length;
+}
+
+function buildResultPercentileDots(percentile) {
+  const playerIndex = Math.max(0, Math.min(19, Math.round((percentile / 100) * 19)));
+
+  return Array.from({ length: 20 }, (_, index) => ({
+    isPlayer: index === playerIndex,
+    color: index <= playerIndex ? "#f65a1e" : "#8fd39b",
+    scale: index === playerIndex ? 1.45 : 0.78 + ((index % 4) * 0.1)
+  }));
+}
+
+function renderResultOutcomePanelHost() {
+  if (!objectLayer) {
+    return;
+  }
+
+  objectLayer.querySelectorAll(".result-outcome-panel-host").forEach((element) => element.remove());
+
+  const host = document.createElement("section");
+  const config = RESULT_GALAXY_LOCATING_CONFIG.resultDietGalaxy;
+  const riskResult = getPlayerRiskResult();
+  const personaResult = buildResultPersonaSummary(riskResult);
+  const traitBars = renderResultOutcomeTraitBars(config, riskResult, personaResult);
+
+  host.className = "result-outcome-panel-host";
+  applyResultOutcomePanelStyle(host, config);
+  host.innerHTML = createResultOutcomePanelMarkup(personaResult, traitBars);
+  objectLayer.appendChild(host);
+}
+
+function renderResultOutcomeTraitBars(config, riskResult, personaResult) {
+  const traitDimensionOrder = ["sensory", "rhythm", "specificity", "danger"];
+  const traitBarItems =
+    config.traitBars.items ||
+    (config.traitBars.values || []).map((value) => ({
+      value,
+      leftLabel: "",
+      rightLabel: "",
+      pointerShape: "square"
+    }));
+
+  return traitBarItems
+    .map((item, index) => {
+      const dimension = traitDimensionOrder[index];
+      const dynamicValue = riskResult.dimensions?.[dimension]?.riskIndex;
+      const value = dynamicValue ?? item.value;
+      const labels = personaResult.dimensionMap[dimension] || {};
+
+      return createResultTraitBarMarkup({ dimension, value, item, labels });
+    })
+    .join("");
+}
+
+function createResultTraitBarMarkup({ dimension, value, item, labels }) {
+  const endpoint = value >= (labels.threshold ?? 50) ? "high" : "low";
+  const iconAsset = getResultTraitIconAssetPath(dimension, endpoint);
+  const activeLabel = endpoint === "high"
+    ? (labels.highLabel || item.rightLabel || "")
+    : (labels.lowLabel || item.leftLabel || "");
+
+  return `
+    <div class="result-trait-bar" style="--trait-position: ${value}%">
+      <div class="result-trait-icon-slot" data-dimension="${escapeHtml(dimension)}" data-endpoint="${endpoint}">
+        <img
+          class="result-trait-icon-image"
+          src="${iconAsset}"
+          alt=""
+          onerror="this.parentElement.classList.add('is-missing'); this.remove();"
+        >
+      </div>
+      <div class="result-trait-content">
+        <div class="result-trait-name-row">
+          <span>${escapeHtml(activeLabel)}</span>
+        </div>
+        <div class="result-trait-track-wrap">
+          <div class="result-trait-track"></div>
+          <div class="result-trait-endpoint result-trait-endpoint-left"></div>
+          <div class="result-trait-endpoint result-trait-endpoint-right"></div>
+          <div class="result-trait-pointer result-trait-pointer-${item.pointerShape || "square"}"></div>
+        </div>
+        <div class="result-trait-label-row">
+          <span class="result-trait-label result-trait-label-left">${escapeHtml(labels.lowLabel || item.leftLabel || "")}</span>
+          <span class="result-trait-label result-trait-label-right">${escapeHtml(labels.highLabel || item.rightLabel || "")}</span>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function getResultTraitIconAssetPath(dimension, endpoint) {
+  return `assets/images/result/persona-icons/${dimension}-${endpoint}.png`;
+}
+
+function applyResultOutcomePanelStyle(layer, config) {
+  layer.style.setProperty("--result-panel-x", `${config.panel.x}px`);
+  layer.style.setProperty("--result-panel-y", `${config.panel.y}px`);
+  layer.style.setProperty("--result-panel-width", `${config.panel.width}px`);
+  layer.style.setProperty("--result-risk-summary-x", `${config.panel.riskX ?? config.panel.x}px`);
+  layer.style.setProperty("--result-risk-summary-y", `${config.panel.riskY ?? 520}px`);
+  layer.style.setProperty("--result-risk-summary-width", `${config.panel.riskWidth ?? config.panel.width}px`);
+  layer.style.setProperty("--result-bars-x", `${config.traitBars.x}px`);
+  layer.style.setProperty("--result-bars-y", `${config.traitBars.y}px`);
+  layer.style.setProperty("--result-bars-width", `${config.traitBars.width}px`);
+  layer.style.setProperty("--result-bar-height", `${config.traitBars.height}px`);
+  layer.style.setProperty("--result-bar-gap", `${config.traitBars.gap}px`);
+  layer.style.setProperty("--result-pointer-width", `${config.traitBars.pointerWidth}px`);
+  layer.style.setProperty("--result-pointer-height", `${config.traitBars.pointerHeight}px`);
+  layer.style.setProperty("--result-trait-endpoint-size", `${config.traitBars.endpointSize || 14}px`);
+  layer.style.setProperty("--result-trait-label-gap", `${config.traitBars.labelGap || 16}px`);
+  layer.style.setProperty("--result-trait-label-font-size", `${config.traitBars.labelFontSize || 16}px`);
+  layer.style.setProperty("--result-trait-icon-size", `${config.traitBars.iconSize || 92}px`);
+  layer.style.setProperty("--result-trait-icon-gap", `${config.traitBars.iconGap || 28}px`);
+}
+
+function createResultOutcomePanelMarkup(personaResult, traitBars) {
+  return `
+    <div class="result-diet-galaxy-panel">
+      <div class="result-persona-heading">
+        <h2>${escapeHtml(personaResult.playerCode)}</h2>
+        <p>${escapeHtml(personaResult.subtitle)}</p>
+      </div>
+    </div>
+    <div class="result-trait-bars">
+      ${traitBars}
+    </div>
+    <div class="result-risk-summary">
+      <p class="result-risk-summary-title">你的食管癌饮食风险评估为</p>
+      <p class="result-risk-summary-level result-risk-summary-level-${personaResult.riskLevel}">${escapeHtml(personaResult.riskLabel)}</p>
+      <div class="result-risk-percentile">
+        <div class="result-risk-percentile-track">
+          ${personaResult.percentileDots.map((dot) => `
+            <span
+              class="result-risk-percentile-dot ${dot.isPlayer ? "is-player" : ""}"
+              style="--dot-color:${dot.color}; --dot-scale:${dot.scale};"
+            ></span>
+          `).join("")}
+        </div>
+        <p>${escapeHtml(personaResult.percentileText)}</p>
+      </div>
     </div>
   `;
 }
@@ -7239,6 +7495,9 @@ function createGalaxyLocatingLayer() {
     layer.appendChild(caption);
   }
   objectLayer.appendChild(layer);
+  if (RESULT_PLANET_ONLY_MODE) {
+    renderResultOutcomePanelHost();
+  }
 
   galaxyLocatingLayer = layer;
   galaxyLocatingField = field;
@@ -8910,6 +9169,7 @@ function cleanupGalaxyLocatingLayer() {
   stopResultPlanetAnimation();
   stopResultFoodOrbitAnimation();
   objectLayer?.querySelectorAll(".result-food-orbit").forEach((element) => element.remove());
+  objectLayer?.querySelectorAll(".result-outcome-panel-host").forEach((element) => element.remove());
   galaxyLocatingLayer?.remove();
   galaxyLocatingLayer = null;
   galaxyLocatingField = null;

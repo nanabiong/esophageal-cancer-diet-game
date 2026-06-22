@@ -134,6 +134,12 @@ body {
   background: #f3f3f0;
 }
 
+body.act0-alarm-active,
+body.act0-alarm-active .comic-stage,
+body.act0-alarm-active .frame-viewport {
+  background: #000;
+}
+
 button {
   padding: 10px 16px;
   border: 2px solid #111;
@@ -220,6 +226,29 @@ button:disabled {
 .home-screen.is-revealing::after {
   opacity: 0;
   transition-duration: 650ms;
+}
+
+.home-transition-bubble-host {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  pointer-events: none;
+}
+
+.home-transition-bubble {
+  position: relative;
+  top: 50vh;
+  width: min(622px, calc(100vw - 48px));
+  height: auto;
+  aspect-ratio: 622 / 133;
+  background: transparent;
+}
+
+.home-transition-bubble .guidance-bubble-text {
+  top: 35%;
 }
 
 .home-screen:not(.is-ready) .home-start-button {

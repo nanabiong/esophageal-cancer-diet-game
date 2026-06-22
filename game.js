@@ -3488,7 +3488,9 @@ function syncAct2PlateSlots() {
 
     if (!selectedFood) {
       slotElement.classList.remove("is-filled", "is-eaten");
-      slotElement.textContent = `格子 ${slotIndex + 1}`;
+      slotElement.textContent = slotElement.classList.contains("act2-catch-plate-slot")
+        ? ""
+        : `格子 ${slotIndex + 1}`;
       return;
     }
 
@@ -3518,7 +3520,9 @@ function syncAct2PlateSlotsWithAssets() {
     if (!selectedFood) {
       slotElement.classList.remove("is-filled", "is-eaten", "has-asset");
       delete slotElement.dataset.foodId;
-      slotElement.textContent = `格子 ${slotIndex + 1}`;
+      slotElement.textContent = slotElement.classList.contains("act2-catch-plate-slot")
+        ? ""
+        : `格子 ${slotIndex + 1}`;
       return;
     }
 
@@ -4293,7 +4297,7 @@ function createAct2CatchPlate() {
 
     slot.className = "act2-scene-object act2-plate-slot act2-catch-plate-slot";
     slot.dataset.slotIndex = String(slotIndex);
-    slot.textContent = `格子 ${slotIndex + 1}`;
+    slot.textContent = "";
     objectLayer.appendChild(slot);
   }
 
@@ -5782,18 +5786,58 @@ function startHomeScreenExit() {
 
   window.setTimeout(() => {
     stopHomePlanetAnimation();
-    continueConfiguredEntryAfterHome();
+    const transitionBubble = showHomeTransitionBubble(layer);
 
-    // Keep a fully black frame over the newly created Act 0 scene, then reveal it.
-    window.requestAnimationFrame(() => {
-      window.requestAnimationFrame(() => {
-        layer?.classList.remove("is-leaving");
-        layer?.classList.add("is-revealing");
-      });
-    });
+    window.setTimeout(() => {
+      transitionBubble?.bubble.classList.add("exit-up");
 
-    window.setTimeout(() => layer?.remove(), 700);
+      window.setTimeout(() => {
+        transitionBubble?.host.remove();
+        continueConfiguredEntryAfterHome();
+
+        // Keep a fully black frame over the newly created Act 0 scene, then reveal it.
+        window.requestAnimationFrame(() => {
+          window.requestAnimationFrame(() => {
+            layer?.classList.remove("is-leaving");
+            layer?.classList.add("is-revealing");
+          });
+        });
+
+        window.setTimeout(() => layer?.remove(), 700);
+      }, 440);
+    }, transitionBubble?.visibleDuration ?? 1900);
   }, 880);
+}
+
+function showHomeTransitionBubble(layer) {
+  if (!layer) {
+    return null;
+  }
+
+  const message = "准备好了吗？你的一天开始啦！";
+  const host = document.createElement("div");
+  const bubble = document.createElement("div");
+  const image = document.createElement("img");
+  const text = document.createElement("div");
+
+  host.className = "home-transition-bubble-host";
+  bubble.className = "guidance-bubble home-transition-bubble has-guidance-bubble-image float-up";
+  image.className = "guidance-bubble-image";
+  image.src = "assets/images/act2/lunch/guide-bubble-left.png";
+  image.alt = "";
+  image.draggable = false;
+  text.className = "guidance-bubble-text";
+
+  bubble.append(image, text);
+  host.appendChild(bubble);
+  layer.appendChild(host);
+  startGuidanceTypewriter(text, message, TYPEWRITER_SPEED);
+
+  return {
+    host,
+    bubble,
+    visibleDuration: Array.from(message).length * TYPEWRITER_SPEED + 900
+  };
 }
 
 function startHomePlanetAnimation(planetBody, options = {}) {
@@ -6061,6 +6105,7 @@ function createAct0Layer() {
   layer.id = config.layerId;
   layer.className = "act0-alarm-layer";
   layer.style.setProperty("--act0-bg-transition-duration", `${config.backgroundTransitionDuration}ms`);
+  document.body.classList.add("act0-alarm-active");
 
   clock.id = config.clockId;
   clock.className = "act0-clock";
@@ -6232,6 +6277,7 @@ function resetAct0Timers() {
 function cleanupAct0Layer() {
   resetAct0Timers();
   stopAlarmSound();
+  document.body.classList.remove("act0-alarm-active");
   act0AlarmLayer?.remove();
   act0AlarmLayer = null;
   act0Clock = null;

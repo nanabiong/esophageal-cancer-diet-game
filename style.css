@@ -486,7 +486,7 @@ button:disabled {
   right: 24px;
   top: 24px;
   z-index: 120;
-  display: flex;
+  display: none;
   gap: 10px;
 }
 
@@ -4881,6 +4881,7 @@ button:disabled {
   right: 28px;
   top: 24px;
   z-index: 2147483647;
+  display: none;
   min-width: 72px;
   height: 42px;
   padding: 0 14px;

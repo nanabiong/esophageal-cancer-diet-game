@@ -575,6 +575,7 @@ let RESULT_PLANET_VISUAL_CONFIG = {
   motionSpeed: 0.75,
   liveMotionScale: 1,
   svgMotionScale: 1,
+  selfSpinDegPerSecond: 4,
   foodOrbit: {
     enabled: true,
     x: 330,
@@ -919,6 +920,9 @@ function mergeResultPlanetVisualConfig(config = {}) {
     motionSpeed: Number(config.motionSpeed ?? RESULT_PLANET_VISUAL_CONFIG.motionSpeed),
     liveMotionScale: Number(config.liveMotionScale ?? RESULT_PLANET_VISUAL_CONFIG.liveMotionScale),
     svgMotionScale: Number(config.svgMotionScale ?? RESULT_PLANET_VISUAL_CONFIG.svgMotionScale),
+    selfSpinDegPerSecond: Number(
+      config.selfSpinDegPerSecond ?? RESULT_PLANET_VISUAL_CONFIG.selfSpinDegPerSecond
+    ),
     foodOrbit: {
       ...RESULT_PLANET_VISUAL_CONFIG.foodOrbit,
       ...(config.foodOrbit || {})
@@ -8866,6 +8870,7 @@ function createGalaxyCenterPlanet() {
 
   const planet = document.createElement("div");
   const planetBody = document.createElement("div");
+  const planetMotionShell = document.createElement("div");
   const image = document.createElement("img");
   const dynamicPlanetMetrics = buildResultPlanetMetrics(getPlayerRiskResult());
   const dynamicPlanetSvg = createResultPlanetSvg(dynamicPlanetMetrics);
@@ -8873,6 +8878,7 @@ function createGalaxyCenterPlanet() {
   planet.id = "result-galaxy-center-planet";
   planet.className = "result-galaxy-center-planet";
   planetBody.className = "result-galaxy-center-planet-body";
+  planetMotionShell.className = "result-galaxy-center-planet-motion";
   planet.style.width = `${planetSize}px`;
   planet.style.height = `${planetSize}px`;
   planet.style.left = `calc(50% + ${planetX}px)`;
@@ -8894,7 +8900,16 @@ function createGalaxyCenterPlanet() {
 
   if (dynamicPlanetSvg) {
     planet.classList.add("has-dynamic-planet");
-    planetBody.appendChild(dynamicPlanetSvg);
+    const selfSpinDegPerSecond = dynamicPlanetMetrics.selfSpinDegPerSecond || 4;
+    const selfSpinDuration = 360 / Math.max(0.01, Math.abs(selfSpinDegPerSecond));
+
+    planetMotionShell.style.setProperty("--result-planet-self-spin-duration", `${selfSpinDuration}s`);
+    planetMotionShell.style.setProperty(
+      "--result-planet-self-spin-direction",
+      selfSpinDegPerSecond < 0 ? "reverse" : "normal"
+    );
+    planetMotionShell.appendChild(dynamicPlanetSvg);
+    planetBody.appendChild(planetMotionShell);
   } else if (config.image) {
     image.className = "result-galaxy-center-planet-image";
     image.alt = "";
@@ -8920,7 +8935,7 @@ function createGalaxyCenterPlanet() {
   galaxyLocatingField.appendChild(planet);
 
   if (dynamicPlanetSvg) {
-    startResultPlanetAnimation(planetBody, dynamicPlanetMetrics);
+    startResultPlanetAnimation(planetMotionShell, dynamicPlanetMetrics);
   }
 }
 
@@ -9277,7 +9292,7 @@ function startResultPlanetAnimation(planetBody, metrics) {
     const liveMotionScale = resultPlanetAnimationMetrics.liveMotionScale ?? 1;
     const svgMotionScale = resultPlanetAnimationMetrics.svgMotionScale ?? 1;
     const tick = elapsed * 0.045 * motionSpeed * (resultPlanetAnimationMetrics.rotationSpeed || 1);
-    const planetElement = planetBody.parentElement;
+    const planetElement = planetBody.closest(".result-galaxy-center-planet");
     const svg = createResultPlanetSvg({
       ...resultPlanetAnimationMetrics,
       tick,
@@ -9341,6 +9356,7 @@ function buildResultPlanetMetrics(riskResult = getPlayerRiskResult()) {
     motionSpeed: RESULT_PLANET_VISUAL_CONFIG.motionSpeed,
     liveMotionScale: RESULT_PLANET_VISUAL_CONFIG.liveMotionScale,
     svgMotionScale: RESULT_PLANET_VISUAL_CONFIG.svgMotionScale,
+    selfSpinDegPerSecond: RESULT_PLANET_VISUAL_CONFIG.selfSpinDegPerSecond,
     frameInterval: RESULT_PLANET_VISUAL_CONFIG.frameInterval,
     tick: 0,
     jitterFrame: 0,

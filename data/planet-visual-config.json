@@ -12,9 +12,10 @@
   "kDotsSpan": 12,
   "rotationSpeed": 1.2,
   "motionSpeed": 1,
-  "liveMotionScale": 0,
-  "svgMotionScale": 0.4,
-  "frameInterval": 140,
+  "liveMotionScale": 1,
+  "svgMotionScale": 1,
+  "selfSpinDegPerSecond": 4,
+  "frameInterval": 80,
   "foodOrbit": {
     "_note": "Selected food overview ring. x/y are offsets from the stage center.",
     "enabled": true,

@@ -4607,6 +4607,15 @@ button:disabled {
   animation: resultCenterPlanetReveal var(--result-galaxy-reveal-duration, 720ms) cubic-bezier(0.2, 1.35, 0.34, 1) forwards;
 }
 
+.result-galaxy-center-planet-motion {
+  position: absolute;
+  inset: 0;
+  transform-origin: center;
+  will-change: transform;
+  animation: resultPlanetSelfSpin var(--result-planet-self-spin-duration, 90s) linear infinite;
+  animation-direction: var(--result-planet-self-spin-direction, normal);
+}
+
 .result-galaxy-dynamic-planet-svg {
   display: block;
   width: 100%;
@@ -6376,6 +6385,16 @@ button:disabled {
 
   68% {
     opacity: 0.42;
+  }
+}
+
+@keyframes resultPlanetSelfSpin {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
   }
 }
 

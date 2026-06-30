@@ -1,0 +1,74 @@
+[
+  {
+    "id": "soft_texture",
+    "name": "质地柔软",
+    "or": 0,
+    "description": "柔软、细腻的食物通常更容易咀嚼和吞咽。"
+  },
+  {
+    "id": "warm_temperature",
+    "name": "温度适中",
+    "or": 0,
+    "description": "温热但不烫口的食物能减少温度刺激。"
+  },
+  {
+    "id": "high_protein",
+    "name": "蛋白质较丰富",
+    "or": 0,
+    "description": "适量优质蛋白有助于维持营养摄入。"
+  },
+  {
+    "id": "high_temperature",
+    "name": "温度过高",
+    "or": 2,
+    "description": "过烫食物可能刺激食管，建议放凉后再吃。"
+  },
+  {
+    "id": "fried_food",
+    "name": "油炸食物",
+    "or": 2,
+    "description": "油炸食物脂肪较高，可能增加消化负担。"
+  },
+  {
+    "id": "hard_texture",
+    "name": "质地偏硬",
+    "or": 2,
+    "description": "坚硬或粗糙的食物可能带来吞咽不适。"
+  },
+  {
+    "id": "spicy_food",
+    "name": "辛辣刺激",
+    "or": 2,
+    "description": "辛辣食物可能刺激食管和胃部。"
+  },
+  {
+    "id": "smoked_grilled_food",
+    "name": "烟熏烧烤",
+    "or": 2,
+    "description": "烟熏、烧烤类食物不建议频繁食用。"
+  },
+  {
+    "id": "pickled_food",
+    "name": "腌制食物",
+    "or": 2,
+    "description": "腌制食物通常盐分较高，建议减少摄入。"
+  },
+  {
+    "id": "high_salt",
+    "name": "盐分较高",
+    "or": 1,
+    "description": "高盐饮食不利于健康饮食管理。"
+  },
+  {
+    "id": "cold_stimulation",
+    "name": "低温刺激",
+    "or": 1,
+    "description": "过冷食物或饮品可能带来不适感。"
+  },
+  {
+    "id": "low_nutrition",
+    "name": "营养价值较低",
+    "or": 1,
+    "description": "营养价值较低的食物不适合作为正餐核心。"
+  }
+]

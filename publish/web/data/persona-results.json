@@ -1,0 +1,29 @@
+{
+  "_note": "Diet persona result copy template. Placeholder only. This file is not fetched by the current demo.",
+  "_todo": [
+    "Fill final persona result types after scoring rules are confirmed.",
+    "Use result ids that can be referenced by scoring-rules.json.",
+    "Keep display copy here; keep numeric scoring logic in scoring-rules.json."
+  ],
+  "version": 1,
+  "results": [
+    {
+      "id": "placeholder_persona_result",
+      "name": "Placeholder Persona",
+      "title": "",
+      "subtitle": "",
+      "description": "",
+      "keywords": [],
+      "traitBars": [],
+      "recommendedCopy": {
+        "summary": "",
+        "tips": []
+      },
+      "visual": {
+        "planetImage": "",
+        "shape": "",
+        "color": ""
+      }
+    }
+  ]
+}

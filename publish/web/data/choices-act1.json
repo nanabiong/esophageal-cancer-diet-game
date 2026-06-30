@@ -1,0 +1,59 @@
+{
+  "_note": "Act1 breakfast choice data. Low-fidelity placeholder values for the first playable breakfast selection.",
+  "_todo": [
+    "Replace riskTags and tendencyScores with real values after the scoring table is confirmed.",
+    "Keep each choice id matched with layouts-act1.json object choiceId.",
+    "Do not change current playerChoices structure without a separate migration plan."
+  ],
+  "actId": "act1",
+  "steps": [
+    {
+      "stepId": "act1_breakfastChoice",
+      "interactionType": "click_breakfast_choice",
+      "choiceLimit": 1
+    }
+  ],
+  "choices": [
+    {
+      "id": "act1_s01_breakfast_overnightPizza",
+      "name": "\u9694\u591c\u62ab\u8428",
+      "label": "\u9694\u591c\u62ab\u8428",
+      "riskTags": ["霉变饮食"],
+      "tendencyScores": {},
+      "hoverText": "\u51b0\u7bb1\u91cc\u5269\u4e0b\u7684\u4e00\u89d2\u62ab\u8428\uff0c\u62ff\u8d77\u6765\u5c31\u80fd\u8d70\u3002"
+    },
+    {
+      "id": "act1_s01_breakfast_baguetteCheese",
+      "name": "\u6cd5\u68cd\u914d\u5976\u916a",
+      "label": "\u6cd5\u68cd\u914d\u5976\u916a",
+      "riskTags": ["硬质饮食"],
+      "tendencyScores": {},
+      "hoverText": "\u786c\u786c\u7684\u6cd5\u68cd\u548c\u5976\u916a\uff0c\u50cf\u4e00\u4e2a\u5306\u5fd9\u4f46\u4f53\u9762\u7684\u65e9\u6668\u3002"
+    },
+    {
+      "id": "act1_s01_breakfast_hotPorridge",
+      "name": "\u70ed\u6c14\u817e\u817e\u7684\u7ca5",
+      "label": "\u70ed\u6c14\u817e\u817e\u7684\u7ca5",
+      "riskTags": ["热烫饮食"],
+      "tendencyScores": {},
+      "hoverText": "\u8fd8\u5192\u7740\u70ed\u6c14\uff0c\u9700\u8981\u4e00\u70b9\u65f6\u95f4\uff0c\u4f46\u770b\u8d77\u6765\u5f88\u6696\u3002"
+    },
+    {
+      "id": "act1_s01_breakfast_eggHamSandwich",
+      "name": "\u9e21\u86cb\u706b\u817f\u4e09\u660e\u6cbb",
+      "label": "\u9e21\u86cb\u706b\u817f\u4e09\u660e\u6cbb",
+      "riskTags": ["加工肉类"],
+      "tendencyScores": {},
+      "hoverText": "\u5939\u7740\u9e21\u86cb\u548c\u706b\u817f\u7684\u4e09\u660e\u6cbb\uff0c\u65e9\u9910\u611f\u5f88\u660e\u786e\u3002"
+    },
+    {
+      "id": "act1_s01_breakfast_cornEggMilk",
+      "name": "\u7389\u7c73\u9e21\u86cb\u725b\u5976",
+      "label": "\u7389\u7c73\u9e21\u86cb\u725b\u5976",
+      "riskTags": [],
+      "tendencyScores": {},
+      "hoverText": "\u7389\u7c73\u3001\u9e21\u86cb\u548c\u725b\u5976\u6446\u5728\u4e00\u8d77\uff0c\u770b\u8d77\u6765\u50cf\u8ba4\u771f\u51c6\u5907\u8fc7\u3002"
+    }
+  ],
+  "targets": []
+}

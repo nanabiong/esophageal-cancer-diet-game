@@ -1,0 +1,95 @@
+{
+  "foods": [
+    {
+      "id": "act3_s01_food_vegetable",
+      "name": "清汤锅里的蔬菜",
+      "baseRiskTags": [],
+      "tendencyScores": {}
+    },
+    {
+      "id": "act3_s01_food_sausage",
+      "name": "小腊肠",
+      "baseRiskTags": ["腌制饮食"],
+      "tendencyScores": {}
+    },
+    {
+      "id": "act3_s01_food_youtiao",
+      "name": "响铃卷 / 油条",
+      "baseRiskTags": ["油炸饮食"],
+      "tendencyScores": {}
+    },
+    {
+      "id": "act3_s01_food_luncheonMeat",
+      "name": "午餐肉",
+      "baseRiskTags": ["加工肉类"],
+      "tendencyScores": {}
+    },
+    {
+      "id": "act3_s01_food_maodu",
+      "name": "毛肚",
+      "baseRiskTags": [],
+      "tendencyScores": {}
+    },
+    {
+      "id": "act3_s01_food_daiRouCuiGu",
+      "name": "带肉脆骨",
+      "baseRiskTags": ["硬质饮食"],
+      "tendencyScores": {}
+    },
+    {
+      "id": "act3_s01_food_beefSlices",
+      "name": "肥牛卷",
+      "baseRiskTags": [],
+      "tendencyScores": {}
+    }
+  ],
+  "foodTargets": [
+    {
+      "id": "act3_s01_target_clearPot",
+      "name": "清汤锅",
+      "riskTags": []
+    },
+    {
+      "id": "act3_s01_target_spicyPot",
+      "name": "辣锅",
+      "riskTags": ["辛辣饮食"]
+    }
+  ],
+  "drinks": [
+    {
+      "id": "act3_s02_drink_highAlcohol",
+      "name": "高度酒精酒",
+      "riskTags": ["高量饮酒"],
+      "tendencyScores": {}
+    },
+    {
+      "id": "act3_s02_drink_lowAlcohol",
+      "name": "低度酒精酒",
+      "riskTags": ["饮酒"],
+      "tendencyScores": {}
+    },
+    {
+      "id": "act3_s02_drink_softDrink",
+      "name": "饮料",
+      "riskTags": [],
+      "tendencyScores": {}
+    },
+    {
+      "id": "act3_s02_drink_lemonWater",
+      "name": "柠檬水",
+      "riskTags": [],
+      "tendencyScores": {}
+    },
+    {
+      "id": "act3_s02_drink_beer",
+      "name": "啤酒",
+      "riskTags": ["饮酒"],
+      "tendencyScores": {}
+    }
+  ],
+  "drinkTarget": {
+    "id": "act3_s02_target_emptyCup",
+    "name": "空杯位置",
+    "riskTags": []
+  }
+}

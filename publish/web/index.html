@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>食管癌饮食数感游戏 V2 - Act 3 原型</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main id="app" class="comic-stage">
+    <section id="homeScreen" class="home-screen" aria-labelledby="homeTitle">
+      <div class="home-screen-inner">
+        <div class="home-screen-copy">
+          <h1 id="homeTitle">测测你的饮食星球</h1>
+          <p>What's Your Diet Planet?</p>
+          <button id="homeStartButton" class="home-start-button" type="button">开始游戏</button>
+        </div>
+
+        <div class="home-planet-stage" aria-hidden="true">
+          <div id="homePlanet" class="home-planet">
+            <div id="homePlanetBody" class="home-planet-body"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <header class="stage-ui">
+      <p class="prototype-label">第三幕低保真原型</p>
+      <h1>夜晚——聚会与火锅</h1>
+    </header>
+
+    <section class="frame-viewport stage-wrapper" aria-label="漫画分镜舞台">
+      <div id="frameTrack" class="frame-track stage-scale-shell"></div>
+    </section>
+
+    <nav class="test-controls" aria-label="画框切换测试">
+      <button type="button" data-direction="slide-left">向左切换</button>
+      <button type="button" data-direction="slide-right">向右切换</button>
+      <button type="button" data-direction="slide-up">向上切换</button>
+      <button type="button" data-direction="slide-down">向下切换</button>
+    </nav>
+  </main>
+
+  <script src="riskConfig.js"></script>
+  <script src="game.js"></script>
+</body>
+</html>
